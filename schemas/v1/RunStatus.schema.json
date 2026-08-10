@@ -1,0 +1,94 @@
+{
+  "$defs": {
+    "RunState": {
+      "description": "Lifecycle state of a single run.",
+      "enum": [
+        "planned",
+        "running",
+        "complete",
+        "failed"
+      ],
+      "title": "RunState",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Current lifecycle status of one run.\n\n``event_hash`` is the SHA-256 (lowercase, 64 hex chars) of the canonical\nordered event stream, recorded when the run reaches COMPLETE. COMPLETE in\nthis phase means structural execution finished - it does not mean\ndecision evidence was produced.",
+  "properties": {
+    "campaign_id": {
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "changed_at": {
+      "format": "date-time",
+      "title": "Changed At",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "event_hash": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Event Hash"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "input_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Input Hash",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "run_plan_id": {
+      "title": "Run Plan Id",
+      "type": "string"
+    },
+    "runtime_version": {
+      "title": "Runtime Version",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "state": {
+      "$ref": "#/$defs/RunState"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "run_id",
+    "campaign_id",
+    "run_plan_id",
+    "state",
+    "runtime_version",
+    "input_hash",
+    "created_at",
+    "changed_at"
+  ],
+  "title": "RunStatus",
+  "type": "object"
+}

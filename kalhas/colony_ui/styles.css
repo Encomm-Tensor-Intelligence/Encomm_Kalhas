@@ -1,0 +1,596 @@
+/* Encomm Colony — local observability UI for the KALHAS kernel.
+ * Dark, premium, high-contrast "mission control" visual system.
+ * CSS-only: no images, no canvas, no external fonts, no CDN assets.
+ * Motion is decorative only and fully disabled for reduced-motion users.
+ */
+
+:root {
+  --bg: #0a0d12;
+  --bg-raised: #0e1219;
+  --panel: #121724;
+  --panel-deep: #0d1119;
+  --panel-edge: rgba(148, 163, 184, 0.16);
+  --panel-edge-strong: rgba(148, 163, 184, 0.32);
+  --text: #e2e8f0;
+  --text-soft: #b6c2d4;
+  --muted: #8494ab;
+  --faint: #5b6a80;
+  --accent: #22d3ee;
+  --accent-dim: rgba(34, 211, 238, 0.12);
+  --ok: #34d399;
+  --ok-dim: rgba(52, 211, 153, 0.14);
+  --warn: #fbbf24;
+  --warn-dim: rgba(251, 191, 36, 0.12);
+  --danger: #f87171;
+  --danger-dim: rgba(248, 113, 113, 0.14);
+  --ext: #8b9bb4;
+  --mono: ui-monospace, "Cascadia Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+  --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 500px at 15% -10%, rgba(34, 211, 238, 0.05), transparent 60%),
+    radial-gradient(1000px 420px at 90% -10%, rgba(52, 211, 153, 0.04), transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+.colony-shell {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 20px 28px;
+}
+
+/* ---------- Header ---------- */
+
+.colony-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 14px 20px 12px;
+  margin: 0 -20px 18px;
+  background: linear-gradient(180deg, rgba(10, 13, 18, 0.96), rgba(10, 13, 18, 0.88));
+  border-bottom: 1px solid var(--panel-edge);
+  backdrop-filter: blur(6px);
+}
+
+.kicker {
+  margin: 0 0 2px;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.colony-header h1 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tagline {
+  margin: 2px 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-edge-strong);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  background: var(--panel-deep);
+}
+
+.badge-primary {
+  border-color: rgba(34, 211, 238, 0.45);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.badge-manual {
+  border-color: rgba(251, 191, 36, 0.45);
+  color: var(--warn);
+  background: var(--warn-dim);
+}
+
+.pull-note {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.tenant-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.tenant-form label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.tenant-form input {
+  width: 260px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-edge-strong);
+  background: var(--panel-deep);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.tenant-form input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tenant-form button {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid rgba(34, 211, 238, 0.5);
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.18), rgba(34, 211, 238, 0.08));
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.tenant-form button:hover {
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.28), rgba(34, 211, 238, 0.12));
+}
+
+.tenant-form button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tenant-form button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.feed-status-line {
+  margin-top: 10px;
+}
+
+.feed-status {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-soft);
+  min-height: 1.4em;
+}
+
+.feed-status-error {
+  color: var(--danger);
+}
+
+.feed-status-ok {
+  color: var(--ok);
+}
+
+.feed-meta {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--faint);
+  font-family: var(--mono);
+}
+
+/* ---------- Main grid ---------- */
+
+.colony-grid {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr) 400px;
+  gap: 16px;
+  align-items: start;
+}
+
+/* ---------- Left system rail ---------- */
+
+.system-rail,
+.mission-floor,
+.event-stream {
+  background: linear-gradient(180deg, var(--panel), var(--panel-deep));
+  border: 1px solid var(--panel-edge);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.rail-title,
+.floor-title,
+.stream-head h2 {
+  margin: 0 0 10px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.system-card {
+  border: 1px solid var(--panel-edge);
+  border-radius: 10px;
+  background: var(--bg-raised);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.system-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.system-head h3 {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--text);
+}
+
+.system-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.system-external {
+  border-color: rgba(139, 155, 180, 0.3);
+}
+
+.system-mock {
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+/* Status lights */
+
+.status-light {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--faint);
+}
+
+.light-on {
+  background: var(--ok);
+  box-shadow: 0 0 8px var(--ok);
+  animation: light-pulse 2.4s ease-in-out infinite;
+}
+
+.light-ext {
+  background: var(--ext);
+}
+
+.light-mock {
+  background: var(--warn);
+  box-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
+}
+
+.light-off {
+  background: var(--faint);
+}
+
+/* ---------- Central mission floor ---------- */
+
+.floor-note {
+  margin: -4px 0 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.zone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.zone {
+  position: relative;
+  border: 1px solid var(--panel-edge);
+  border-radius: 12px;
+  background:
+    linear-gradient(160deg, rgba(148, 163, 184, 0.05), transparent 55%),
+    var(--bg-raised);
+  padding: 12px 14px;
+  min-height: 118px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.zone h3 {
+  margin: 0 0 4px;
+  font-size: 13.5px;
+  letter-spacing: 0.08em;
+  color: var(--text-soft);
+}
+
+.zone-kinds {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: var(--faint);
+  font-family: var(--mono);
+}
+
+.zone-latest {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  font-family: var(--mono);
+  word-break: break-word;
+}
+
+.zone-time {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--faint);
+  font-family: var(--mono);
+}
+
+.zone-refs {
+  margin: 6px 0 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  font-size: 11.5px;
+}
+
+.zone-refs dt {
+  color: var(--faint);
+}
+
+.zone-refs dd {
+  margin: 0;
+  color: var(--text-soft);
+  font-family: var(--mono);
+  word-break: break-all;
+}
+
+/* A zone glows only when its kinds were observed in the loaded feed. */
+
+.zone.observed {
+  border-color: rgba(34, 211, 238, 0.5);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.14), inset 0 0 18px rgba(34, 211, 238, 0.05);
+  animation: zone-glow 5s ease-in-out infinite;
+}
+
+.zone.observed h3 {
+  color: var(--accent);
+}
+
+.zone.observed .zone-latest {
+  color: var(--text);
+}
+
+/* ---------- Right event stream ---------- */
+
+.stream-head {
+  margin-bottom: 10px;
+}
+
+.stream-note {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 620px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event {
+  border: 1px solid var(--panel-edge);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  background: var(--bg-raised);
+  padding: 8px 10px;
+}
+
+.event-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+}
+
+.event-seq {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
+.event-kind {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.event-time {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--faint);
+  margin-left: auto;
+}
+
+.event-refs,
+.event-payload {
+  margin: 6px 0 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1px 10px;
+  font-size: 11.5px;
+}
+
+.event-refs dt,
+.event-payload dt {
+  color: var(--faint);
+}
+
+.event-refs dd,
+.event-payload dd {
+  margin: 0;
+  color: var(--text-soft);
+  font-family: var(--mono);
+  word-break: break-all;
+}
+
+.event-payload {
+  border-top: 1px dashed var(--panel-edge);
+  padding-top: 5px;
+  margin-top: 5px;
+}
+
+.empty-state {
+  margin: 14px 0 0;
+  padding: 14px;
+  border: 1px dashed var(--panel-edge-strong);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ---------- Bottom timeline / status bar ---------- */
+
+.timeline-bar {
+  margin-top: 16px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--panel), var(--panel-deep));
+  padding: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 28px;
+}
+
+.timeline-stats {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 26px;
+}
+
+.stat dt {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.stat dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.hash-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ok);
+}
+
+/* ---------- Motion ---------- */
+
+@keyframes light-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@keyframes zone-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(34, 211, 238, 0.10), inset 0 0 14px rgba(34, 211, 238, 0.04); }
+  50% { box-shadow: 0 0 18px rgba(34, 211, 238, 0.20), inset 0 0 22px rgba(34, 211, 238, 0.07); }
+}
+
+/* Decorative motion is fully disabled for reduced-motion users. */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1180px) {
+  .colony-grid {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .event-stream {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .colony-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .colony-header {
+    position: static;
+  }
+
+  .tenant-form input {
+    width: 100%;
+  }
+
+  .event-time {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .colony-shell {
+    padding: 0 12px 20px;
+  }
+
+  .colony-header {
+    margin: 0 -12px 14px;
+  }
+}

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Encomm Colony — KALHAS operational observability</title>
+  <meta name="description" content="Encomm Colony: local, read-only mission control for the KALHAS kernel. Manual pull refresh of tenant operational activity. No streaming, no external assets.">
+  <link rel="stylesheet" href="/colony/styles.css">
+</head>
+<body>
+  <div class="colony-shell">
+
+    <header class="colony-header">
+      <div class="brand-block">
+        <p class="kicker">Local companion · same origin · strictly read-only</p>
+        <h1>ENCOMM COLONY</h1>
+        <p class="tagline">Mission control for the KALHAS kernel</p>
+        <div class="badges">
+          <span class="badge badge-primary">KALHAS operational observability</span>
+          <span class="badge badge-manual">manual pull refresh</span>
+        </div>
+        <p class="pull-note">The feed is pull-based: it changes only when you press the button below. It is not streaming live.</p>
+      </div>
+
+      <form class="tenant-form" id="tenant-form" autocomplete="off">
+        <label for="tenant-input">Tenant identifier</label>
+        <input id="tenant-input" name="tenant" type="text" placeholder="e.g. tenant-demo" spellcheck="false" autocomplete="off">
+        <button id="load-button" type="submit">Load activity</button>
+      </form>
+
+      <div class="feed-status-line">
+        <p class="feed-status" id="feed-status" role="status" aria-live="polite">No feed loaded yet. Enter a tenant identifier and press Load activity.</p>
+        <p class="feed-meta" id="feed-meta" aria-hidden="true"></p>
+      </div>
+    </header>
+
+    <div class="colony-grid">
+
+      <aside class="system-rail" aria-label="Architecture state">
+        <h2 class="rail-title">Architecture state</h2>
+
+        <section class="system-card" aria-labelledby="sys-kalhas">
+          <div class="system-head">
+            <span class="status-light light-off" id="kalhas-light" aria-hidden="true"></span>
+            <h3 id="sys-kalhas">KALHAS</h3>
+          </div>
+          <p class="system-note" id="kalhas-status">Not queried yet — connects after a successful activity request.</p>
+        </section>
+
+        <section class="system-card system-external" aria-labelledby="sys-nexus">
+          <div class="system-head">
+            <span class="status-light light-ext" aria-hidden="true"></span>
+            <h3 id="sys-nexus">NEXUS</h3>
+          </div>
+          <p class="system-note">External boundary — not connected. No integration is present.</p>
+        </section>
+
+        <section class="system-card system-mock" aria-labelledby="sys-legion">
+          <div class="system-head">
+            <span class="status-light light-mock" aria-hidden="true"></span>
+            <h3 id="sys-legion">LEGION</h3>
+          </div>
+          <p class="system-note">Mock strategy boundary only — not connected, no agents active.</p>
+        </section>
+      </aside>
+
+      <main class="mission-floor" aria-label="Mission zones">
+        <h2 class="floor-title">Mission floor</h2>
+        <p class="floor-note">Zones light up only from activity actually observed in the loaded feed. No agents are shown or implied.</p>
+
+        <div class="zone-grid">
+          <section class="zone" id="zone-scenario_studio" aria-labelledby="zone-title-scenario_studio">
+            <h3 id="zone-title-scenario_studio">Scenario Studio</h3>
+            <p class="zone-kinds">Observes: scenario_registered</p>
+            <p class="zone-latest" id="zone-scenario_studio-kind">No activity observed in the loaded feed</p>
+            <p class="zone-time" id="zone-scenario_studio-time"></p>
+            <dl class="zone-refs" id="zone-scenario_studio-refs"></dl>
+          </section>
+
+          <section class="zone" id="zone-world_forge" aria-labelledby="zone-title-world_forge">
+            <h3 id="zone-title-world_forge">World Forge</h3>
+            <p class="zone-kinds">Observes: world_compiled</p>
+            <p class="zone-latest" id="zone-world_forge-kind">No activity observed in the loaded feed</p>
+            <p class="zone-time" id="zone-world_forge-time"></p>
+            <dl class="zone-refs" id="zone-world_forge-refs"></dl>
+          </section>
+
+          <section class="zone" id="zone-domain_registry" aria-labelledby="zone-title-domain_registry">
+            <h3 id="zone-title-domain_registry">Domain Registry</h3>
+            <p class="zone-kinds">Observes: domain_pack_registered · domain_pack_bound · capability_inputs_declared · domain_state_model_declared · domain_state_transition_declared</p>
+            <p class="zone-latest" id="zone-domain_registry-kind">No activity observed in the loaded feed</p>
+            <p class="zone-time" id="zone-domain_registry-time"></p>
+            <dl class="zone-refs" id="zone-domain_registry-refs"></dl>
+          </section>
+
+          <section class="zone" id="zone-campaign_control" aria-labelledby="zone-title-campaign_control">
+            <h3 id="zone-title-campaign_control">Campaign Control</h3>
+            <p class="zone-kinds">Observes: campaign_prepared · campaign_started · campaign_executed</p>
+            <p class="zone-latest" id="zone-campaign_control-kind">No activity observed in the loaded feed</p>
+            <p class="zone-time" id="zone-campaign_control-time"></p>
+            <dl class="zone-refs" id="zone-campaign_control-refs"></dl>
+          </section>
+
+          <section class="zone" id="zone-integrity_vault" aria-labelledby="zone-title-integrity_vault">
+            <h3 id="zone-title-integrity_vault">Integrity and Replay Vault</h3>
+            <p class="zone-kinds">Observes: run_inputs_verified · run_replayed</p>
+            <p class="zone-latest" id="zone-integrity_vault-kind">No activity observed in the loaded feed</p>
+            <p class="zone-time" id="zone-integrity_vault-time"></p>
+            <dl class="zone-refs" id="zone-integrity_vault-refs"></dl>
+          </section>
+        </div>
+      </main>
+
+      <aside class="event-stream" aria-label="Operational event stream">
+        <div class="stream-head">
+          <h2>Event stream</h2>
+          <p class="stream-note">Newest first; sequence numbers are the true tenant-local operational order. occurred_at is the source artifact time — not simulation or replay time.</p>
+        </div>
+        <ol class="event-list" id="event-list"></ol>
+        <p class="empty-state" id="empty-state" hidden>No operational activity for this tenant yet.</p>
+      </aside>
+
+    </div>
+
+    <footer class="timeline-bar" aria-label="Timeline status">
+      <dl class="timeline-stats">
+        <div class="stat"><dt>Oldest loaded</dt><dd id="oldest-loaded">—</dd></div>
+        <div class="stat"><dt>Newest loaded</dt><dd id="newest-loaded">—</dd></div>
+        <div class="stat"><dt>API latest_sequence</dt><dd id="api-latest">—</dd></div>
+        <div class="stat"><dt>Older history beyond window</dt><dd id="older-history">—</dd></div>
+      </dl>
+      <p class="hash-note">Operational activity is observability only — it never affects simulation or replay hashes.</p>
+    </footer>
+
+  </div>
+  <script src="/colony/app.js"></script>
+</body>
+</html>

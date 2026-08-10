@@ -1,0 +1,156 @@
+{
+  "$defs": {
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "description": "Immutable declarative state-to-metric observation binding.\n\nThe binding connects exactly one scenario metric (identified by\n``metric_id`` against the stored ``ScenarioSpec``) to exactly one\nnumeric field (identified by ``state_field_id``) of an existing\nscenario-bound ``DomainStateModel`` (identified by\n``state_model_identifier`` and ``state_model_id``). Every identity\nfield - binding id, manifest id, logical ``pack_id``, semantic\n``pack_version``, authoritative manifest content hash, the\nreferenced state model's deterministic identifier and authoritative\ncontent hash - is copied from stored immutable records, never from\nclient input. The copied ``state_field_value_kind`` is the\nauthoritative numeric value kind of the referenced field.\n\nThe binding declares that a future phase *may* observe the\nreferenced field's final trajectory state as the metric's raw\nobservation. It is a declaration of provenance only: nothing here\ninspects any ``RunTrajectoryExecution``, reads ``initial_state`` or\n``final_state``, extracts metric values, evaluates trajectories,\ncalculates outcomes, aggregates observations, produces evidence,\nranks strategies, or generates recommendations.\n\nThe binding is frozen by contract and is never updated, deleted,\nreplaced, repaired, or re-declared; at most one binding may exist\nper scenario metric (Phase 19 MVP).",
+  "properties": {
+    "binding_id": {
+      "title": "Binding Id",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "declared_at": {
+      "format": "date-time",
+      "title": "Declared At",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "manifest_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Manifest Content Hash",
+      "type": "string"
+    },
+    "manifest_id": {
+      "title": "Manifest Id",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "metric_id": {
+      "minLength": 1,
+      "title": "Metric Id",
+      "type": "string"
+    },
+    "observation_point": {
+      "const": "final_state",
+      "default": "final_state",
+      "title": "Observation Point",
+      "type": "string"
+    },
+    "pack_id": {
+      "title": "Pack Id",
+      "type": "string"
+    },
+    "pack_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Pack Version",
+      "type": "string"
+    },
+    "scenario_id": {
+      "minLength": 1,
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "state_field_id": {
+      "minLength": 1,
+      "title": "State Field Id",
+      "type": "string"
+    },
+    "state_field_value_kind": {
+      "enum": [
+        "integer",
+        "number"
+      ],
+      "title": "State Field Value Kind",
+      "type": "string"
+    },
+    "state_model_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "State Model Content Hash",
+      "type": "string"
+    },
+    "state_model_id": {
+      "minLength": 1,
+      "title": "State Model Id",
+      "type": "string"
+    },
+    "state_model_identifier": {
+      "minLength": 1,
+      "title": "State Model Identifier",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "scenario_id",
+    "binding_id",
+    "manifest_id",
+    "pack_id",
+    "pack_version",
+    "manifest_content_hash",
+    "metric_id",
+    "state_model_identifier",
+    "state_model_id",
+    "state_model_content_hash",
+    "state_field_id",
+    "state_field_value_kind",
+    "content_hash",
+    "declared_at"
+  ],
+  "title": "DomainMetricObservationBinding",
+  "type": "object"
+}

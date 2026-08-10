@@ -1,0 +1,185 @@
+{
+  "$defs": {
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "OperationalActivityKind": {
+      "description": "Generic structural lifecycle facts recorded by the activity feed.",
+      "enum": [
+        "scenario_registered",
+        "world_compiled",
+        "domain_pack_registered",
+        "domain_pack_bound",
+        "capability_inputs_declared",
+        "domain_state_model_declared",
+        "domain_state_transition_declared",
+        "campaign_prepared",
+        "campaign_started",
+        "campaign_executed",
+        "run_inputs_verified",
+        "run_replayed"
+      ],
+      "title": "OperationalActivityKind",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One immutable, tenant-local structural lifecycle fact.\n\nThe store assigns the tenant-local ``sequence`` (strictly increasing,\nstarting at zero) and the deterministic identifier\n``activity-{sequence}`` when the event is appended; events are\nimmutable once appended and are retrieved in ascending sequence\norder. ``occurred_at`` is copied from the already-recorded source\ncontract (scenario ``created_at``, world ``created_at``, binding\n``bound_at``, declaration ``declared_at``, campaign status\n``changed_at``, integrity manifest ``recorded_at``, replay manifest\n``created_at``) - never the wall clock.\n\nThe ``payload`` carries only safe structural facts for the owning\ntenant (identifiers, versions, counts, lifecycle states, and hashes\nalready exposed by the source contracts). Raw capability input\nvalues, policy rules, hidden reasoning, provider data, outcomes,\nevidence, recommendations, and executable content are never\nrepresentable here by convention and test.",
+  "properties": {
+    "binding_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Binding Id"
+    },
+    "campaign_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Campaign Id"
+    },
+    "declaration_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Declaration Id"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "kind": {
+      "$ref": "#/$defs/OperationalActivityKind"
+    },
+    "manifest_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Manifest Id"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "payload": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Payload",
+      "type": "object"
+    },
+    "run_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Run Id"
+    },
+    "scenario_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Scenario Id"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sequence": {
+      "minimum": 0,
+      "title": "Sequence",
+      "type": "integer"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "world_version_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "World Version Id"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "sequence",
+    "kind",
+    "occurred_at"
+  ],
+  "title": "OperationalActivityEvent",
+  "type": "object"
+}

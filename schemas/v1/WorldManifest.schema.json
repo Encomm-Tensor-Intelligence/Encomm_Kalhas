@@ -1,0 +1,84 @@
+{
+  "$defs": {
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "description": "A declarative inventory of a world model version.\n\n``entity_count`` counts compiled entities. The Phase 2 generic compiler\ncompiles declarative scenario elements only - not entities - so\n``entity_count`` is 0 for its worlds; the declarative objective,\nconstraint, metric, and assumption counts are preserved separately in\n``state``.",
+  "properties": {
+    "entity_count": {
+      "minimum": 0,
+      "title": "Entity Count",
+      "type": "integer"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "state": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "State",
+      "type": "object"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "world_version_id": {
+      "title": "World Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "world_version_id",
+    "entity_count"
+  ],
+  "title": "WorldManifest",
+  "type": "object"
+}

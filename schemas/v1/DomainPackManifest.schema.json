@@ -1,0 +1,173 @@
+{
+  "$defs": {
+    "DomainPackCapability": {
+      "additionalProperties": false,
+      "description": "A declarative capability of a domain pack.\n\nDescriptive only: the capability declares its identifier, a concise\ndescription, and the ordered identifiers of its declared inputs and\noutputs. There are no callbacks, imports, executable expressions,\nprovider references, or runtime behavior - the fields are plain strings,\nordered tuples of strings, and JSON-compatible metadata.\n\n``input_ids`` and ``output_ids`` are ordered identifiers and each must\nbe unique within its tuple: duplicate input identifiers would make the\nexact key matching of declared ``input_values`` ambiguous, and\nduplicate output identifiers would make declared outputs ambiguous.\nThe declared tuple order is preserved exactly as given.",
+      "properties": {
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "identifier": {
+          "title": "Identifier",
+          "type": "string"
+        },
+        "input_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Input Ids",
+          "type": "array"
+        },
+        "metadata": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Metadata",
+          "type": "object"
+        },
+        "output_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Output Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "identifier",
+        "description"
+      ],
+      "title": "DomainPackCapability",
+      "type": "object"
+    },
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "description": "The declarative identity of a future domain pack.\n\nA registered manifest is immutable: the contract is frozen and the\nregistry rejects duplicate manifest identifiers per tenant. The manifest\ncarries the logical ``pack_id``, a human-readable ``name``, a strict\nsemantic ``pack_version`` (``major.minor.patch``), the supported KALHAS\nAPI versions (API version ``1`` is required), a non-empty ordered list of\ndeclarative capabilities, JSON-compatible schema metadata, a\ndeterministic ``content_hash``, a deterministic ``created_at``, and\noptional JSON-compatible metadata.\n\nThe content hash is computed over the canonical serialized manifest\ncontent excluding ``content_hash`` itself; it is never accepted from a\nclient. Capability identifiers must be unique within the manifest.",
+  "properties": {
+    "capabilities": {
+      "items": {
+        "$ref": "#/$defs/DomainPackCapability"
+      },
+      "minItems": 1,
+      "title": "Capabilities",
+      "type": "array"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "pack_id": {
+      "title": "Pack Id",
+      "type": "string"
+    },
+    "pack_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Pack Version",
+      "type": "string"
+    },
+    "schema_metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Schema Metadata",
+      "type": "object"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "supported_api_versions": {
+      "items": {
+        "pattern": "^\\d+$",
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Supported Api Versions",
+      "type": "array"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "pack_id",
+    "name",
+    "pack_version",
+    "supported_api_versions",
+    "capabilities",
+    "content_hash",
+    "created_at"
+  ],
+  "title": "DomainPackManifest",
+  "type": "object"
+}

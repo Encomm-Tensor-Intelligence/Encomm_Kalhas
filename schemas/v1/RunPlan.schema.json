@@ -1,0 +1,69 @@
+{
+  "additionalProperties": false,
+  "description": "A planning manifest for exactly one run of one strategy on one seed.\n\nPlanning manifest only: no executable code, callbacks, provider\nconfiguration, arbitrary imports, or simulated outcomes. The input hash\nis a deterministic SHA-256 hex digest (lowercase, 64 chars) over the\nworld content hash, the strategy contract, the seed contract, and the\nruntime version.",
+  "properties": {
+    "campaign_id": {
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "input_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Input Hash",
+      "type": "string"
+    },
+    "planned_state": {
+      "const": "planned",
+      "default": "planned",
+      "title": "Planned State",
+      "type": "string"
+    },
+    "runtime_version": {
+      "title": "Runtime Version",
+      "type": "string"
+    },
+    "scenario_seed_id": {
+      "title": "Scenario Seed Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "strategy_candidate_id": {
+      "title": "Strategy Candidate Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "world_version_id": {
+      "title": "World Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "campaign_id",
+    "world_version_id",
+    "strategy_candidate_id",
+    "scenario_seed_id",
+    "runtime_version",
+    "input_hash",
+    "created_at"
+  ],
+  "title": "RunPlan",
+  "type": "object"
+}

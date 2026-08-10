@@ -1,0 +1,283 @@
+{
+  "$defs": {
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "RunStateTrajectoryResult": {
+      "additionalProperties": false,
+      "description": "The immutable evaluated result of one state-model plan.\n\nBinds the result to its exact ``StrategyTrajectoryPlan`` (identifier\nand content hash) and to the exact resolved state model embedded in\nthe verified compiled world (manifest, deterministic model\nidentifier, logical model id, and content hash). The initial and\nfinal states are fresh plain JSON snapshots (never the engine's\nfrozen views and never references into the model or the world), with\ntheir canonical hashes; the ordered attempt records, the engine's\ndeterministic trace hash, and a self-covering ``content_hash`` over\nthe complete canonical result excluding ``content_hash`` itself.",
+      "properties": {
+        "attempts": {
+          "items": {
+            "$ref": "#/$defs/RunTrajectoryAttemptRecord"
+          },
+          "title": "Attempts",
+          "type": "array"
+        },
+        "content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "final_state": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Final State",
+          "type": "object"
+        },
+        "final_state_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Final State Hash",
+          "type": "string"
+        },
+        "initial_state": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Initial State",
+          "type": "object"
+        },
+        "initial_state_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Initial State Hash",
+          "type": "string"
+        },
+        "manifest_id": {
+          "title": "Manifest Id",
+          "type": "string"
+        },
+        "state_model_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "State Model Content Hash",
+          "type": "string"
+        },
+        "state_model_id": {
+          "title": "State Model Id",
+          "type": "string"
+        },
+        "state_model_identifier": {
+          "title": "State Model Identifier",
+          "type": "string"
+        },
+        "trace_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Trace Hash",
+          "type": "string"
+        },
+        "trajectory_plan_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Trajectory Plan Content Hash",
+          "type": "string"
+        },
+        "trajectory_plan_id": {
+          "title": "Trajectory Plan Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trajectory_plan_id",
+        "trajectory_plan_content_hash",
+        "manifest_id",
+        "state_model_identifier",
+        "state_model_id",
+        "state_model_content_hash",
+        "initial_state",
+        "initial_state_hash",
+        "attempts",
+        "final_state",
+        "final_state_hash",
+        "trace_hash",
+        "content_hash"
+      ],
+      "title": "RunStateTrajectoryResult",
+      "type": "object"
+    },
+    "RunTrajectoryAttemptRecord": {
+      "additionalProperties": false,
+      "description": "One deterministic transition attempt within an evaluated trajectory.\n\nRecords only the attempt's sequence position, the authoritative\nreference to the attempted transition (deterministic identifier,\nlogical transition id, content hash), the deterministic outcome, and\nthe before/after state hashes. It carries no guard or target values,\nno state snapshots, no explanation, no evidence, no recommendation,\nand no hidden reasoning.",
+      "properties": {
+        "after_state_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "After State Hash",
+          "type": "string"
+        },
+        "before_state_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Before State Hash",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "applied",
+            "guard_not_satisfied"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "sequence_position": {
+          "minimum": 0,
+          "title": "Sequence Position",
+          "type": "integer"
+        },
+        "transition_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Transition Content Hash",
+          "type": "string"
+        },
+        "transition_id": {
+          "minLength": 1,
+          "title": "Transition Id",
+          "type": "string"
+        },
+        "transition_identifier": {
+          "title": "Transition Identifier",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sequence_position",
+        "transition_identifier",
+        "transition_id",
+        "transition_content_hash",
+        "outcome",
+        "before_state_hash",
+        "after_state_hash"
+      ],
+      "title": "RunTrajectoryAttemptRecord",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The immutable run-scoped trajectory execution artifact.\n\nOne aggregate artifact per completed trajectory-runtime run: the run,\ncampaign, and run-plan identity; the verified compiled world and the\nexact recorded strategy with their content hashes; the recorded seed\nidentity (provenance only - the declarative transition kernel never\nsamples or uses the seed); the trajectory runtime version; the run\ninput hash; the exact ordered plan-set hash; the ordered result tuple\n(one per applicable state-model plan, in canonical order); the\naggregate ``content_hash``; and the deterministic ``executed_at``\nfrom the recorded RunPlan creation time - never the wall clock. The\nidentifier is deterministic from the run identity and runtime\nversion. An empty results tuple is valid only for a verified world\nwith no transition-capable state models.",
+  "properties": {
+    "campaign_id": {
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "executed_at": {
+      "format": "date-time",
+      "title": "Executed At",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "input_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Input Hash",
+      "type": "string"
+    },
+    "results": {
+      "items": {
+        "$ref": "#/$defs/RunStateTrajectoryResult"
+      },
+      "title": "Results",
+      "type": "array"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "run_plan_id": {
+      "title": "Run Plan Id",
+      "type": "string"
+    },
+    "runtime_version": {
+      "const": "2.0.0",
+      "title": "Runtime Version",
+      "type": "string"
+    },
+    "scenario_seed_id": {
+      "title": "Scenario Seed Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "strategy_candidate_id": {
+      "title": "Strategy Candidate Id",
+      "type": "string"
+    },
+    "strategy_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Strategy Content Hash",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "trajectory_plan_set_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Trajectory Plan Set Hash",
+      "type": "string"
+    },
+    "world_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "World Content Hash",
+      "type": "string"
+    },
+    "world_version_id": {
+      "title": "World Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "run_id",
+    "campaign_id",
+    "run_plan_id",
+    "world_version_id",
+    "world_content_hash",
+    "strategy_candidate_id",
+    "strategy_content_hash",
+    "scenario_seed_id",
+    "runtime_version",
+    "input_hash",
+    "trajectory_plan_set_hash",
+    "results",
+    "content_hash",
+    "executed_at"
+  ],
+  "title": "RunTrajectoryExecution",
+  "type": "object"
+}
