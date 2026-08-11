@@ -1216,3 +1216,48 @@ registered as a top-level contract).
   Phase 18 campaign trajectory matrix, Phase 19 declaration behavior,
   Phase 20 extraction behavior, and the Phase 21 metric-observation
   matrix are unchanged. **Phase 23 has not started.**
+
+## Phase 23 status
+
+- **Deterministic objective-to-metric evaluation (COMPLETE).**
+  `ScenarioEvaluationProfile` (36th public contract) + `CampaignObjectiveEvaluationMatrix`
+  (37th, appended last); `ObjectiveMetricBinding` and
+  `ObjectiveObservationEvaluation` stay nested. Exactly two new schema
+  artifacts; `PUBLIC_CONTRACTS` 35 -> 37; no existing v1 contract
+  field changed.
+- **Declaration**: one immutable profile per tenant + scenario;
+  caller supplies only `objective_id`, `metric_id`, `reach_tolerance`,
+  `normalization_scale` (+ `declared_at`, `metadata`); direction,
+  target, weight, metric unit copied from the stored `ScenarioSpec`
+  (forged authoritative fields impossible); bindings canonicalized
+  into the exact `ScenarioSpec.objectives` order; complete coverage,
+  exactly-one reference per objective; reach-tolerance/scale rules;
+  declaration before first world compilation; duplicates 409; no
+  update/replace/delete/list surface; deep-copy + strict
+  revalidation on write and every read (with independent
+  ownership/identifier/content-hash verification before any copy
+  crosses the store boundary); tenant isolation.
+- **Evaluation semantics** (pure builder over the verified Phase 21
+  matrix): direction-aware `signed_target_delta` (positive =
+  adverse), `target_achieved = delta <= 0`, `normalized_target_violation
+  = max(0, delta) / scale`; optimization-only objectives carry `None`
+  evaluation fields; exact int/float preservation; bool/NaN/Infinity
+  rejected before coercion everywhere; overflow/non-finite derived
+  values reject the complete matrix (409). Target violation only - no
+  regret/ranking/dominance/probability/confidence/distribution/risk/
+  evidence/recommendation semantics.
+- **World integration**: dedicated `evaluation_profile` key embedded
+  only when a profile exists - profile-free worlds stay byte-identical
+  to Phase 22; `verify_world_snapshot` re-derives scenario hash,
+  profile id/hash, coverage, copied values, tolerance/scale rules, and
+  recompile-equality; `VerifiedWorldCatalog.evaluation_profile`.
+- **Pipeline**: COMPLETE gate -> verified Phase 21 matrix -> verified
+  compiled world -> world-embedded profile matched to the stored
+  record (404 when absent, 409 when missing/mismatched) -> in-memory
+  matrix, never stored; GET-only endpoint; typed 404/409
+  `invalid_state`/409 `conflict`/409 `integrity_error`; no automatic
+  extraction, no operational-activity, no Colony changes.
+- **API**: `POST`/`GET /v1/scenarios/{scenario_id}/evaluation-profile`,
+  `GET /v1/campaigns/{campaign_id}/objective-evaluations` (direct
+  contracts, `ApiErrorResponse` envelope unchanged, non-leaking
+  messages, byte-identical repeats).

@@ -71,7 +71,7 @@ def _execution(**overrides: object) -> RunTrajectoryExecution:
 
 class TestRegistration:
     def test_public_contract_count_is_35(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 35
+        assert len(PUBLIC_CONTRACTS) == 37
 
     def test_only_the_two_versioned_records_are_registered(self) -> None:
         registered = {contract.__name__ for contract in PUBLIC_CONTRACTS}

@@ -71,6 +71,20 @@ from kalhas.application.domain_errors import (
     WorldScenarioMismatchError,
     WorldSnapshotIntegrityError,
 )
+from kalhas.application.objective_evaluation_errors import (
+    CampaignObjectiveEvaluationMatrixIntegrityError,
+    EvaluationProfileAlreadyExistsError,
+    EvaluationProfileDeclarationAfterCompilationError,
+    EvaluationProfileIncompleteCoverageError,
+    EvaluationProfileIntegrityError,
+    EvaluationProfileInvalidScaleError,
+    EvaluationProfileMetricNotFoundError,
+    EvaluationProfileNotFoundError,
+    EvaluationProfileObjectiveNotFoundError,
+    EvaluationProfileReachTargetRequiredError,
+    EvaluationProfileToleranceRuleError,
+    EvaluationProfileValidationError,
+)
 from kalhas.contracts.v1.common import ApiErrorResponse, ErrorCode, ErrorDetail
 
 logger = logging.getLogger("kalhas.api")
@@ -163,6 +177,7 @@ def register_error_handlers(app: FastAPI) -> None:
                 DomainMetricObservationNotFoundError,
                 DomainStateModelNotFoundError,
                 DomainStateTransitionNotFoundError,
+                EvaluationProfileNotFoundError,
             ),
         ):
             status, code, message = 404, ErrorCode.NOT_FOUND, str(exc)
@@ -182,6 +197,8 @@ def register_error_handlers(app: FastAPI) -> None:
                 RunMetricObservationAlreadyExistsError,
                 UnsupportedRuntimeVersionError,
                 TrajectoryPlansRequiredError,
+                EvaluationProfileAlreadyExistsError,
+                EvaluationProfileDeclarationAfterCompilationError,
             ),
         ):
             status, code, message = 409, ErrorCode.CONFLICT, str(exc)
@@ -197,6 +214,13 @@ def register_error_handlers(app: FastAPI) -> None:
                 DomainMetricObservationStateFieldNotFoundError,
                 DomainMetricObservationNonNumericFieldError,
                 DomainStateTransitionValuesError,
+                EvaluationProfileObjectiveNotFoundError,
+                EvaluationProfileMetricNotFoundError,
+                EvaluationProfileIncompleteCoverageError,
+                EvaluationProfileReachTargetRequiredError,
+                EvaluationProfileToleranceRuleError,
+                EvaluationProfileInvalidScaleError,
+                EvaluationProfileValidationError,
             ),
         ):
             status, code, message = 422, ErrorCode.VALIDATION_ERROR, str(exc)
@@ -227,6 +251,8 @@ def register_error_handlers(app: FastAPI) -> None:
                 RunMetricObservationIntegrityError,
                 CampaignMetricObservationMatrixIntegrityError,
                 CampaignMetricStatisticsIntegrityError,
+                EvaluationProfileIntegrityError,
+                CampaignObjectiveEvaluationMatrixIntegrityError,
             ),
         ):
             status, code, message = 409, ErrorCode.INTEGRITY_ERROR, str(exc)

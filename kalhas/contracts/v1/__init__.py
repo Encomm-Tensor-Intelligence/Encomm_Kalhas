@@ -28,6 +28,10 @@ from kalhas.contracts.v1.execution import ReplayManifest, RunState, RunStatus
 from kalhas.contracts.v1.health import HealthResponse
 from kalhas.contracts.v1.integrity import RunInputIntegrityManifest
 from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
+from kalhas.contracts.v1.objective_evaluation import (
+    CampaignObjectiveEvaluationMatrix,
+    ScenarioEvaluationProfile,
+)
 from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
 from kalhas.contracts.v1.run_plan import RunPlan
 from kalhas.contracts.v1.scenario import (
@@ -108,12 +112,15 @@ PUBLIC_CONTRACTS: tuple[type[VersionedContract], ...] = (
     RunMetricObservationSet,
     CampaignMetricObservationMatrix,
     CampaignMetricStatisticsMatrix,
+    ScenarioEvaluationProfile,
+    CampaignObjectiveEvaluationMatrix,
 )
 __all__ = [
     "API_VERSION",
     "ApiErrorResponse",
     "CampaignMetricObservationMatrix",
     "CampaignMetricStatisticsMatrix",
+    "CampaignObjectiveEvaluationMatrix",
     "CampaignSpec",
     "CampaignState",
     "CampaignStatus",
@@ -150,6 +157,7 @@ __all__ = [
     "RunMetricObservationSet",
     "RuntimeMode",
     "SCHEMA_VERSION",
+    "ScenarioEvaluationProfile",
     "ScenarioSeed",
     "ScenarioSpec",
     "StateValueKind",

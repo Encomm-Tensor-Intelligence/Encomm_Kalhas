@@ -53,6 +53,16 @@ the compiler never interprets, extracts, or evaluates a metric value, a
 state field, or an observation point, and never reads a trajectory
 execution.
 
+When the scenario has a declared evaluation profile, its complete
+serialized snapshot (one ``ScenarioEvaluationProfile`` object) is
+included under ``evaluation_profile`` in the world content and in the
+canonical content hash - only when present, so profile-free worlds
+compile byte-identically to the Phase 22 compiler. The profile is an
+inert declarative snapshot: the compiler never interprets objective
+direction, target, weight, tolerance, normalization scale, or metric
+unit semantics - it only canonicalizes and embeds the immutable
+profile.
+
 The compiler never relies on caller-provided collection ordering:
 bindings are canonicalized by ``manifest_id``, declarations by
 ``(manifest_id, capability_id)``, state models by
@@ -62,8 +72,11 @@ transition_id)`` with their guard/target mappings re-canonicalized by
 field identifier inside the compiler, and observation bindings by
 ``metric_id``, so equivalent snapshot sets supplied in any tuple order
 compile to the same content hash and the same serialized world content.
-Already correctly ordered inputs sort to the identical order, so
-established hashes are unchanged.
+The evaluation profile is a single object whose binding order is
+already canonical by contract (exact ``ScenarioSpec.objectives``
+order); the compiler embeds it exactly as stored. Already correctly
+ordered inputs sort to the identical order, so established hashes are
+unchanged.
 """
 
 from __future__ import annotations
@@ -78,6 +91,7 @@ from kalhas.contracts.v1.domain_pack import (
     DomainPackBinding,
 )
 from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
+from kalhas.contracts.v1.objective_evaluation import ScenarioEvaluationProfile
 from kalhas.contracts.v1.scenario import ScenarioSpec
 from kalhas.contracts.v1.shared import JsonValue
 from kalhas.contracts.v1.state_model import DomainStateModel
@@ -93,6 +107,7 @@ _DECLARATIONS_KEY = "domain_capability_declarations"
 _STATE_MODELS_KEY = "domain_state_models"
 _TRANSITIONS_KEY = "domain_state_transitions"
 _OBSERVATIONS_KEY = "domain_metric_observations"
+_EVALUATION_PROFILE_KEY = "evaluation_profile"
 
 
 def _binding_sort_key(binding: DomainPackBinding) -> str:
@@ -203,6 +218,7 @@ def content_hash(
     state_models: tuple[DomainStateModel, ...] = (),
     transitions: tuple[DomainStateTransition, ...] = (),
     domain_metric_observations: tuple[DomainMetricObservationBinding, ...] = (),
+    evaluation_profile: ScenarioEvaluationProfile | None = None,
 ) -> str:
     """SHA-256 of the canonical scenario serialization plus the compiler version.
 
@@ -224,7 +240,10 @@ def content_hash(
     domain metric observation bindings are included as complete
     serialized snapshots in canonical metric-id order - only when
     non-empty, so observation-free worlds keep their exact Phase 18
-    hash. Caller-supplied tuple order never affects the digest.
+    hash. A declared evaluation profile is included as its complete
+    serialized snapshot - only when present, so profile-free worlds
+    keep their exact Phase 22 hash. Caller-supplied tuple order never
+    affects the digest.
     """
     canonical_bindings = _canonical_bindings(bindings)
     canonical_declarations = _canonical_declarations(declarations)
@@ -253,6 +272,8 @@ def content_hash(
         payload[_OBSERVATIONS_KEY] = [
             observation.model_dump(mode="json") for observation in canonical_observations
         ]
+    if evaluation_profile is not None:
+        payload[_EVALUATION_PROFILE_KEY] = evaluation_profile.model_dump(mode="json")
     return sha256_hex(canonical_json(payload))
 
 
@@ -273,6 +294,7 @@ def compile_world(
     state_models: tuple[DomainStateModel, ...] = (),
     transitions: tuple[DomainStateTransition, ...] = (),
     domain_metric_observations: tuple[DomainMetricObservationBinding, ...] = (),
+    evaluation_profile: ScenarioEvaluationProfile | None = None,
 ) -> CompiledWorld:
     """Compile a semantically valid scenario into an immutable world.
 
@@ -287,11 +309,14 @@ def compile_world(
     transitions by ``(manifest_id, state_model_id, transition_id)`` with
     guard/target mappings by field identifier, observation bindings by
     ``metric_id``) so caller-supplied tuple order never affects the
-    compiled world, its content hash, or the manifest counts. The
+    compiled world, its content hash, or the manifest counts. A declared
+    evaluation profile is embedded as one complete serialized snapshot
+    under ``evaluation_profile`` - only when present, so profile-free
+    worlds compile byte-identically to the Phase 22 compiler. The
     compiler never inspects, loads, executes, or interprets a domain
-    pack, a state field, a transition guard, a target state patch, or an
-    observation binding - observation snapshots are inert declarative
-    provenance data.
+    pack, a state field, a transition guard, a target state patch, an
+    observation binding, or an evaluation profile - profile snapshots
+    are inert declarative data.
     """
     result = validate_scenario(scenario, validated_at=scenario.created_at)
     if not result.report.valid:
@@ -310,6 +335,7 @@ def compile_world(
         state_models,
         transitions,
         domain_metric_observations,
+        evaluation_profile,
     )
     world_id = f"{_WORLD_ID_PREFIX}{digest[:_ID_HASH_LENGTH]}"
     world_content: dict[str, JsonValue] = {
@@ -337,6 +363,8 @@ def compile_world(
         world_content[_OBSERVATIONS_KEY] = [
             observation.model_dump(mode="json") for observation in canonical_observations
         ]
+    if evaluation_profile is not None:
+        world_content[_EVALUATION_PROFILE_KEY] = evaluation_profile.model_dump(mode="json")
     world_version = WorldVersion(
         identifier=world_id,
         tenant_id=scenario.tenant_id,
@@ -368,6 +396,8 @@ def compile_world(
         state["declared_domain_state_transition_count"] = len(canonical_transitions)
     if canonical_observations:
         state["declared_domain_metric_observation_count"] = len(canonical_observations)
+    if evaluation_profile is not None:
+        state["declared_evaluation_profile_count"] = 1
     manifest = WorldManifest(
         identifier=f"{_MANIFEST_ID_PREFIX}{digest[:_ID_HASH_LENGTH]}",
         tenant_id=scenario.tenant_id,

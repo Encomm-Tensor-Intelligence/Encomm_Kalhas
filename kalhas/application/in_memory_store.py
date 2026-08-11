@@ -56,6 +56,14 @@ from kalhas.application.domain_errors import (
     TrajectoryPlansNotFoundError,
     WorldNotFoundError,
 )
+from kalhas.application.objective_evaluation_errors import (
+    EvaluationProfileAlreadyExistsError,
+    EvaluationProfileIntegrityError,
+    EvaluationProfileNotFoundError,
+)
+from kalhas.application.objective_evaluation_identity import (
+    verify_evaluation_profile_identity,
+)
 from kalhas.contracts.v1.activity import OperationalActivityEvent, OperationalActivityKind
 from kalhas.contracts.v1.campaign import CampaignSpec, CampaignStatus
 from kalhas.contracts.v1.domain_pack import (
@@ -66,6 +74,7 @@ from kalhas.contracts.v1.domain_pack import (
 from kalhas.contracts.v1.execution import ReplayManifest, RunStatus
 from kalhas.contracts.v1.integrity import RunInputIntegrityManifest
 from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
+from kalhas.contracts.v1.objective_evaluation import ScenarioEvaluationProfile
 from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
 from kalhas.contracts.v1.run_plan import RunPlan
 from kalhas.contracts.v1.scenario import ScenarioSpec
@@ -305,6 +314,67 @@ def revalidate_stored_run_metric_observation_set(
         ) from None
 
 
+def revalidate_stored_evaluation_profile(
+    profile: object,
+    tenant_id: str,
+    scenario_id: str,
+) -> None:
+    """Strictly revalidate one stored evaluation profile against its contract.
+
+    ``model_copy``/``model_construct`` and private-store injection can
+    produce a ``ScenarioEvaluationProfile`` instance whose contract
+    validators never ran - for example a malformed nested metadata
+    value, an invalid hash pattern, a binding carrying a non-finite
+    target or tolerance, a ``reach`` binding without a target or
+    tolerance, or a tolerance on a ``minimize``/``maximize`` binding.
+    Revalidating the record's Python-mode serialized data with
+    ``strict=True`` re-runs every field rule, including the nested
+    ``ObjectiveMetricBinding`` contracts and the profile-level rules,
+    so a validator-bypassed stored record is rejected before any field
+    of it is trusted. The temporary revalidated object is discarded;
+    the actual stored snapshot is what callers continue to verify. Any
+    failure raises :class:`EvaluationProfileIntegrityError` with a safe
+    generic public message - validation details, raw hashes, targets,
+    tolerances, scales, and metadata values are never exposed - and
+    storage is never repaired, normalized, replaced, or rewritten.
+    """
+    if not isinstance(profile, ScenarioEvaluationProfile):
+        raise EvaluationProfileIntegrityError(
+            tenant_id,
+            scenario_id,
+            reason="stored evaluation profile violates its contract",
+        )
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+            )
+            serialized = profile.model_dump(mode="python")
+        revalidated = ScenarioEvaluationProfile.model_validate(serialized, strict=True)
+        # Pydantic's strict float validation still accepts NaN/Infinity by
+        # default, so the contract's non-finite metadata rule is enforced
+        # explicitly over the revalidated record as well.
+        if _contains_non_finite(revalidated.metadata):
+            raise EvaluationProfileIntegrityError(
+                tenant_id,
+                scenario_id,
+                reason="stored evaluation profile violates its contract",
+            )
+        # The deterministic identity (ownership, identifier, content
+        # hash) is independently re-verified over the revalidated
+        # record; a forged or corrupted record is rejected here even if
+        # its contract shape is intact.
+        verify_evaluation_profile_identity(
+            revalidated, tenant_id=tenant_id, scenario_id=scenario_id
+        )
+    except (ValidationError, TypeError, AttributeError, EvaluationProfileIntegrityError):
+        raise EvaluationProfileIntegrityError(
+            tenant_id,
+            scenario_id,
+            reason="stored evaluation profile violates its contract",
+        ) from None
+
+
 class InMemoryScenarioStore:
     """Process-local store for scenarios, worlds, campaigns, and run plans."""
 
@@ -332,6 +402,7 @@ class InMemoryScenarioStore:
         self._domain_metric_observations: dict[
             tuple[str, str, str], DomainMetricObservationBinding
         ] = {}
+        self._evaluation_profiles: dict[tuple[str, str], ScenarioEvaluationProfile] = {}
         self._operational_activity: dict[tuple[str, str], OperationalActivityEvent] = {}
         self._activity_sequences: dict[str, int] = {}
         self._strategy_trajectory_plans: dict[
@@ -1061,6 +1132,75 @@ class InMemoryScenarioStore:
         return tuple(
             _deep_copy_contract(binding)
             for binding in sorted(bindings, key=lambda binding: binding.metric_id)
+        )
+
+    def put_evaluation_profile(
+        self,
+        tenant_id: str,
+        scenario_id: str,
+        profile: ScenarioEvaluationProfile,
+    ) -> None:
+        """Store an immutable evaluation profile; rejects duplicates.
+
+        Evaluation profiles are immutable and at most one profile may
+        exist per ``(tenant_id, scenario_id)``: a second declaration
+        raises EvaluationProfileAlreadyExistsError and never overwrites
+        the original. The supplied profile must carry exactly the key's
+        ownership (tenant and scenario identifiers) and must strictly
+        revalidate against its complete contract (serializer-based
+        strict revalidation - a validator-bypassed instance is rejected
+        before any field is trusted), otherwise a safe typed integrity
+        error is raised and nothing is written. There is no update,
+        delete, repair, replace, or list surface.
+        """
+        key = (tenant_id, scenario_id)
+        if key in self._evaluation_profiles:
+            raise EvaluationProfileAlreadyExistsError(tenant_id, scenario_id)
+        revalidate_stored_evaluation_profile(profile, tenant_id, scenario_id)
+        if profile.tenant_id != tenant_id or profile.scenario_id != scenario_id:
+            raise EvaluationProfileIntegrityError(
+                tenant_id,
+                scenario_id,
+                reason="evaluation profile ownership mismatch",
+            )
+        self._evaluation_profiles[key] = _deep_copy_contract(profile)
+
+    def get_evaluation_profile(
+        self,
+        tenant_id: str,
+        scenario_id: str,
+    ) -> ScenarioEvaluationProfile:
+        """Fetch an evaluation profile; raises EvaluationProfileNotFoundError.
+
+        The stored record is strictly revalidated against its complete
+        contract **and** its deterministic identity (ownership,
+        identifier, content hash) on every read, before any copy crosses
+        the store boundary: a validator-bypassed, malformed, forged, or
+        corrupted stored record raises EvaluationProfileIntegrityError
+        and is never returned. After successful revalidation a fresh
+        deep defensive copy is returned. Unknown and foreign profiles
+        are indistinguishable: both raise the same typed error, so no
+        tenant can learn about another tenant's profiles.
+        """
+        try:
+            stored = self._evaluation_profiles[(tenant_id, scenario_id)]
+        except KeyError as exc:
+            raise EvaluationProfileNotFoundError(tenant_id, scenario_id) from exc
+        revalidate_stored_evaluation_profile(stored, tenant_id, scenario_id)
+        return _deep_copy_contract(stored)
+
+    def has_compiled_worlds_for_scenario(self, tenant_id: str, scenario_id: str) -> bool:
+        """True when any world has been compiled for the tenant/scenario.
+
+        Worlds are immutable and the compiler is deterministic, so once
+        a world exists for a scenario the evaluation profile can no
+        longer be declared (its snapshot could never be embedded in the
+        already-compiled world). Read-only scan over the stored world
+        records; nothing is modified.
+        """
+        return any(
+            world.tenant_id == tenant_id and world.source_scenario_id == scenario_id
+            for world in self._worlds.values()
         )
 
     def append_operational_activity(

@@ -2232,3 +2232,111 @@ Phase 17 artifact queries, the Phase 18 campaign trajectory matrix,
 Phase 19 declaration behavior, Phase 20 extraction behavior, and the
 Phase 21 metric-observation matrix are unchanged. **Phase 23 has not
 started.**
+
+## Phase 23: deterministic objective-to-metric evaluation
+
+**Status: COMPLETE.** Phase 23 adds an immutable, tenant-scoped
+per-scenario evaluation profile and a read-only campaign
+objective-evaluation matrix derived exclusively from the completely
+verified Phase 21 `CampaignMetricObservationMatrix` and the
+world-embedded profile snapshot. Evaluation is target violation only.
+
+### Contracts
+
+`ObjectiveMetricBinding` (frozen, `extra="forbid"`, nested, not
+registered) snapshots `objective_id`, `metric_id`, `direction`,
+`target`, `weight`, `metric_unit`, `reach_tolerance`, and
+`normalization_scale`. `ScenarioEvaluationProfile` (36th public
+contract; identifier
+`evaluation-profile-{sha256(canonical_json({tenant_id, scenario_id,
+scenario_content_hash, schema_version}))[:16]}`, self-covering
+`content_hash`, timezone-aware `declared_at`, strict JSON `metadata`)
+requires exactly one binding per scenario objective in the exact
+`ScenarioSpec.objectives` order. `ObjectiveObservationEvaluation`
+(nested) independently recomputes the expected signed target delta
+from its own raw value, direction, target, and reach tolerance via the
+shared pure `evaluate_target_delta` helper (the same expression the
+Phase 23 builder uses) and requires `signed_target_delta`,
+`target_achieved == (delta <= 0)`, and
+`normalized_target_violation == max(0, delta) / normalization_scale`
+to match exactly - a self-consistent but forged triple is rejected,
+never clamped, rounded, coerced, or approximately compared - with all
+three evaluation fields `None` when the objective has no target.
+`CampaignObjectiveEvaluationMatrix` (37th
+public contract) enforces the **required** runtime literal `2.0.0`
+(no default; present in the schema `required` array), comparison mode
+`identical_conditions`, the complete strategy x seed x objective
+Cartesian product in strategy-major, seed-minor, objective-minor order
+with contiguous positions and identity agreement, and full provenance
+(source matrix id/hash, profile id/hash, world/scenario hashes,
+`evaluated_at` from the Phase 21 `assembled_at`). Two new schema
+artifacts; no existing contract changed.
+
+### Declaration lifecycle
+
+`POST /v1/scenarios/{scenario_id}/evaluation-profile` accepts only
+caller-owned fields (`objective_id`, `metric_id`, `reach_tolerance`,
+`normalization_scale`, `declared_at`, `metadata`); direction, target,
+weight, and metric unit are copied from the stored `ScenarioSpec`, so
+forged authoritative fields are impossible (422). Bindings are
+canonicalized into scenario objective order; equivalent caller orders
+produce identical profiles. Coverage must be complete with exactly one
+reference per objective (422 otherwise, including duplicate objectives
+in the scenario). `reach_tolerance` is required, finite, and >= 0 for
+`reach` only and forbidden otherwise; `normalization_scale` must be
+exact finite numeric > 0. One immutable profile per tenant + scenario:
+duplicates 409 and never overwrite; declaration after the first world
+compilation 409; unknown/foreign scenario 404; no update, replace,
+delete, or list surface. Storage is deep-copied and strict-revalidated
+on write and **every read**, with independent
+ownership/identifier/content-hash verification (pure identity helpers)
+before any copy crosses the store boundary. `GET` returns the stored
+profile unchanged.
+
+### World integration
+
+The declared profile is embedded under a dedicated `evaluation_profile`
+key and included in the world content hash only when present;
+profile-free worlds compile byte-identically to Phase 22.
+`verify_world_snapshot` strictly parses the embedded profile,
+recomputes the scenario content hash from the embedded scenario,
+re-derives profile identifier and content hash, verifies exact
+scenario-order coverage and copied-value agreement, enforces
+tolerance/scale rules, and requires exact recompile equality;
+`VerifiedWorldCatalog` carries the canonical `evaluation_profile`.
+The compiler snapshots and canonicalizes only; it never interprets
+objective semantics.
+
+### Verified query
+
+`GET /v1/campaigns/{campaign_id}/objective-evaluations` (GET-only):
+tenant-scoped campaign and COMPLETE gate (409 `invalid_state`) ->
+verified Phase 21 matrix -> fully verified compiled world -> exact
+world-embedded profile matched against the stored record (world
+without embedded profile 404; missing/mismatched stored record 409
+`integrity_error`) -> pure in-memory builder re-deriving every source
+identifier and hash and resolving each binding to exactly one verified
+observation. The matrix is never stored; no automatic extraction, no
+execution/replay/repair/lifecycle changes, no operational-activity
+kinds or writes. Legacy/unsupported runtime 409 `conflict`;
+unknown/foreign campaign 404. Public messages never leak raw values,
+targets, tolerances, scales, hashes, metadata, or integrity reasons.
+
+### Non-goals (unchanged through Phase 23)
+
+No comparative regret, ranking, dominance, preference, winner
+selection, probability/confidence/quantiles, empirical distributions,
+risk/CVaR, evidence, `DecisionBrief`, recommendations, uncertainty
+sampling or seed consumption, new runtime versions, automatic
+evaluation during execution, operational-activity kinds, Colony
+changes, real NEXUS/LEGION integration, live actions, external
+providers/network, filesystem/database persistence, or new
+dependencies. Runtime 1.0.0/2.0.0 behavior, RunPlan generation,
+campaign/run lifecycle, trajectory planning, transition evaluation,
+`RunTrajectoryExecution` generation and hashes, `RunEvent` and its
+structural kinds, replay behavior and replay-manifest hashes, Phase 17
+artifact queries, the Phase 18 campaign trajectory matrix, Phase 19
+declaration behavior, Phase 20 extraction behavior, the Phase 21
+metric-observation matrix, and the Phase 22 metric-statistics matrix
+are unchanged (world hashes change only for worlds compiled with a
+declared profile). **Phase 24 has not started.**

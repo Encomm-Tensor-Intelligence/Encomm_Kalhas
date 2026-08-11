@@ -318,7 +318,7 @@ def test_phase18_19_20_behavior_unchanged() -> None:
 
 
 def test_public_contracts_remain_exactly_thirty_five() -> None:
-    assert len(PUBLIC_CONTRACTS) == 35
+    assert len(PUBLIC_CONTRACTS) == 37
 
 
 def test_existing_v1_contracts_unchanged_and_matrix_appended_last() -> None:

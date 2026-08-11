@@ -21,6 +21,10 @@ from kalhas.contracts.v1.domain_pack import (
 from kalhas.contracts.v1.execution import ReplayManifest, RunStatus
 from kalhas.contracts.v1.integrity import RunInputIntegrityManifest
 from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
+from kalhas.contracts.v1.objective_evaluation import (
+    CampaignObjectiveEvaluationMatrix,
+    ScenarioEvaluationProfile,
+)
 from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
 from kalhas.contracts.v1.run_plan import RunPlan
 from kalhas.contracts.v1.scenario import (
@@ -478,6 +482,81 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         ],
         "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
         "summarized_at": NOW,
+    },
+    ScenarioEvaluationProfile: {
+        "identifier": "evaluation-profile-0123456789abcdef",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "scenario_id": "scenario-1",
+        "scenario_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "bindings": [
+            {
+                "objective_id": "obj-1",
+                "metric_id": "m-1",
+                "direction": "minimize",
+                "target": 100.0,
+                "weight": 1.0,
+                "metric_unit": "units",
+                "reach_tolerance": None,
+                "normalization_scale": 100.0,
+            }
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "declared_at": NOW,
+        "metadata": {},
+    },
+    CampaignObjectiveEvaluationMatrix: {
+        "identifier": "objective-evaluation-matrix-0123456789abcdef",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "campaign_id": "campaign-1",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "runtime_version": "2.0.0",
+        "comparison_mode": "identical_conditions",
+        "source_metric_observation_matrix_id": "metric-observation-matrix-0123456789abcdef",
+        "source_metric_observation_matrix_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "evaluation_profile_id": "evaluation-profile-0123456789abcdef",
+        "evaluation_profile_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "scenario_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "ordered_strategy_candidate_ids": ["sc-1"],
+        "ordered_scenario_seed_ids": ["seed-1"],
+        "ordered_objective_ids": ["obj-1"],
+        "cells": [
+            {
+                "sequence_position": 0,
+                "strategy_position": 0,
+                "seed_position": 0,
+                "objective_position": 0,
+                "strategy_candidate_id": "sc-1",
+                "scenario_seed_id": "seed-1",
+                "objective_id": "obj-1",
+                "metric_id": "m-1",
+                "metric_unit": "units",
+                "run_id": "run-1",
+                "input_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+                "raw_value": 91,
+                "direction": "minimize",
+                "target": 100.0,
+                "weight": 1.0,
+                "reach_tolerance": None,
+                "normalization_scale": 100.0,
+                "target_achieved": True,
+                "signed_target_delta": -9.0,
+                "normalized_target_violation": 0.0,
+            }
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "evaluated_at": NOW,
     },
     OperationalActivityEvent: {
         "identifier": "activity-0",

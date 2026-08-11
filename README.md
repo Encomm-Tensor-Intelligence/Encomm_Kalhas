@@ -2509,3 +2509,135 @@ OutcomeVector, evidence, ranking, or recommendation exists yet.
   matrix, Phase 19 declaration behavior, Phase 20 extraction behavior,
   and the Phase 21 metric-observation matrix are unchanged. **Phase 23
   has not started.**
+
+## Phase 23 status
+
+**Deterministic objective-to-metric evaluation (COMPLETE).** Phase 23
+adds the immutable, tenant-scoped per-scenario **evaluation profile**
+(`ScenarioEvaluationProfile`, the 36th public contract) declared via
+API with only the caller-owned fields `objective_id`, `metric_id`,
+`reach_tolerance`, `normalization_scale` - direction, target, weight,
+and metric unit are always copied from the stored `ScenarioSpec`, so
+forged authoritative fields are impossible. The profile is embedded
+into subsequently compiled world snapshots (byte-identical Phase 22
+world output and hashes when no profile exists) and evaluated at
+campaign time exclusively from the completely verified Phase 21
+`CampaignMetricObservationMatrix` into the read-only
+`CampaignObjectiveEvaluationMatrix` (37th public contract, appended
+last), with `ObjectiveMetricBinding` and `ObjectiveObservationEvaluation`
+remaining nested (never registered). Evaluation is **target violation
+only** - `signed_target_delta` is direction-aware and positive =
+adverse (minimize/reach: `value - target`; maximize:
+`target - value`; reach subtracts `reach_tolerance`), `target_achieved`
+is `delta <= 0`, and `normalized_target_violation` is
+`max(0, delta) / normalization_scale` - with no regret, ranking,
+dominance, preference, probability, confidence, distribution, risk,
+evidence, or recommendation semantics anywhere.
+- **Contracts** (`kalhas/contracts/v1/objective_evaluation.py`):
+  `ObjectiveMetricBinding` (frozen, `extra="forbid"`, nested) snapshots
+  the authoritative objective/metric fields; `ScenarioEvaluationProfile`
+  (frozen, `extra="forbid"`, registered) holds one binding per scenario
+  objective in the **exact `ScenarioSpec.objectives` order** (never
+  caller order), with independent `scenario_content_hash` (SHA-256 of
+  the canonical full `ScenarioSpec` dump), a non-circular identifier
+  `evaluation-profile-{sha256(canonical_json({tenant_id, scenario_id,
+  scenario_content_hash, schema_version}))[:16]}`, a self-covering
+  `content_hash`, timezone-aware `declared_at`, and strict JSON
+  `metadata`; `ObjectiveObservationEvaluation` (frozen,
+  `extra="forbid"`, nested) enforces the exact evaluation-field
+  consistency rules (all three fields `None` iff no target; the cell
+  independently recomputes the expected signed delta from its own raw
+  value, direction, target, and tolerance via the shared pure
+  `evaluate_target_delta` helper and requires `achieved == (delta <=
+  0)` and `violation == max(0, delta) / scale` exactly, so
+  self-consistent forged triples are rejected);
+  `CampaignObjectiveEvaluationMatrix` (frozen, `extra="forbid"`,
+  registered) enforces the **required** runtime literal `2.0.0` (no
+  default; in the schema `required` array), comparison mode
+  `identical_conditions`, complete strategy x seed x objective
+  Cartesian coverage in exact strategy-major, seed-minor,
+  objective-minor order with contiguous positions, identity-vs-position
+  agreement, source matrix/profile/world/scenario provenance ids and
+  hashes, and a self-covering content hash. Exactly two new schema
+  artifacts (`ScenarioEvaluationProfile.schema.json`,
+  `CampaignObjectiveEvaluationMatrix.schema.json`); no existing v1
+  contract field changed; `PUBLIC_CONTRACTS` 35 -> **37**.
+- **Numeric strictness**: booleans, strings, `None`, containers, NaN,
+  and Infinity are rejected before any coercion (contract-level and
+  service-level for caller fields; builder-level and
+  world-integrity-level defense-in-depth for snapshots); raw integers
+  stay integers and raw floats stay floats; `normalization_scale` must
+  be exact finite numeric > 0; `reach_tolerance` is required and
+  finite >= 0 for `reach` only and forbidden otherwise; non-finite or
+  overflowed derived deltas/violations reject the complete matrix with
+  a typed 409.
+- **Declaration lifecycle**
+  (`kalhas/application/objective_evaluation_service.py`): one immutable
+  profile per tenant + scenario; declaration-before-first-world-
+  compilation enforced (typed 409 after any compiled world); duplicates
+  rejected and never overwrite (typed 409); unknown/foreign scenario
+  and missing/unknown objective or metric -> typed 404/422;
+  reach-without-target, tolerance/scale violations -> typed 422;
+  complete coverage with exactly-one reference per objective; stored
+  deep-copied and strict-revalidated on write and **every read**, with
+  independent ownership/identifier/content-hash verification before
+  any copy crosses the store boundary; no update,
+  replace, delete, or list surface; tenant isolation with foreign
+  access indistinguishable from missing. `GET` returns the stored
+  profile unchanged.
+- **World integration** (`world_compiler.py`, `world_integrity.py`):
+  the declared profile is embedded under a dedicated
+  `evaluation_profile` single-object key and included in the world
+  content hash only when present - profile-free worlds compile
+  byte-identically to Phase 22 (runtime-2 golden identifiers and
+  hashes preserved, hash-compat regression-tested); the compiler
+  canonicalizes and snapshots only and never interprets objective
+  semantics. `verify_world_snapshot` strictly parses the embedded
+  profile, recomputes the scenario content hash from the embedded
+  scenario, re-derives profile identifier and content hash, requires
+  exact scenario-order binding coverage with copied-value agreement
+  (direction/target/weight/metric unit), tolerance/scale rules, and
+  recompile-equality; `VerifiedWorldCatalog` gained the canonical
+  `evaluation_profile`. `MockNexusAdapter.compile_scenario` loads the
+  stored profile.
+- **Pipeline** (`kalhas/application/objective_evaluation_runtime.py` +
+  `objective_evaluation_query_service.py`): COMPLETE gate (409
+  `invalid_state`) -> existing verified Phase 21 query as the sole
+  observation source -> fully verified compiled world -> exact
+  world-embedded profile strictly matched against the stored record
+  (world without embedded profile -> 404; missing/mismatched stored
+  record -> 409 `integrity_error`) -> pure in-memory builder that
+  re-derives every source identifier and content hash, resolves each
+  binding to exactly one verified observation, and emits the complete
+  matrix. **Never stored** (no store collection or method exists), no
+  automatic extraction, no execution/replay/repair/lifecycle changes,
+  no operational-activity kinds or writes, no Colony changes.
+- **API**: `POST /v1/scenarios/{scenario_id}/evaluation-profile`
+  (201, exact `ScenarioEvaluationProfile`; request model accepts only
+  the four caller-owned fields plus `declared_at`/`metadata`; forged
+  authoritative fields -> 422), `GET /v1/scenarios/{scenario_id}/evaluation-profile`
+  (200/404), `GET /v1/campaigns/{campaign_id}/objective-evaluations`
+  (200 exact matrix, GET-only; 404 unknown/foreign campaign or
+  profile-less world; 409 `invalid_state`; 409 `conflict` legacy
+  runtime; 409 `integrity_error`). Single `ApiErrorResponse` envelope
+  unchanged; public messages never leak raw values, targets,
+  tolerances, scales, hashes, metadata, or integrity reasons; repeated
+  GETs byte-identical.
+- **Non-goals**: no comparative regret, ranking, dominance, preference,
+  winner selection, probability/confidence/quantiles/distributions,
+  risk/CVaR, evidence, `DecisionBrief`, recommendations, uncertainty
+  sampling or seed consumption, new runtime versions, automatic
+  evaluation during execution, operational-activity kinds, Colony
+  changes, real NEXUS/LEGION integration, live actions, external
+  providers/network, filesystem/database persistence, new
+  dependencies, AGENTS.md/global-config/skill changes, commits or
+  pushes. Runtime 1.0.0/2.0.0 behavior, RunPlan generation, campaign/
+  run lifecycle, trajectory planning, transition evaluation,
+  `RunTrajectoryExecution` generation and hashes, `RunEvent` and its
+  structural kinds, replay behavior and replay-manifest hashes, Phase
+  17 artifact queries, the Phase 18 campaign trajectory matrix, Phase
+  19 declaration behavior, Phase 20 extraction behavior, the Phase 21
+  metric-observation matrix, and the Phase 22 metric-statistics matrix
+  are unchanged (world hashes change only for worlds compiled with a
+  declared profile - new deterministic provenance). **Phase 24 has not
+  started.**

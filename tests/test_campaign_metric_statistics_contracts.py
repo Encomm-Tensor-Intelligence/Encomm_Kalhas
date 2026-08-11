@@ -197,11 +197,12 @@ def _matrix(**overrides: object) -> CampaignMetricStatisticsMatrix:
 
 class TestRegistration:
     def test_public_contract_count_is_exactly_35(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 35
+        assert len(PUBLIC_CONTRACTS) == 37
 
     def test_matrix_is_registered_last_and_summary_is_not(self) -> None:
         names = [contract.__name__ for contract in PUBLIC_CONTRACTS]
-        assert names[-1] == "CampaignMetricStatisticsMatrix"
+        assert names[-2] == "ScenarioEvaluationProfile"
+        assert names[-1] == "CampaignObjectiveEvaluationMatrix"
         assert "CampaignStrategyMetricStatistics" not in names
 
     def test_prior_34_contracts_unchanged_and_in_order(self) -> None:

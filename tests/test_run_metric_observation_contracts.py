@@ -332,13 +332,15 @@ class TestSerialization:
 
 class TestRegistration:
     def test_public_contract_count_is_exactly_35(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 35
+        assert len(PUBLIC_CONTRACTS) == 37
 
     def test_set_is_registered_before_the_phase21_matrix(self) -> None:
         assert RunMetricObservationSet in PUBLIC_CONTRACTS
-        assert PUBLIC_CONTRACTS[-3] is RunMetricObservationSet
-        assert PUBLIC_CONTRACTS[-2].__name__ == "CampaignMetricObservationMatrix"
-        assert PUBLIC_CONTRACTS[-1].__name__ == "CampaignMetricStatisticsMatrix"
+        assert PUBLIC_CONTRACTS[-5] is RunMetricObservationSet
+        assert PUBLIC_CONTRACTS[-4].__name__ == "CampaignMetricObservationMatrix"
+        assert PUBLIC_CONTRACTS[-3].__name__ == "CampaignMetricStatisticsMatrix"
+        assert PUBLIC_CONTRACTS[-2].__name__ == "ScenarioEvaluationProfile"
+        assert PUBLIC_CONTRACTS[-1].__name__ == "CampaignObjectiveEvaluationMatrix"
 
     def test_previous_32_contracts_unchanged_and_set_appended(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)

@@ -30,6 +30,11 @@ from kalhas.application.domain_errors import (
     InvalidScenarioError,
     WorldSnapshotIntegrityError,
 )
+from kalhas.application.objective_evaluation_identity import (
+    evaluation_profile_content_hash,
+    evaluation_profile_identifier,
+    scenario_content_hash,
+)
 from kalhas.application.world_compiler import (
     _canonical_bindings,
     _canonical_declarations,
@@ -42,7 +47,9 @@ from kalhas.contracts.v1.domain_pack import (
     DomainPackBinding,
 )
 from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
+from kalhas.contracts.v1.objective_evaluation import ScenarioEvaluationProfile
 from kalhas.contracts.v1.scenario import ScenarioSpec
+from kalhas.contracts.v1.shared import MetricDefinition
 from kalhas.contracts.v1.state_model import DomainStateModel
 from kalhas.contracts.v1.transition import DomainStateTransition
 from kalhas.contracts.v1.world import WorldManifest, WorldVersion
@@ -55,6 +62,7 @@ _DECLARATIONS_KEY = "domain_capability_declarations"
 _STATE_MODELS_KEY = "domain_state_models"
 _TRANSITIONS_KEY = "domain_state_transitions"
 _OBSERVATIONS_KEY = "domain_metric_observations"
+_EVALUATION_PROFILE_KEY = "evaluation_profile"
 
 # The exact set of compiler-owned top-level world body keys. Anything
 # else is unexpected compiler-owned content and is rejected.
@@ -68,6 +76,7 @@ _WORLD_BODY_KEYS = frozenset(
         _STATE_MODELS_KEY,
         _TRANSITIONS_KEY,
         _OBSERVATIONS_KEY,
+        _EVALUATION_PROFILE_KEY,
     }
 )
 _REQUIRED_WORLD_BODY_KEYS = ("compiler_version", "content_hash", "scenario")
@@ -107,6 +116,119 @@ def _parse_snapshots[T: BaseModel](
         except ValidationError:
             raise _reject(world_version_id, f"embedded {label} is malformed") from None
     return tuple(parsed)
+
+
+def _parse_single_snapshot[T: BaseModel](
+    world_version_id: str,
+    body: Mapping[str, object],
+    key: str,
+    contract: type[T],
+    label: str,
+) -> T | None:
+    """Parse one optional embedded single-object snapshot as the strict contract.
+
+    An absent key means no snapshot (the compiler omits the key when
+    the feature is absent); a present key must hold exactly one JSON
+    object validating as the contract, otherwise the embedded content
+    is malformed and the world is rejected. Used for the optional
+    single evaluation-profile snapshot, which is one object - not a
+    collection.
+    """
+    if key not in body:
+        return None
+    raw = body[key]
+    if not isinstance(raw, dict):
+        raise _reject(world_version_id, f"embedded {label} is malformed")
+    try:
+        return contract.model_validate(raw)
+    except ValidationError:
+        raise _reject(world_version_id, f"embedded {label} is malformed") from None
+
+
+def _verify_evaluation_profile_references(
+    world_version_id: str,
+    profile: ScenarioEvaluationProfile,
+    scenario: ScenarioSpec,
+) -> None:
+    """Verify the embedded evaluation profile against the same compiled world.
+
+    The profile is declarative provenance data; the verifier proves it
+    is self-consistent with the compiled world: the profile belongs to
+    the world's tenant and scenario, its authoritative scenario
+    snapshot hash matches the recomputed digest of the embedded
+    scenario, its identifier matches the independent derivation from
+    the canonical identity payload, its content hash matches the
+    recomputed canonical digest, its bindings cover every scenario
+    objective exactly once **in the exact ``ScenarioSpec.objectives``
+    order**, every referenced metric exists exactly once in the
+    scenario, and every copied authoritative value (direction, target,
+    weight, metric unit) equals the stored scenario record. Tolerance
+    and normalization rules are additionally re-checked. The stored
+    world is never repaired, normalized, reordered, or replaced; on any
+    mismatch the world is rejected with a safe generic error whose
+    internal reason names only the violated rule.
+    """
+    if profile.tenant_id != scenario.tenant_id:
+        raise _reject(world_version_id, "embedded evaluation profile has a foreign tenant")
+    if profile.scenario_id != scenario.identifier:
+        raise _reject(world_version_id, "embedded evaluation profile has a foreign scenario")
+    expected_hash = scenario_content_hash(scenario)
+    if profile.scenario_content_hash != expected_hash:
+        raise _reject(world_version_id, "embedded evaluation profile scenario hash mismatch")
+    if profile.identifier != evaluation_profile_identifier(
+        tenant_id=scenario.tenant_id,
+        scenario_id=scenario.identifier,
+        scenario_content_hash_value=expected_hash,
+    ):
+        raise _reject(world_version_id, "embedded evaluation profile identifier mismatch")
+    if profile.content_hash != evaluation_profile_content_hash(profile):
+        raise _reject(world_version_id, "embedded evaluation profile content hash mismatch")
+
+    objective_ids = [objective.identifier for objective in scenario.objectives]
+    if len(objective_ids) != len(set(objective_ids)):
+        raise _reject(world_version_id, "embedded scenario objective identifiers are not unique")
+    binding_ids = [binding.objective_id for binding in profile.bindings]
+    if binding_ids != objective_ids:
+        raise _reject(
+            world_version_id,
+            "embedded evaluation profile bindings do not match the scenario objectives "
+            "exactly, in exact scenario order",
+        )
+    objectives_by_id = {objective.identifier: objective for objective in scenario.objectives}
+    metric_count_by_id: dict[str, int] = {}
+    for metric in scenario.metrics:
+        metric_count_by_id[metric.identifier] = metric_count_by_id.get(metric.identifier, 0) + 1
+    metrics_by_id: dict[str, MetricDefinition] = {}
+    for metric in scenario.metrics:
+        metrics_by_id[metric.identifier] = metric
+    for binding in profile.bindings:
+        objective = objectives_by_id[binding.objective_id]
+        if binding.direction != objective.direction.value:
+            raise _reject(world_version_id, "embedded evaluation profile direction mismatch")
+        if binding.target != objective.target:
+            raise _reject(world_version_id, "embedded evaluation profile target mismatch")
+        if binding.weight != objective.weight:
+            raise _reject(world_version_id, "embedded evaluation profile weight mismatch")
+        if metric_count_by_id.get(binding.metric_id, 0) != 1:
+            raise _reject(
+                world_version_id,
+                "embedded evaluation profile references an unknown scenario metric",
+            )
+        metric = metrics_by_id[binding.metric_id]
+        if binding.metric_unit != metric.unit:
+            raise _reject(world_version_id, "embedded evaluation profile metric unit mismatch")
+        if binding.direction == "reach":
+            if binding.reach_tolerance is None or binding.reach_tolerance < 0.0:
+                raise _reject(
+                    world_version_id, "embedded evaluation profile tolerance rule violation"
+                )
+        elif binding.reach_tolerance is not None:
+            raise _reject(world_version_id, "embedded evaluation profile tolerance rule violation")
+        if binding.normalization_scale <= 0.0:
+            raise _reject(
+                world_version_id,
+                "embedded evaluation profile normalization scale violation",
+            )
 
 
 def _verify_observation_references(
@@ -272,6 +394,13 @@ def verify_world_snapshot(world: WorldVersion, manifest: WorldManifest) -> None:
         DomainMetricObservationBinding,
         "domain metric observation",
     )
+    evaluation_profile = _parse_single_snapshot(
+        world.identifier,
+        body,
+        _EVALUATION_PROFILE_KEY,
+        ScenarioEvaluationProfile,
+        "evaluation profile",
+    )
 
     if bindings != _canonical_bindings(bindings):
         raise _reject(world.identifier, "embedded domain pack bindings are not canonical")
@@ -284,6 +413,8 @@ def verify_world_snapshot(world: WorldVersion, manifest: WorldManifest) -> None:
     if observations != _canonical_domain_metric_observations(observations):
         raise _reject(world.identifier, "embedded domain metric observations are not canonical")
     _verify_observation_references(world.identifier, observations, scenario, bindings, state_models)
+    if evaluation_profile is not None:
+        _verify_evaluation_profile_references(world.identifier, evaluation_profile, scenario)
 
     try:
         compiled = world_compiler.compile_world(
@@ -294,6 +425,7 @@ def verify_world_snapshot(world: WorldVersion, manifest: WorldManifest) -> None:
             state_models=state_models,
             transitions=transitions,
             domain_metric_observations=observations,
+            evaluation_profile=evaluation_profile,
         )
     except InvalidScenarioError:
         raise _reject(world.identifier, "embedded scenario is semantically invalid") from None
@@ -305,7 +437,7 @@ def verify_world_snapshot(world: WorldVersion, manifest: WorldManifest) -> None:
 
 @dataclass(frozen=True)
 class VerifiedWorldCatalog:
-    """The state models, transitions, and observation bindings of a verified world.
+    """The state models, transitions, observation bindings, and profile of a verified world.
 
     Parsed strictly from the compiled ``WorldVersion`` snapshot in the
     compiler's canonical ordering. Only these embedded snapshots are
@@ -316,6 +448,7 @@ class VerifiedWorldCatalog:
     state_models: tuple[DomainStateModel, ...]
     transitions: tuple[DomainStateTransition, ...]
     domain_metric_observations: tuple[DomainMetricObservationBinding, ...] = ()
+    evaluation_profile: ScenarioEvaluationProfile | None = None
 
 
 def extract_world_catalog(world: WorldVersion) -> VerifiedWorldCatalog:
@@ -347,8 +480,16 @@ def extract_world_catalog(world: WorldVersion) -> VerifiedWorldCatalog:
         DomainMetricObservationBinding,
         "domain metric observation",
     )
+    evaluation_profile = _parse_single_snapshot(
+        world.identifier,
+        body,
+        _EVALUATION_PROFILE_KEY,
+        ScenarioEvaluationProfile,
+        "evaluation profile",
+    )
     return VerifiedWorldCatalog(
         state_models=state_models,
         transitions=transitions,
         domain_metric_observations=observations,
+        evaluation_profile=evaluation_profile,
     )
