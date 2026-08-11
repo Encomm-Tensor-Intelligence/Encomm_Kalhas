@@ -356,8 +356,8 @@ def test_phase_18_19_20_21_22_behavior_unchanged() -> None:
     assert names[34] == "CampaignMetricStatisticsMatrix"
 
 
-def test_public_contracts_remain_exactly_thirty_seven() -> None:
-    assert len(PUBLIC_CONTRACTS) == 37
+def test_public_contracts_remain_exactly_forty() -> None:
+    assert len(PUBLIC_CONTRACTS) == 40
 
 
 def test_existing_v1_contracts_unchanged_and_phase23_contracts_appended_last() -> None:
@@ -367,6 +367,22 @@ def test_existing_v1_contracts_unchanged_and_phase23_contracts_appended_last() -
     assert names[36] == "CampaignObjectiveEvaluationMatrix"
     assert "ObjectiveMetricBinding" not in names
     assert "ObjectiveObservationEvaluation" not in names
+
+
+def test_phase24_contracts_occupy_indexes_37_through_39() -> None:
+    names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
+    assert names[37] == "WorldUncertaintyModel"
+    assert names[38] == "WorldRealization"
+    assert names[39] == "CampaignWorldRealizationMatrix"
+    # The Phase 24 nested value objects stay unregistered.
+    assert "UniformDistribution" not in names
+    assert "TriangularDistribution" not in names
+    assert "NormalDistribution" not in names
+    assert "LognormalDistribution" not in names
+    assert "DiscreteDistribution" not in names
+    assert "StateFieldUncertaintyBinding" not in names
+    assert "SampledStateFieldValue" not in names
+    assert "RealizedStateFieldValue" not in names
 
 
 def test_contract_fields_carry_no_executable_types() -> None:

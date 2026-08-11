@@ -26,6 +26,14 @@ from dataclasses import dataclass
 from pydantic import BaseModel, ValidationError
 
 from kalhas.application import world_compiler
+from kalhas.application.deterministic_sampler import (
+    QUANTIZATION_FRACTION_BITS,
+    QUANTIZATION_POLICY,
+    SAMPLER_VERSION,
+    canonical_json_text,
+    discrete_static_final_values,
+    validate_effective_parameters,
+)
 from kalhas.application.domain_errors import (
     InvalidScenarioError,
     WorldSnapshotIntegrityError,
@@ -42,6 +50,10 @@ from kalhas.application.world_compiler import (
     _canonical_state_models,
     _canonical_transitions,
 )
+from kalhas.application.world_uncertainty_identity import (
+    uncertainty_model_content_hash,
+    uncertainty_model_identifier,
+)
 from kalhas.contracts.v1.domain_pack import (
     DomainCapabilityDeclaration,
     DomainPackBinding,
@@ -53,6 +65,10 @@ from kalhas.contracts.v1.shared import MetricDefinition
 from kalhas.contracts.v1.state_model import DomainStateModel
 from kalhas.contracts.v1.transition import DomainStateTransition
 from kalhas.contracts.v1.world import WorldManifest, WorldVersion
+from kalhas.contracts.v1.world_realization import (
+    DiscreteDistribution,
+    WorldUncertaintyModel,
+)
 
 _WORLD_ID_PREFIX = "world-"
 _MANIFEST_ID_PREFIX = "manifest-"
@@ -63,6 +79,7 @@ _STATE_MODELS_KEY = "domain_state_models"
 _TRANSITIONS_KEY = "domain_state_transitions"
 _OBSERVATIONS_KEY = "domain_metric_observations"
 _EVALUATION_PROFILE_KEY = "evaluation_profile"
+_UNCERTAINTY_MODEL_KEY = "uncertainty_model"
 
 # The exact set of compiler-owned top-level world body keys. Anything
 # else is unexpected compiler-owned content and is rejected.
@@ -77,6 +94,7 @@ _WORLD_BODY_KEYS = frozenset(
         _TRANSITIONS_KEY,
         _OBSERVATIONS_KEY,
         _EVALUATION_PROFILE_KEY,
+        _UNCERTAINTY_MODEL_KEY,
     }
 )
 _REQUIRED_WORLD_BODY_KEYS = ("compiler_version", "content_hash", "scenario")
@@ -229,6 +247,171 @@ def _verify_evaluation_profile_references(
                 world_version_id,
                 "embedded evaluation profile normalization scale violation",
             )
+
+
+def _verify_uncertainty_model_references(
+    world_version_id: str,
+    model: WorldUncertaintyModel,
+    scenario: ScenarioSpec,
+    bindings: tuple[DomainPackBinding, ...],
+    state_models: tuple[DomainStateModel, ...],
+) -> None:
+    """Verify the embedded uncertainty model against the same compiled world.
+
+    The model is declarative provenance data; the verifier proves it is
+    self-consistent with the compiled world: the model belongs to the
+    world's tenant and scenario, its authoritative scenario snapshot
+    hash matches the recomputed digest of the embedded scenario, its
+    identifier matches the independent derivation from the canonical
+    identity payload, its content hash matches the recomputed canonical
+    digest, its bindings are in the exact canonical
+    ``(manifest_id, state_model_id, state_field_id)`` order with unique
+    target tuples, and every binding's copied provenance resolves
+    exactly against the embedded pack-binding and state-model snapshots
+    (source binding identifier, manifest, pack identity, manifest
+    content hash, deterministic state-model identifier, logical
+    state-model id, state-model content hash, target state field, and
+    copied field value kind). The frozen sampler/quantization
+    provenance literals must equal the versioned constants, the
+    effective Q64.64 parameter rules must hold, and - for discrete
+    distributions with a declared ``allowed_values`` set - every
+    statically selectable final value must be canonically allowed. The
+    stored world is never repaired, normalized, reordered, or replaced;
+    on any mismatch the world is rejected with a safe generic error
+    whose internal reason names only the violated rule.
+    """
+    if model.tenant_id != scenario.tenant_id:
+        raise _reject(world_version_id, "embedded uncertainty model has a foreign tenant")
+    if model.scenario_id != scenario.identifier:
+        raise _reject(world_version_id, "embedded uncertainty model has a foreign scenario")
+    expected_hash = scenario_content_hash(scenario)
+    if model.scenario_content_hash != expected_hash:
+        raise _reject(world_version_id, "embedded uncertainty model scenario hash mismatch")
+    if model.identifier != uncertainty_model_identifier(
+        tenant_id=scenario.tenant_id,
+        scenario_id=scenario.identifier,
+        scenario_content_hash_value=expected_hash,
+    ):
+        raise _reject(world_version_id, "embedded uncertainty model identifier mismatch")
+    if model.content_hash != uncertainty_model_content_hash(model):
+        raise _reject(world_version_id, "embedded uncertainty model content hash mismatch")
+
+    ordered = tuple(
+        sorted(
+            model.bindings,
+            key=lambda binding: (
+                binding.manifest_id,
+                binding.state_model_id,
+                binding.state_field_id,
+            ),
+        )
+    )
+    if model.bindings != ordered:
+        raise _reject(world_version_id, "embedded uncertainty model bindings are not canonical")
+
+    state_models_by_identifier = {
+        state_model.identifier: state_model for state_model in state_models
+    }
+    pack_bindings_by_manifest = {binding.manifest_id: binding for binding in bindings}
+    for binding in model.bindings:
+        state_model = state_models_by_identifier.get(binding.state_model_identifier)
+        if state_model is None:
+            raise _reject(
+                world_version_id,
+                "embedded uncertainty model references an unknown state model",
+            )
+        if state_model.state_model_id != binding.state_model_id:
+            raise _reject(
+                world_version_id, "embedded uncertainty model state model identity mismatch"
+            )
+        if state_model.content_hash != binding.state_model_content_hash:
+            raise _reject(
+                world_version_id,
+                "embedded uncertainty model state model content hash mismatch",
+            )
+        if state_model.manifest_id != binding.manifest_id:
+            raise _reject(
+                world_version_id, "embedded uncertainty model state model manifest mismatch"
+            )
+        field = next(
+            (
+                candidate
+                for candidate in state_model.state_fields
+                if candidate.identifier == binding.state_field_id
+            ),
+            None,
+        )
+        if field is None:
+            raise _reject(
+                world_version_id,
+                "embedded uncertainty model references an unknown state field",
+            )
+        if field.value_kind.value != binding.state_field_value_kind:
+            raise _reject(
+                world_version_id,
+                "embedded uncertainty model state field value kind mismatch",
+            )
+        pack_binding = pack_bindings_by_manifest.get(binding.manifest_id)
+        if pack_binding is None:
+            raise _reject(
+                world_version_id,
+                "embedded uncertainty model references an unknown pack binding",
+            )
+        if pack_binding.identifier != binding.binding_id:
+            raise _reject(
+                world_version_id, "embedded uncertainty model pack binding identity mismatch"
+            )
+        if (
+            pack_binding.pack_id != binding.pack_id
+            or pack_binding.pack_version != binding.pack_version
+        ):
+            raise _reject(world_version_id, "embedded uncertainty model pack identity mismatch")
+        if pack_binding.manifest_content_hash != binding.manifest_content_hash:
+            raise _reject(
+                world_version_id,
+                "embedded uncertainty model manifest content hash mismatch",
+            )
+        if (
+            binding.sampler_version != SAMPLER_VERSION
+            or binding.quantization_policy != QUANTIZATION_POLICY
+            or binding.quantization_fraction_bits != QUANTIZATION_FRACTION_BITS
+        ):
+            raise _reject(
+                world_version_id,
+                "embedded uncertainty model sampler provenance mismatch",
+            )
+        try:
+            validate_effective_parameters(
+                binding.distribution,
+                lower_bound=binding.lower_bound,
+                upper_bound=binding.upper_bound,
+            )
+        except ValueError:
+            raise _reject(
+                world_version_id,
+                "embedded uncertainty model parameter rules violated",
+            ) from None
+        if isinstance(binding.distribution, DiscreteDistribution) and field.allowed_values:
+            try:
+                final_values = discrete_static_final_values(
+                    binding.distribution,
+                    lower_bound=binding.lower_bound,
+                    upper_bound=binding.upper_bound,
+                    field_kind=binding.state_field_value_kind,
+                    rounding_policy=binding.rounding_policy,
+                )
+            except ValueError:
+                raise _reject(
+                    world_version_id,
+                    "embedded uncertainty model discrete outcome rules violated",
+                ) from None
+            allowed = {canonical_json_text(value) for value in field.allowed_values}
+            for value in final_values:
+                if canonical_json_text(value) not in allowed:
+                    raise _reject(
+                        world_version_id,
+                        "embedded uncertainty model discrete outcome not among allowed_values",
+                    )
 
 
 def _verify_observation_references(
@@ -401,6 +584,13 @@ def verify_world_snapshot(world: WorldVersion, manifest: WorldManifest) -> None:
         ScenarioEvaluationProfile,
         "evaluation profile",
     )
+    uncertainty_model = _parse_single_snapshot(
+        world.identifier,
+        body,
+        _UNCERTAINTY_MODEL_KEY,
+        WorldUncertaintyModel,
+        "uncertainty model",
+    )
 
     if bindings != _canonical_bindings(bindings):
         raise _reject(world.identifier, "embedded domain pack bindings are not canonical")
@@ -415,6 +605,14 @@ def verify_world_snapshot(world: WorldVersion, manifest: WorldManifest) -> None:
     _verify_observation_references(world.identifier, observations, scenario, bindings, state_models)
     if evaluation_profile is not None:
         _verify_evaluation_profile_references(world.identifier, evaluation_profile, scenario)
+    if uncertainty_model is not None:
+        _verify_uncertainty_model_references(
+            world.identifier,
+            uncertainty_model,
+            scenario,
+            bindings,
+            state_models,
+        )
 
     try:
         compiled = world_compiler.compile_world(
@@ -426,6 +624,7 @@ def verify_world_snapshot(world: WorldVersion, manifest: WorldManifest) -> None:
             transitions=transitions,
             domain_metric_observations=observations,
             evaluation_profile=evaluation_profile,
+            uncertainty_model=uncertainty_model,
         )
     except InvalidScenarioError:
         raise _reject(world.identifier, "embedded scenario is semantically invalid") from None
@@ -437,7 +636,8 @@ def verify_world_snapshot(world: WorldVersion, manifest: WorldManifest) -> None:
 
 @dataclass(frozen=True)
 class VerifiedWorldCatalog:
-    """The state models, transitions, observation bindings, and profile of a verified world.
+    """The state models, transitions, observation bindings, profile, and
+    uncertainty model of a verified world.
 
     Parsed strictly from the compiled ``WorldVersion`` snapshot in the
     compiler's canonical ordering. Only these embedded snapshots are
@@ -449,6 +649,7 @@ class VerifiedWorldCatalog:
     transitions: tuple[DomainStateTransition, ...]
     domain_metric_observations: tuple[DomainMetricObservationBinding, ...] = ()
     evaluation_profile: ScenarioEvaluationProfile | None = None
+    uncertainty_model: WorldUncertaintyModel | None = None
 
 
 def extract_world_catalog(world: WorldVersion) -> VerifiedWorldCatalog:
@@ -487,9 +688,17 @@ def extract_world_catalog(world: WorldVersion) -> VerifiedWorldCatalog:
         ScenarioEvaluationProfile,
         "evaluation profile",
     )
+    uncertainty_model = _parse_single_snapshot(
+        world.identifier,
+        body,
+        _UNCERTAINTY_MODEL_KEY,
+        WorldUncertaintyModel,
+        "uncertainty model",
+    )
     return VerifiedWorldCatalog(
         state_models=state_models,
         transitions=transitions,
         domain_metric_observations=observations,
         evaluation_profile=evaluation_profile,
+        uncertainty_model=uncertainty_model,
     )

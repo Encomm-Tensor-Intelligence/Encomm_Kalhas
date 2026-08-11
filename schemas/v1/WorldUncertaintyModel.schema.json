@@ -1,0 +1,436 @@
+{
+  "$defs": {
+    "DiscreteDistribution": {
+      "additionalProperties": false,
+      "description": "``discrete(values, probabilities)`` with exact-weight selection.\n\n``values`` are strict exact numerics (an ``int`` stays an ``int``\nand a ``float`` stays a ``float``; booleans are rejected) and must\nbe canonically unique - canonical JSON ``1`` and ``1.0`` are\ndistinct values. ``probabilities`` are finite and non-negative with\nat least one strictly positive entry, and the declared float sum\nmust lie within ``PROBABILITY_SUM_TOLERANCE`` of ``1.0``; the exact\nquantized integer weights define the selection distribution (no\nhidden normalization or resampling). Zero-probability support\nvalues are never selected.",
+      "properties": {
+        "kind": {
+          "const": "discrete",
+          "title": "Kind",
+          "type": "string"
+        },
+        "probabilities": {
+          "items": {
+            "type": "number"
+          },
+          "minItems": 1,
+          "title": "Probabilities",
+          "type": "array"
+        },
+        "values": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "values",
+        "probabilities"
+      ],
+      "title": "DiscreteDistribution",
+      "type": "object"
+    },
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "LognormalDistribution": {
+      "additionalProperties": false,
+      "description": "``lognormal(mu, sigma)`` with **log-space** parameters.\n\n``mu`` is the mean of ``ln X`` and ``sigma`` is the standard\ndeviation of ``ln X``; the sampled value is ``X = exp(mu + sigma*Z)``\nwith standard normal ``Z``. ``sigma`` is strictly positive.",
+      "properties": {
+        "kind": {
+          "const": "lognormal",
+          "title": "Kind",
+          "type": "string"
+        },
+        "mu": {
+          "title": "Mu",
+          "type": "number"
+        },
+        "sigma": {
+          "title": "Sigma",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "mu",
+        "sigma"
+      ],
+      "title": "LognormalDistribution",
+      "type": "object"
+    },
+    "NormalDistribution": {
+      "additionalProperties": false,
+      "description": "``normal(mean, standard_deviation)`` with strictly positive deviation.",
+      "properties": {
+        "kind": {
+          "const": "normal",
+          "title": "Kind",
+          "type": "string"
+        },
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        },
+        "standard_deviation": {
+          "title": "Standard Deviation",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "mean",
+        "standard_deviation"
+      ],
+      "title": "NormalDistribution",
+      "type": "object"
+    },
+    "StateFieldUncertaintyBinding": {
+      "additionalProperties": false,
+      "description": "One immutable uncertainty binding of one initial-state field.\n\nEvery provenance field (scenario, source ``DomainPackBinding``\nidentifier, manifest, pack identity, manifest content hash,\ndeterministic state-model identifier, logical state-model id,\nstate-model content hash, state-field id, and the copied field\nvalue kind) is copied from stored immutable records - never from\nclient input. The caller owns only the distribution, the rounding\npolicy, and the independently optional clipping bounds. The\ndeterministic binding identifier is derived from the canonical\ntarget identity and is independent of the content hash; the\nself-covering ``content_hash`` covers the complete canonical\nserialization excluding itself.\n\nOnly ``integer`` and ``number`` initial-state fields may be\ntargeted. An integer target requires exactly one rounding policy\nfrom ``floor``/``ceil``/``nearest_ties_to_even`` and forbids it for\nnumber targets. Bounds are independently optional (both present\nrequires ``lower <= upper``); every bound on an integer target must\nbe a stored exact ``int``; number targets accept exact ``int`` or\n``float`` bounds whose JSON representation is preserved.",
+      "properties": {
+        "binding_id": {
+          "minLength": 1,
+          "title": "Binding Id",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "distribution": {
+          "discriminator": {
+            "mapping": {
+              "discrete": "#/$defs/DiscreteDistribution",
+              "lognormal": "#/$defs/LognormalDistribution",
+              "normal": "#/$defs/NormalDistribution",
+              "triangular": "#/$defs/TriangularDistribution",
+              "uniform": "#/$defs/UniformDistribution"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UniformDistribution"
+            },
+            {
+              "$ref": "#/$defs/TriangularDistribution"
+            },
+            {
+              "$ref": "#/$defs/NormalDistribution"
+            },
+            {
+              "$ref": "#/$defs/LognormalDistribution"
+            },
+            {
+              "$ref": "#/$defs/DiscreteDistribution"
+            }
+          ],
+          "title": "Distribution"
+        },
+        "identifier": {
+          "minLength": 1,
+          "title": "Identifier",
+          "type": "string"
+        },
+        "lower_bound": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lower Bound"
+        },
+        "manifest_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Manifest Content Hash",
+          "type": "string"
+        },
+        "manifest_id": {
+          "minLength": 1,
+          "title": "Manifest Id",
+          "type": "string"
+        },
+        "pack_id": {
+          "minLength": 1,
+          "title": "Pack Id",
+          "type": "string"
+        },
+        "pack_version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Pack Version",
+          "type": "string"
+        },
+        "quantization_fraction_bits": {
+          "const": 64,
+          "title": "Quantization Fraction Bits",
+          "type": "integer"
+        },
+        "quantization_policy": {
+          "const": "rational-round-half-even",
+          "title": "Quantization Policy",
+          "type": "string"
+        },
+        "rounding_policy": {
+          "anyOf": [
+            {
+              "enum": [
+                "floor",
+                "ceil",
+                "nearest_ties_to_even"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rounding Policy"
+        },
+        "sampler_version": {
+          "const": "sha256-counter-v1",
+          "title": "Sampler Version",
+          "type": "string"
+        },
+        "scenario_id": {
+          "minLength": 1,
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "state_field_id": {
+          "minLength": 1,
+          "title": "State Field Id",
+          "type": "string"
+        },
+        "state_field_value_kind": {
+          "enum": [
+            "integer",
+            "number"
+          ],
+          "title": "State Field Value Kind",
+          "type": "string"
+        },
+        "state_model_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "State Model Content Hash",
+          "type": "string"
+        },
+        "state_model_id": {
+          "minLength": 1,
+          "title": "State Model Id",
+          "type": "string"
+        },
+        "state_model_identifier": {
+          "minLength": 1,
+          "title": "State Model Identifier",
+          "type": "string"
+        },
+        "upper_bound": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Upper Bound"
+        }
+      },
+      "required": [
+        "identifier",
+        "scenario_id",
+        "binding_id",
+        "manifest_id",
+        "pack_id",
+        "pack_version",
+        "manifest_content_hash",
+        "state_model_identifier",
+        "state_model_id",
+        "state_model_content_hash",
+        "state_field_id",
+        "state_field_value_kind",
+        "distribution",
+        "sampler_version",
+        "quantization_policy",
+        "quantization_fraction_bits",
+        "content_hash"
+      ],
+      "title": "StateFieldUncertaintyBinding",
+      "type": "object"
+    },
+    "TriangularDistribution": {
+      "additionalProperties": false,
+      "description": "``triangular(low, mode, high)`` with ``low <= mode <= high``.\n\nEqualities are allowed: ``mode == low`` and ``mode == high`` are\nthe standard right/left triangular shapes, and the fully degenerate\ncase samples the constant ``low`` (never a division by zero).",
+      "properties": {
+        "high": {
+          "title": "High",
+          "type": "number"
+        },
+        "kind": {
+          "const": "triangular",
+          "title": "Kind",
+          "type": "string"
+        },
+        "low": {
+          "title": "Low",
+          "type": "number"
+        },
+        "mode": {
+          "title": "Mode",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "low",
+        "mode",
+        "high"
+      ],
+      "title": "TriangularDistribution",
+      "type": "object"
+    },
+    "UniformDistribution": {
+      "additionalProperties": false,
+      "description": "``uniform(low, high)`` on the continuous interval ``[low, high)``.\n\nBoth endpoints are exact finite numerics with ``low <= high``; the\ndegenerate ``low == high`` case is allowed and samples the constant\n``low``.",
+      "properties": {
+        "high": {
+          "title": "High",
+          "type": "number"
+        },
+        "kind": {
+          "const": "uniform",
+          "title": "Kind",
+          "type": "string"
+        },
+        "low": {
+          "title": "Low",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "low",
+        "high"
+      ],
+      "title": "UniformDistribution",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The immutable one-per-scenario uncertainty model.\n\nDeclares the complete uncertainty binding tuple for one stored\nscenario, canonicalized into the exact ``(manifest_id,\nstate_model_id, state_field_id)`` target-tuple order (caller\ndeclaration order never affects the artifact). At least one binding\nis required (an absent model is the only representation of empty\nuncertainty), each complete target tuple appears exactly once, and\nonly ``integer`` and ``number`` initial-state fields may be\ntargeted. The identifier is independently derived from the\ncanonical tenant/scenario/scenario-hash identity, the content hash\ncovers the complete canonical serialization excluding itself, and\n``declared_at`` is the deterministic caller-supplied timestamp. The\nmodel must be declared before the first world compilation of the\nscenario and can never be updated, replaced, deleted, or\nre-declared.",
+  "properties": {
+    "bindings": {
+      "items": {
+        "$ref": "#/$defs/StateFieldUncertaintyBinding"
+      },
+      "minItems": 1,
+      "title": "Bindings",
+      "type": "array"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "declared_at": {
+      "format": "date-time",
+      "title": "Declared At",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "scenario_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Scenario Content Hash",
+      "type": "string"
+    },
+    "scenario_id": {
+      "minLength": 1,
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "scenario_id",
+    "scenario_content_hash",
+    "bindings",
+    "content_hash",
+    "declared_at"
+  ],
+  "title": "WorldUncertaintyModel",
+  "type": "object"
+}

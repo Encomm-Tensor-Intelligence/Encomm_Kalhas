@@ -16,6 +16,8 @@ from kalhas.application.objective_evaluation_service import (
 from kalhas.application.scenario_service import ScenarioValidationResult, validate_scenario
 from kalhas.application.world_compiler import CompiledWorld, compile_world
 from kalhas.application.world_integrity import verify_world_snapshot
+from kalhas.application.world_uncertainty_errors import WorldUncertaintyModelNotFoundError
+from kalhas.application.world_uncertainty_service import get_world_uncertainty_model
 from kalhas.contracts.v1.scenario import ClarificationQuestion, ScenarioSpec
 from kalhas.contracts.v1.world import WorldManifest, WorldVersion
 
@@ -47,10 +49,11 @@ class MockNexusAdapter:
         The scenario's registered domain-pack bindings, declared
         capability inputs, declared domain state models, declared domain
         state transitions, declared domain metric observation bindings,
-        and (when declared) its evaluation profile are loaded in
-        deterministic order and embedded into the compiled world as
-        declarative snapshots; an unbound, undeclared, profile-free
-        scenario compiles exactly as before.
+        its evaluation profile, and (when declared) its world
+        uncertainty model are loaded in deterministic order and embedded
+        into the compiled world as declarative snapshots; an unbound,
+        undeclared, profile-free, model-free scenario compiles exactly
+        as before.
         """
         scenario = self._store.get_scenario(tenant_id, scenario_id)
         bindings = self._store.list_domain_pack_bindings(tenant_id, scenario_id)
@@ -69,6 +72,12 @@ class MockNexusAdapter:
             )
         except EvaluationProfileNotFoundError:
             evaluation_profile = None
+        try:
+            # The uncertainty model follows the same verified-retrieval
+            # pattern: a corrupted model can never reach the compiler.
+            uncertainty_model = get_world_uncertainty_model(self._store, tenant_id, scenario_id)
+        except WorldUncertaintyModelNotFoundError:
+            uncertainty_model = None
         compiled = compile_world(
             scenario,
             bindings=bindings,
@@ -77,6 +86,7 @@ class MockNexusAdapter:
             transitions=transitions,
             domain_metric_observations=observations,
             evaluation_profile=evaluation_profile,
+            uncertainty_model=uncertainty_model,
         )
         self._store.put_world(compiled.version, compiled.manifest)
         return compiled

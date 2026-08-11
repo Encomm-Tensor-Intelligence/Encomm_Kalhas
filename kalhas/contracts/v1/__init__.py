@@ -73,6 +73,11 @@ from kalhas.contracts.v1.world import (
     WorldManifest,
     WorldVersion,
 )
+from kalhas.contracts.v1.world_realization import (
+    CampaignWorldRealizationMatrix,
+    WorldRealization,
+    WorldUncertaintyModel,
+)
 
 API_VERSION = "1"
 
@@ -114,6 +119,9 @@ PUBLIC_CONTRACTS: tuple[type[VersionedContract], ...] = (
     CampaignMetricStatisticsMatrix,
     ScenarioEvaluationProfile,
     CampaignObjectiveEvaluationMatrix,
+    WorldUncertaintyModel,
+    WorldRealization,
+    CampaignWorldRealizationMatrix,
 )
 __all__ = [
     "API_VERSION",
@@ -173,4 +181,7 @@ __all__ = [
     "VersionedContract",
     "WorldManifest",
     "WorldVersion",
+    "WorldUncertaintyModel",
+    "WorldRealization",
+    "CampaignWorldRealizationMatrix",
 ]

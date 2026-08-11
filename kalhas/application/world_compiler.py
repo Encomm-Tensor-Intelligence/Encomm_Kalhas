@@ -63,6 +63,15 @@ direction, target, weight, tolerance, normalization scale, or metric
 unit semantics - it only canonicalizes and embeds the immutable
 profile.
 
+When the scenario has a declared world uncertainty model, its complete
+serialized snapshot (one ``WorldUncertaintyModel`` object) is included
+under ``uncertainty_model`` in the world content and in the canonical
+content hash - only when present, so model-free worlds compile
+byte-identically to the Phase 23 compiler. The model is an inert
+declarative snapshot: the compiler never samples, interprets, or
+validates distribution semantics - it only canonicalizes and embeds
+the immutable model.
+
 The compiler never relies on caller-provided collection ordering:
 bindings are canonicalized by ``manifest_id``, declarations by
 ``(manifest_id, capability_id)``, state models by
@@ -97,6 +106,7 @@ from kalhas.contracts.v1.shared import JsonValue
 from kalhas.contracts.v1.state_model import DomainStateModel
 from kalhas.contracts.v1.transition import DomainStateTransition
 from kalhas.contracts.v1.world import WorldManifest, WorldVersion
+from kalhas.contracts.v1.world_realization import WorldUncertaintyModel
 
 COMPILER_VERSION = "1.0.0"
 _WORLD_ID_PREFIX = "world-"
@@ -108,6 +118,7 @@ _STATE_MODELS_KEY = "domain_state_models"
 _TRANSITIONS_KEY = "domain_state_transitions"
 _OBSERVATIONS_KEY = "domain_metric_observations"
 _EVALUATION_PROFILE_KEY = "evaluation_profile"
+_UNCERTAINTY_MODEL_KEY = "uncertainty_model"
 
 
 def _binding_sort_key(binding: DomainPackBinding) -> str:
@@ -219,6 +230,7 @@ def content_hash(
     transitions: tuple[DomainStateTransition, ...] = (),
     domain_metric_observations: tuple[DomainMetricObservationBinding, ...] = (),
     evaluation_profile: ScenarioEvaluationProfile | None = None,
+    uncertainty_model: WorldUncertaintyModel | None = None,
 ) -> str:
     """SHA-256 of the canonical scenario serialization plus the compiler version.
 
@@ -274,6 +286,8 @@ def content_hash(
         ]
     if evaluation_profile is not None:
         payload[_EVALUATION_PROFILE_KEY] = evaluation_profile.model_dump(mode="json")
+    if uncertainty_model is not None:
+        payload[_UNCERTAINTY_MODEL_KEY] = uncertainty_model.model_dump(mode="json")
     return sha256_hex(canonical_json(payload))
 
 
@@ -295,6 +309,7 @@ def compile_world(
     transitions: tuple[DomainStateTransition, ...] = (),
     domain_metric_observations: tuple[DomainMetricObservationBinding, ...] = (),
     evaluation_profile: ScenarioEvaluationProfile | None = None,
+    uncertainty_model: WorldUncertaintyModel | None = None,
 ) -> CompiledWorld:
     """Compile a semantically valid scenario into an immutable world.
 
@@ -336,6 +351,7 @@ def compile_world(
         transitions,
         domain_metric_observations,
         evaluation_profile,
+        uncertainty_model,
     )
     world_id = f"{_WORLD_ID_PREFIX}{digest[:_ID_HASH_LENGTH]}"
     world_content: dict[str, JsonValue] = {
@@ -365,6 +381,8 @@ def compile_world(
         ]
     if evaluation_profile is not None:
         world_content[_EVALUATION_PROFILE_KEY] = evaluation_profile.model_dump(mode="json")
+    if uncertainty_model is not None:
+        world_content[_UNCERTAINTY_MODEL_KEY] = uncertainty_model.model_dump(mode="json")
     world_version = WorldVersion(
         identifier=world_id,
         tenant_id=scenario.tenant_id,
@@ -398,6 +416,8 @@ def compile_world(
         state["declared_domain_metric_observation_count"] = len(canonical_observations)
     if evaluation_profile is not None:
         state["declared_evaluation_profile_count"] = 1
+    if uncertainty_model is not None:
+        state["declared_world_uncertainty_model_count"] = 1
     manifest = WorldManifest(
         identifier=f"{_MANIFEST_ID_PREFIX}{digest[:_ID_HASH_LENGTH]}",
         tenant_id=scenario.tenant_id,

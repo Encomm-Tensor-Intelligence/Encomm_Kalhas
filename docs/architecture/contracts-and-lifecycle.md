@@ -2339,4 +2339,180 @@ artifact queries, the Phase 18 campaign trajectory matrix, Phase 19
 declaration behavior, Phase 20 extraction behavior, the Phase 21
 metric-observation matrix, and the Phase 22 metric-statistics matrix
 are unchanged (world hashes change only for worlds compiled with a
-declared profile). **Phase 24 has not started.**
+declared profile). **Phase 24 is complete (next section).**
+
+## Phase 24: deterministic world uncertainty realizations
+
+**Status: COMPLETE.** Phase 24 is sampling and provenance only: for a
+campaign's shared seeds it produces exactly one immutable,
+strategy-independent `WorldRealization` per seed from the compiled
+world and the scenario's immutable `WorldUncertaintyModel`. It never
+executes strategies, trajectories, transitions, metrics, objectives,
+outcomes, comparisons, rankings, or recommendations; never invokes
+NEXUS or LEGION; never loads or executes domain-pack code; and never
+uses providers, network, databases, filesystems, wall clocks, global
+RNG, UUIDs, or `random.seed`. Phase 25 / runtime 3.0.0 has not
+started.
+
+### Contracts
+
+Three new public contracts appended at the tail
+(`kalhas/contracts/v1/world_realization.py`, `PUBLIC_CONTRACTS` 37 ->
+40): `WorldUncertaintyModel` (38th), `WorldRealization` (39th), and
+`CampaignWorldRealizationMatrix` (40th). The five distribution
+families - `uniform(low, high)` with `low <= high`,
+`triangular(low, mode, high)` with `low <= mode <= high`,
+`normal(mean, standard_deviation)` and `lognormal(mu, sigma)` (mu/sigma
+are log-space parameters) with strictly positive deviations, and
+`discrete(values, probabilities)` with canonically unique strict
+values, finite non-negative probabilities, at least one positive, and
+a documented `1e-12` sum tolerance - form the **closed discriminated
+union** `DistributionSpecification` (no unvalidated parameter
+dictionaries). `StateFieldUncertaintyBinding` copies every
+authoritative provenance field from stored immutable records and adds
+the caller-owned distribution, one exact rounding policy for integer
+targets only (`floor`/`ceil`/`nearest_ties_to_even`), and
+independently optional clipping bounds (integer targets require exact
+`int` bounds). `SampledStateFieldValue` records the raw sample before
+clipping/rounding (integer-target raws may be float) and the final
+realized value (integer targets always exact `int`), with global
+digest-word `draw_index`/`draw_count` accounting whose ranges partition
+`[0, total_words)`. `WorldRealization` carries world/seed identity and
+content-hash provenance, the model identity/hash or an explicit absent
+state, the frozen sampler/quantization provenance literals
+(`sha256-counter-v1`, `rational-round-half-even`, 64 fraction bits),
+the complete realized initial-state override delta (one override per
+binding, one-to-one with the sampled values), a deterministic
+identifier independent of the content hash, and `realized_at` = the
+campaign's authoritative `created_at`. `CampaignWorldRealizationMatrix`
+holds exactly one realization per seed in exact seed-ensemble order
+with no strategy identifiers anywhere. All eight nested value objects
+stay unregistered; `UncertaintyDefinition` is untouched.
+
+### Sampler and quantization
+
+`sha256-counter-v1` is integer-only Q64.64 fixed-point with frozen
+integer literals (never platform libm). Every declared parameter is
+converted by exact rational round-half-even quantization
+(`float.as_integer_ratio()` + `divmod`). The open-uniform input is
+`u = (word + 1) / 2**64` (structurally never zero; `log(0)`
+unreachable). Each digest word is the first 8 bytes big-endian of one
+SHA-256 over the canonical payload `{domain:
+"kalhas/world-realization-v1", draw_index, sampler_version,
+seed_content_hash, uncertainty_binding_content_hash,
+world_content_hash}` - no strategy terms. `sqrt` uses exact
+`math.isqrt`; `log` a fixed 32-term atanh series; `exp` is reduced by
+`ln 2` (`k = floor(x/ln2)`, `r = x - k*ln2`, `exp = 2**k * exp(r)`,
+24-term Horner, `k > 1024` rejected before any shift, `k < -65` ->
+exactly 0); `cos` uses quadrant reduction plus a fixed 14-term Horner;
+Box-Muller consumes two words with the exact deterministic radius
+`sqrt(-2 ln u1)` and the invariant-checked maximum `Z_MAX =
+isqrt(128 ln2)`. Discrete selection uses exact integer weights, the
+ticket `(word * W) >> 64`, and strict `<` cumulative boundaries
+(ticket exactly on a boundary resolves to the later value;
+zero-probability support is never selected; no forced residual).
+Verified accuracy budgets: `log`/`cos` at most 64/32 Q64.64 ulps,
+`exp` relative error below `2**-50`.
+
+### Representation semantics
+
+Canonical JSON `1` and `1.0` are distinct. Continuous families always
+record float raws (even when mathematically integral); a discrete
+sample preserves the exact declared value type; clipping a number
+target adopts the exact stored bound type; integer targets always
+finish as exact `int`. The operation order is **finite raw -> clip ->
+round -> complete-state validation** using the existing
+`validate_state` rules (exact kind, canonical `allowed_values`
+membership); the raw is recorded before clipping and the
+finite-representability guard runs before any clip, so clipping can
+never rescue a non-finite raw. Failures are deterministic per seed and
+never resampled or retried.
+
+### Declaration lifecycle
+
+One immutable model per tenant + scenario (`world_uncertainty_service.py`):
+caller supplies only the binding drafts (`manifest_id`,
+`state_model_id`, `state_field_id`, distribution, rounding policy,
+independently optional bounds) plus `declared_at`/`metadata`; every
+provenance field is copied from stored records, so forged
+authoritative values are impossible. Bindings are canonicalized into
+exact `(manifest_id, state_model_id, state_field_id)` order. Only
+`integer`/`number` initial-state fields may be targeted. Unknown
+references, unsupported kinds, rounding/bound rule violations,
+discrete-kind mismatches, effective Q64.64 parameter violations
+(vanishing rule, effective ordering, effectively positive deviations,
+lognormal static finite-raw boundary), and statically provable discrete
+allowed-values violations -> typed 422. Declaration after the first
+world compilation and duplicate declarations -> typed 409. The store
+deep-copies on write and read and strictly revalidates the complete
+contract plus the deterministic identity on **every** access; there is
+no update/replace/delete/list surface and no operational-activity
+event.
+
+### World integration
+
+The compiler embeds the complete model snapshot under
+`uncertainty_model` (covered by the world content hash) only when a
+model exists; model-free worlds compile byte-identically to Phase 23
+and no runtime-2 golden world hash changes. `verify_world_snapshot`
+strictly verifies the embedded model's ownership, identifier, content
+hash, canonical binding order, copied authoritative provenance against
+the embedded pack-binding/state-model snapshots, sampler/quantization
+literals, effective parameter rules, and static discrete allowed
+outcomes, then recompiles and requires exact equality.
+`VerifiedWorldCatalog` gained the additive `uncertainty_model`.
+`MockNexusAdapter.compile_scenario` loads the stored model through the
+verified retrieval path.
+
+### Builder and verified query
+
+The pure builder (`world_realization_builder.py`) derives each base
+initial state from the embedded `DomainStateModel`, samples every
+targeted field exactly once, applies the approved clip/round order,
+validates each final value and the complete realized state, and emits
+detached immutable plain-JSON artifacts; it never mutates the world,
+model, seed, or state models, and rejects inconsistent direct inputs
+(campaign/world/seed/model provenance mismatches, missing or
+mismatched target state models/fields, empty seed ensembles) with
+typed integrity errors. The verified query
+(`world_realization_query_service.py`) loads and fully verifies the
+campaign's world/manifest, strictly revalidates the stored model and
+requires canonical equality with the embedded snapshot, and derives
+the matrix in memory - never stored, no lifecycle gate (any recorded
+campaign state yields identical bytes), no writes, no operational-
+activity events, no NEXUS/LEGION calls. A world without an uncertainty
+model still yields one deterministic empty realization per seed
+(empty samples/overrides, explicit absent model markers, real derived
+hashes). Deterministic per-seed sampling failures propagate as the
+typed 409 `conflict` sampling error; missing, inconsistent, or
+corrupted artifacts map to typed 409 `integrity_error`.
+
+### API
+
+`POST /v1/scenarios/{scenario_id}/uncertainty-model` (201; forged
+authoritative fields, identifiers, hashes, and sampler literals ->
+422), `GET /v1/scenarios/{scenario_id}/uncertainty-model` (200/404/409
+integrity), `GET /v1/campaigns/{campaign_id}/world-realizations`
+(200 with exactly K realizations for K seeds and any strategy count;
+404 unknown/foreign campaign; 409 `conflict`; 409 `integrity_error`).
+The single `ApiErrorResponse` envelope is unchanged; public messages
+never leak sampled values, distribution parameters, bounds, hashes,
+state values, metadata, or internal reasons; repeated GETs are
+byte-identical.
+
+### Non-goals (unchanged through Phase 24)
+
+No execution, replay, transition, metric extraction, objective
+evaluation, outcomes, empirical distributions, comparison, ranking,
+recommendation, evidence, or decision briefs; no uncertainty
+consumption beyond sampling; no new runtime version; no
+operational-activity kinds; no Colony changes; no NEXUS/LEGION
+integration; no live actions, providers, network, filesystem, or
+database; no new dependencies. Runtime 1.0.0/2.0.0 behavior, RunPlan
+generation and `run_input_hash`, campaign/run lifecycle, trajectory
+planning, transition evaluation, `RunTrajectoryExecution` generation
+and hashes, `RunEvent` structural kinds, replay behavior, all
+Phase 17-22 artifact queries, the Phase 22 metric-statistics matrix,
+and the Phase 23 evaluation profile/matrix are unchanged (world
+hashes change only for worlds compiled with a declared uncertainty
+model - new deterministic provenance). **Phase 25 has not started.**

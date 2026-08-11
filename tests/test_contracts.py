@@ -48,6 +48,11 @@ from kalhas.contracts.v1.trajectory_execution import (
 )
 from kalhas.contracts.v1.transition import DomainStateTransition
 from kalhas.contracts.v1.world import UncertaintyDefinition, WorldManifest, WorldVersion
+from kalhas.contracts.v1.world_realization import (
+    CampaignWorldRealizationMatrix,
+    WorldRealization,
+    WorldUncertaintyModel,
+)
 from pydantic import ValidationError
 
 NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
@@ -1072,6 +1077,231 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
                 "result_content_hashes": [
                     "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
                 ],
+            }
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "assembled_at": NOW,
+    },
+    WorldUncertaintyModel: {
+        "identifier": "uncertainty-model-0123456789abcdef",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "scenario_id": "scenario-1",
+        "scenario_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "bindings": [
+            {
+                "identifier": "uncertainty-binding-0123456789abcdef",
+                "scenario_id": "scenario-1",
+                "binding_id": "binding-1",
+                "manifest_id": "manifest-1",
+                "pack_id": "pack-1",
+                "pack_version": "1.2.3",
+                "manifest_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "state_model_identifier": "state-model-1",
+                "state_model_id": "sm-1",
+                "state_model_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "state_field_id": "level",
+                "state_field_value_kind": "integer",
+                "distribution": {"kind": "uniform", "low": 0.0, "high": 1.0},
+                "rounding_policy": "floor",
+                "lower_bound": None,
+                "upper_bound": None,
+                "sampler_version": "sha256-counter-v1",
+                "quantization_policy": "rational-round-half-even",
+                "quantization_fraction_bits": 64,
+                "content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+            },
+            {
+                "identifier": "uncertainty-binding-0123456789abcde0",
+                "scenario_id": "scenario-1",
+                "binding_id": "binding-1",
+                "manifest_id": "manifest-1",
+                "pack_id": "pack-1",
+                "pack_version": "1.2.3",
+                "manifest_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "state_model_identifier": "state-model-1",
+                "state_model_id": "sm-1",
+                "state_model_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "state_field_id": "ratio",
+                "state_field_value_kind": "number",
+                "distribution": {
+                    "kind": "discrete",
+                    "values": [1, 1.0],
+                    "probabilities": [0.5, 0.5],
+                },
+                "rounding_policy": None,
+                "lower_bound": None,
+                "upper_bound": None,
+                "sampler_version": "sha256-counter-v1",
+                "quantization_policy": "rational-round-half-even",
+                "quantization_fraction_bits": 64,
+                "content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+            },
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "declared_at": NOW,
+        "metadata": {},
+    },
+    WorldRealization: {
+        "identifier": "world-realization-0123456789abcdef",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "scenario_seed_id": "seed-1",
+        "seed_content_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "uncertainty_model_id": "uncertainty-model-0123456789abcdef",
+        "uncertainty_model_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "sampler_version": "sha256-counter-v1",
+        "quantization_policy": "rational-round-half-even",
+        "quantization_fraction_bits": 64,
+        "sampled_values": [
+            {
+                "uncertainty_binding_identifier": "uncertainty-binding-0123456789abcdef",
+                "uncertainty_binding_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "scenario_id": "scenario-1",
+                "binding_id": "binding-1",
+                "manifest_id": "manifest-1",
+                "state_model_identifier": "state-model-1",
+                "state_model_id": "sm-1",
+                "state_field_id": "level",
+                "state_field_value_kind": "integer",
+                "distribution_kind": "uniform",
+                "sampler_version": "sha256-counter-v1",
+                "quantization_policy": "rational-round-half-even",
+                "quantization_fraction_bits": 64,
+                "draw_index": 0,
+                "draw_count": 1,
+                "sampled_raw_value": 0.25,
+                "realized_value": 0,
+            },
+            {
+                "uncertainty_binding_identifier": "uncertainty-binding-0123456789abcde0",
+                "uncertainty_binding_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "scenario_id": "scenario-1",
+                "binding_id": "binding-1",
+                "manifest_id": "manifest-1",
+                "state_model_identifier": "state-model-1",
+                "state_model_id": "sm-1",
+                "state_field_id": "ratio",
+                "state_field_value_kind": "number",
+                "distribution_kind": "discrete",
+                "sampler_version": "sha256-counter-v1",
+                "quantization_policy": "rational-round-half-even",
+                "quantization_fraction_bits": 64,
+                "draw_index": 1,
+                "draw_count": 1,
+                "sampled_raw_value": 1.0,
+                "realized_value": 1.0,
+            },
+        ],
+        "realized_initial_state_overrides": [
+            {
+                "state_model_identifier": "state-model-1",
+                "state_field_id": "level",
+                "value": 0,
+            },
+            {
+                "state_model_identifier": "state-model-1",
+                "state_field_id": "ratio",
+                "value": 1.0,
+            },
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "realized_at": NOW,
+    },
+    CampaignWorldRealizationMatrix: {
+        "identifier": "campaign-realization-matrix-0123456789abcdef",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "campaign_id": "campaign-1",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "uncertainty_model_id": "uncertainty-model-0123456789abcdef",
+        "uncertainty_model_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "sampler_version": "sha256-counter-v1",
+        "quantization_policy": "rational-round-half-even",
+        "quantization_fraction_bits": 64,
+        "ordered_scenario_seed_ids": ["seed-1"],
+        "realizations": [
+            {
+                "identifier": "world-realization-0123456789abcdef",
+                "tenant_id": "tenant-1",
+                "schema_version": "1.0.0",
+                "scenario_id": "scenario-1",
+                "world_version_id": "world-0123456789abcdef",
+                "world_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "scenario_seed_id": "seed-1",
+                "seed_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "uncertainty_model_id": "uncertainty-model-0123456789abcdef",
+                "uncertainty_model_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "sampler_version": "sha256-counter-v1",
+                "quantization_policy": "rational-round-half-even",
+                "quantization_fraction_bits": 64,
+                "sampled_values": [
+                    {
+                        "uncertainty_binding_identifier": "uncertainty-binding-0123456789abcdef",
+                        "uncertainty_binding_content_hash": (
+                            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                        ),
+                        "scenario_id": "scenario-1",
+                        "binding_id": "binding-1",
+                        "manifest_id": "manifest-1",
+                        "state_model_identifier": "state-model-1",
+                        "state_model_id": "sm-1",
+                        "state_field_id": "level",
+                        "state_field_value_kind": "integer",
+                        "distribution_kind": "uniform",
+                        "sampler_version": "sha256-counter-v1",
+                        "quantization_policy": "rational-round-half-even",
+                        "quantization_fraction_bits": 64,
+                        "draw_index": 0,
+                        "draw_count": 1,
+                        "sampled_raw_value": 0.25,
+                        "realized_value": 0,
+                    }
+                ],
+                "realized_initial_state_overrides": [
+                    {
+                        "state_model_identifier": "state-model-1",
+                        "state_field_id": "level",
+                        "value": 0,
+                    }
+                ],
+                "content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "realized_at": NOW,
             }
         ],
         "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",

@@ -64,6 +64,14 @@ from kalhas.application.objective_evaluation_errors import (
 from kalhas.application.objective_evaluation_identity import (
     verify_evaluation_profile_identity,
 )
+from kalhas.application.world_uncertainty_errors import (
+    WorldUncertaintyModelAlreadyExistsError,
+    WorldUncertaintyModelIntegrityError,
+    WorldUncertaintyModelNotFoundError,
+)
+from kalhas.application.world_uncertainty_identity import (
+    verify_world_uncertainty_model_identity,
+)
 from kalhas.contracts.v1.activity import OperationalActivityEvent, OperationalActivityKind
 from kalhas.contracts.v1.campaign import CampaignSpec, CampaignStatus
 from kalhas.contracts.v1.domain_pack import (
@@ -89,6 +97,7 @@ from kalhas.contracts.v1.trajectory_execution import (
 )
 from kalhas.contracts.v1.transition import DomainStateTransition
 from kalhas.contracts.v1.world import WorldManifest, WorldVersion
+from kalhas.contracts.v1.world_realization import WorldUncertaintyModel
 
 MAX_ACTIVITY_LIMIT = 100
 
@@ -375,6 +384,72 @@ def revalidate_stored_evaluation_profile(
         ) from None
 
 
+def revalidate_stored_world_uncertainty_model(
+    model: object,
+    tenant_id: str,
+    scenario_id: str,
+) -> None:
+    """Strictly revalidate one stored uncertainty model against its contract.
+
+    ``model_copy``/``model_construct`` and private-store injection can
+    produce a ``WorldUncertaintyModel`` instance whose contract
+    validators never ran - for example a malformed nested metadata
+    value, an invalid hash pattern, a binding carrying a non-finite
+    distribution parameter, a rounding-policy rule violation, a bound
+    rule violation, or a non-canonical binding order. Revalidating the
+    record's Python-mode serialized data with ``strict=True`` re-runs
+    every field rule, including the nested distribution, binding, and
+    sampled-value contracts, so a validator-bypassed stored record is
+    rejected before any field of it is trusted. The temporary
+    revalidated object is discarded; the actual stored snapshot is what
+    callers continue to verify. Any failure raises
+    :class:`WorldUncertaintyModelIntegrityError` with a safe generic
+    public message - validation details, raw hashes, parameters,
+    bounds, and metadata values are never exposed - and storage is
+    never repaired, normalized, replaced, or rewritten.
+    """
+    if not isinstance(model, WorldUncertaintyModel):
+        raise WorldUncertaintyModelIntegrityError(
+            tenant_id,
+            scenario_id,
+            reason="stored uncertainty model violates its contract",
+        )
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+            )
+            serialized = model.model_dump(mode="python")
+        revalidated = WorldUncertaintyModel.model_validate(serialized, strict=True)
+        # Pydantic's strict float validation still accepts NaN/Infinity by
+        # default, so the contract's non-finite metadata rule is enforced
+        # explicitly over the revalidated record as well.
+        if _contains_non_finite(revalidated.metadata):
+            raise WorldUncertaintyModelIntegrityError(
+                tenant_id,
+                scenario_id,
+                reason="stored uncertainty model violates its contract",
+            )
+        # The deterministic identity (ownership, identifier, content
+        # hash) is independently re-verified over the revalidated
+        # record; a forged or corrupted record is rejected here even if
+        # its contract shape is intact.
+        verify_world_uncertainty_model_identity(
+            revalidated, tenant_id=tenant_id, scenario_id=scenario_id
+        )
+    except (
+        ValidationError,
+        TypeError,
+        AttributeError,
+        WorldUncertaintyModelIntegrityError,
+    ):
+        raise WorldUncertaintyModelIntegrityError(
+            tenant_id,
+            scenario_id,
+            reason="stored uncertainty model violates its contract",
+        ) from None
+
+
 class InMemoryScenarioStore:
     """Process-local store for scenarios, worlds, campaigns, and run plans."""
 
@@ -403,6 +478,7 @@ class InMemoryScenarioStore:
             tuple[str, str, str], DomainMetricObservationBinding
         ] = {}
         self._evaluation_profiles: dict[tuple[str, str], ScenarioEvaluationProfile] = {}
+        self._world_uncertainty_models: dict[tuple[str, str], WorldUncertaintyModel] = {}
         self._operational_activity: dict[tuple[str, str], OperationalActivityEvent] = {}
         self._activity_sequences: dict[str, int] = {}
         self._strategy_trajectory_plans: dict[
@@ -1202,6 +1278,62 @@ class InMemoryScenarioStore:
             world.tenant_id == tenant_id and world.source_scenario_id == scenario_id
             for world in self._worlds.values()
         )
+
+    def put_world_uncertainty_model(
+        self,
+        tenant_id: str,
+        scenario_id: str,
+        model: WorldUncertaintyModel,
+    ) -> None:
+        """Store an immutable uncertainty model; rejects duplicates.
+
+        Uncertainty models are immutable and at most one model may
+        exist per ``(tenant_id, scenario_id)``: a second declaration
+        raises WorldUncertaintyModelAlreadyExistsError and never
+        overwrites the original. The supplied model must carry exactly
+        the key's ownership (tenant and scenario identifiers) and must
+        strictly revalidate against its complete contract
+        (serializer-based strict revalidation - a validator-bypassed
+        instance is rejected before any field is trusted), otherwise a
+        safe typed integrity error is raised and nothing is written.
+        There is no update, delete, repair, replace, or list surface.
+        """
+        key = (tenant_id, scenario_id)
+        if key in self._world_uncertainty_models:
+            raise WorldUncertaintyModelAlreadyExistsError(tenant_id, scenario_id)
+        revalidate_stored_world_uncertainty_model(model, tenant_id, scenario_id)
+        if model.tenant_id != tenant_id or model.scenario_id != scenario_id:
+            raise WorldUncertaintyModelIntegrityError(
+                tenant_id,
+                scenario_id,
+                reason="uncertainty model ownership mismatch",
+            )
+        self._world_uncertainty_models[key] = _deep_copy_contract(model)
+
+    def get_world_uncertainty_model(
+        self,
+        tenant_id: str,
+        scenario_id: str,
+    ) -> WorldUncertaintyModel:
+        """Fetch an uncertainty model; raises WorldUncertaintyModelNotFoundError.
+
+        The stored record is strictly revalidated against its complete
+        contract **and** its deterministic identity (ownership,
+        identifier, content hash) on every read, before any copy
+        crosses the store boundary: a validator-bypassed, malformed,
+        forged, or corrupted stored record raises
+        WorldUncertaintyModelIntegrityError and is never returned.
+        After successful revalidation a fresh deep defensive copy is
+        returned. Unknown and foreign models are indistinguishable:
+        both raise the same typed error, so no tenant can learn about
+        another tenant's models.
+        """
+        try:
+            stored = self._world_uncertainty_models[(tenant_id, scenario_id)]
+        except KeyError as exc:
+            raise WorldUncertaintyModelNotFoundError(tenant_id, scenario_id) from exc
+        revalidate_stored_world_uncertainty_model(stored, tenant_id, scenario_id)
+        return _deep_copy_contract(stored)
 
     def append_operational_activity(
         self,

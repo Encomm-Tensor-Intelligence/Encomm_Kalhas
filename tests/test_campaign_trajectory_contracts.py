@@ -91,8 +91,8 @@ def _multi_cell_payload(
 
 
 class TestRegistration:
-    def test_public_contract_count_is_35(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 37
+    def test_public_contract_count_is_40(self) -> None:
+        assert len(PUBLIC_CONTRACTS) == 40
 
     def test_only_the_versioned_matrix_is_registered(self) -> None:
         registered = {contract.__name__ for contract in PUBLIC_CONTRACTS}
@@ -111,16 +111,21 @@ class TestRegistration:
         # Phase 19 appended the observation binding after the matrix,
         # Phase 20 appended the observation set after the binding,
         # Phase 21 appended the metric-observation matrix after the set,
-        # and Phase 23 appends the evaluation profile and the
-        # objective-evaluation matrix last; the trajectory matrix keeps
-        # its own slot, the binding and sets stay immediately after it,
-        # and the newest contracts are last.
+        # Phase 23 appends the evaluation profile and the
+        # objective-evaluation matrix, and Phase 24 appends the world
+        # uncertainty model, the world realization, and the campaign
+        # realization matrix last; the trajectory matrix keeps its own
+        # slot, the binding and sets stay immediately after it, and the
+        # newest contracts are last.
         matrix_index = names.index("CampaignTrajectoryMatrix")
         assert names[matrix_index + 1] == "DomainMetricObservationBinding"
         assert names[matrix_index + 2] == "RunMetricObservationSet"
         assert names[matrix_index + 3] == "CampaignMetricObservationMatrix"
-        assert names[-2] == "ScenarioEvaluationProfile"
-        assert names[-1] == "CampaignObjectiveEvaluationMatrix"
+        assert names[-5] == "ScenarioEvaluationProfile"
+        assert names[-4] == "CampaignObjectiveEvaluationMatrix"
+        assert names[-3] == "WorldUncertaintyModel"
+        assert names[-2] == "WorldRealization"
+        assert names[-1] == "CampaignWorldRealizationMatrix"
 
 
 class TestRunCell:

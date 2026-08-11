@@ -1215,7 +1215,7 @@ registered as a top-level contract).
   behavior and replay-manifest hashes, Phase 17 artifact queries, the
   Phase 18 campaign trajectory matrix, Phase 19 declaration behavior,
   Phase 20 extraction behavior, and the Phase 21 metric-observation
-  matrix are unchanged. **Phase 23 has not started.**
+  matrix are unchanged. **Phase 23 is complete (next section).**
 
 ## Phase 23 status
 
@@ -1261,3 +1261,71 @@ registered as a top-level contract).
   `GET /v1/campaigns/{campaign_id}/objective-evaluations` (direct
   contracts, `ApiErrorResponse` envelope unchanged, non-leaking
   messages, byte-identical repeats).
+
+## Phase 24 status
+
+- **Deterministic world uncertainty realizations (COMPLETE).**
+  `WorldUncertaintyModel` (38th), `WorldRealization` (39th), and
+  `CampaignWorldRealizationMatrix` (40th, appended last);
+  `PUBLIC_CONTRACTS` 37 -> 40. The five distribution families
+  (`uniform`, `triangular`, `normal`, `lognormal` - mu/sigma are
+  log-space parameters - and `discrete`) form a closed discriminated
+  union; `StateFieldUncertaintyBinding`, `SampledStateFieldValue`,
+  `RealizedStateFieldValue`, and the five distributions stay nested.
+  Exactly three new schema artifacts; no existing v1 contract field
+  changed; `UncertaintyDefinition` untouched.
+- **Sampler** (`sha256-counter-v1`): integer-only Q64.64 fixed-point,
+  `rational-round-half-even` quantization via exact
+  `float.as_integer_ratio()` + `divmod`; frozen integer literals
+  (never platform libm); one SHA-256 per digest word over the
+  domain-separated canonical payload (world/seed/binding hashes, draw
+  index - no strategy terms); open-uniform `u = (word + 1) / 2**64`
+  (never zero); exact `isqrt` square root; fixed-iteration atanh log,
+  ln2-reduced exp (pre-shift `k > 1024` guard, `k < -65` -> 0), and
+  quadrant-reduced cos; Box-Muller with the invariant-checked
+  `Z_MAX = isqrt(128 ln2)`; exact-weight discrete tickets with strict
+  `<` boundaries, zero-probability entries never selected, no forced
+  residual.
+- **Representation**: canonical JSON `1` vs `1.0` distinct;
+  continuous raws always float; discrete preserves the declared value
+  type; clipping adopts the exact stored bound type; integer targets
+  always finish as exact `int`; operation order is **finite raw ->
+  clip -> round -> complete-state validation** (existing
+  `validate_state` rules incl. canonical `allowed_values`); raw
+  recorded before clipping; no retry/resampling; deterministic
+  per-seed failure (409 `conflict`).
+- **Declaration**: one immutable model per tenant + scenario,
+  caller-owned fields only (provenance always copied from stored
+  records); canonical `(manifest_id, state_model_id, state_field_id)`
+  binding order; only `integer`/`number` initial-state fields;
+  rounding-policy/bound/discrete-kind/effective-parameter/static
+  discrete allowed-values rules (422); declaration before first world
+  compilation (409); duplicates 409; deep-copy + strict revalidation
+  + identity/hash verification on write and every read; no
+  update/replace/delete/list surface; no operational activity.
+- **World integration**: `uncertainty_model` key embedded only when a
+  model exists - model-free worlds byte-identical to Phase 23, no
+  runtime-2 golden hash changes; `verify_world_snapshot` re-derives
+  model id/hash, ownership, canonical order, copied provenance,
+  sampler literals, effective parameters, static discrete allowed
+  outcomes, and recompile-equality; `VerifiedWorldCatalog.uncertainty_model`.
+- **Pipeline**: verified world/manifest -> stored model strictly
+  revalidated and canonically matched to the embedded snapshot ->
+  pure in-memory builder (one realization per seed, strategy
+  independent, K realizations for K seeds and any S strategies) ->
+  matrix returned directly, never stored; no lifecycle gate (any
+  recorded campaign state yields identical bytes); absent model ->
+  deterministic empty realizations with real derived hashes; no
+  writes, no activity, no NEXUS/LEGION calls, no execution.
+- **API**: `POST`/`GET /v1/scenarios/{scenario_id}/uncertainty-model`,
+  `GET /v1/campaigns/{campaign_id}/world-realizations` (direct
+  contracts, 201/200/404/409 conflict/409 integrity_error/422,
+  `ApiErrorResponse` envelope unchanged, non-leaking messages,
+  byte-identical repeats).
+- **Non-goals**: no execution, replay, transition, metric extraction,
+  objective evaluation, outcomes, distributions, comparison, ranking,
+  recommendation, evidence, or decision briefs; no new runtime
+  version; no NEXUS/LEGION integration; no live actions/providers/
+  network/filesystem/database; no new dependencies; no operational-
+  activity kinds; no Colony changes; no Phase 25 work; no commits or
+  pushes.
