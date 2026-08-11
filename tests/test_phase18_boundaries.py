@@ -227,8 +227,8 @@ def test_structural_event_kinds_are_exactly_three() -> None:
     )
 
 
-def test_public_contracts_remain_exactly_thirty_one() -> None:
-    assert len(PUBLIC_CONTRACTS) == 32
+def test_public_contracts_remain_exactly_thirty_four() -> None:
+    assert len(PUBLIC_CONTRACTS) == 35
 
 
 def test_existing_v1_contracts_unchanged_and_matrix_appended() -> None:

@@ -36,6 +36,12 @@ from kalhas.api.responses import (
     RunPlanListResponse,
     ScenarioValidationResponse,
 )
+from kalhas.application.campaign_metric_observation_query_service import (
+    get_verified_campaign_metric_observation_matrix,
+)
+from kalhas.application.campaign_metric_statistics_query_service import (
+    get_verified_campaign_metric_statistics,
+)
 from kalhas.application.campaign_service import prepare_campaign, start_campaign
 from kalhas.application.campaign_trajectory_query_service import (
     get_verified_campaign_trajectory_matrix,
@@ -84,6 +90,10 @@ from kalhas.application.operational_activity import (
     record_world_compiled,
 )
 from kalhas.application.replay_service import replay_run
+from kalhas.application.run_metric_observation_service import (
+    extract_run_metric_observations,
+    get_verified_run_metric_observation_set,
+)
 from kalhas.application.runtime import get_runtime_mode
 from kalhas.application.structural_runtime import execute_campaign
 from kalhas.application.system_info import get_system_info
@@ -93,6 +103,8 @@ from kalhas.application.trajectory_query_service import (
 )
 from kalhas.contracts.v1 import API_VERSION
 from kalhas.contracts.v1.campaign import CampaignStatus
+from kalhas.contracts.v1.campaign_metric_observation import CampaignMetricObservationMatrix
+from kalhas.contracts.v1.campaign_metric_statistics import CampaignMetricStatisticsMatrix
 from kalhas.contracts.v1.campaign_trajectory import CampaignTrajectoryMatrix
 from kalhas.contracts.v1.domain_pack import (
     DomainCapabilityDeclaration,
@@ -103,6 +115,7 @@ from kalhas.contracts.v1.execution import ReplayManifest, RunStatus
 from kalhas.contracts.v1.health import HealthResponse
 from kalhas.contracts.v1.integrity import RunInputIntegrityManifest
 from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
+from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
 from kalhas.contracts.v1.scenario import ScenarioSpec
 from kalhas.contracts.v1.state_model import DomainStateModel
 from kalhas.contracts.v1.system_info import SystemInfoResponse
@@ -390,6 +403,91 @@ def get_campaign_trajectory_matrix_route(
 
 
 @router.get(
+    "/v1/campaigns/{campaign_id}/metric-observation-matrix",
+    response_model=CampaignMetricObservationMatrix,
+    tags=["campaigns"],
+    summary="Fetch a completed campaign's verified metric-observation matrix",
+)
+def get_campaign_metric_observation_matrix_route(
+    campaign_id: str,
+    request: Request,
+    x_tenant_id: str = Header(alias="X-Tenant-ID"),
+) -> CampaignMetricObservationMatrix:
+    """Fetch the deterministic metric-observation matrix of a COMPLETE 2.0.0 campaign.
+
+    The exact authoritative strategy x shared-seed observation layout
+    of one completed trajectory-runtime campaign, assembled from every
+    completely verified Phase 20 ``RunMetricObservationSet`` of that
+    campaign in the exact order of its verified Phase 18 trajectory
+    matrix: a comparison-ready artifact of exact raw observations and
+    provenance only - never aggregations, outcomes, distributions,
+    scores, rankings, evidence, or recommendations. Read-only
+    retrieval: the campaign must be COMPLETE, the Phase 18 trajectory
+    matrix is obtained through the existing verified query service, and
+    every run's Phase 20 observation set must already exist and pass
+    the existing Phase 20 verification - nothing is ever extracted
+    automatically. The complete matrix is built in memory and returned
+    directly; it is never stored, executed, replayed, evaluated,
+    repaired, or partially returned. Unknown or foreign campaigns
+    return the typed 404; non-COMPLETE campaigns the typed 409
+    invalid_state; legacy or unsupported runtime the typed 409
+    conflict; and missing, inconsistent, or corrupted Phase 20
+    artifacts (or an internally malformed matrix) the typed 409
+    integrity_error - without leaking raw observation values, hashes,
+    state values, guards, targets, policies, metadata, internal
+    reasons, or validation details. The GET performs no write and
+    creates no operational-activity event.
+    """
+    return get_verified_campaign_metric_observation_matrix(
+        store=_store(request), tenant_id=x_tenant_id, campaign_id=campaign_id
+    )
+
+
+@router.get(
+    "/v1/campaigns/{campaign_id}/metric-statistics",
+    response_model=CampaignMetricStatisticsMatrix,
+    tags=["campaigns"],
+    summary="Fetch a completed campaign's deterministic metric statistics",
+)
+def get_campaign_metric_statistics_route(
+    campaign_id: str,
+    request: Request,
+    x_tenant_id: str = Header(alias="X-Tenant-ID"),
+) -> CampaignMetricStatisticsMatrix:
+    """Fetch the deterministic descriptive-statistics matrix of a COMPLETE 2.0.0 campaign.
+
+    The exact strategy x metric descriptive-statistics summary of one
+    completed trajectory-runtime campaign, derived exclusively from its
+    completely verified Phase 21 metric-observation matrix: the exact
+    ordered seed observations (preserved in seed order, integers stay
+    integers) and the fixed finite descriptive statistics - minimum,
+    maximum, arithmetic mean, median, and population standard
+    deviation. Descriptive statistics only - never rankings, scores,
+    outcomes, distributions, evidence, recommendations, objective or
+    target comparison, or decision briefs, and no declared aggregation
+    policy is ever interpreted. Read-only retrieval: the campaign must
+    be COMPLETE, the Phase 21 metric-observation matrix is obtained
+    through the existing verified query service (Phase 18/20/21
+    verification is never weakened and nothing is ever extracted
+    automatically), and the statistics matrix is built in memory and
+    returned directly - it is never stored, executed, replayed,
+    evaluated, repaired, or partially returned. Unknown or foreign
+    campaigns return the typed 404; non-COMPLETE campaigns the typed
+    409 invalid_state; legacy or unsupported runtime the typed 409
+    conflict; missing, inconsistent, or corrupted earlier-phase
+    artifacts the existing safe typed 409 integrity_error; and Phase 22
+    calculation, consistency, overflow, or non-finite failures the
+    typed 409 integrity_error - without leaking raw observation values,
+    calculated statistics, hashes, state values, field names, policies,
+    metadata, internal reasons, or validation details. The GET performs
+    no write and creates no operational-activity event.
+    """
+    return get_verified_campaign_metric_statistics(
+        store=_store(request), tenant_id=x_tenant_id, campaign_id=campaign_id
+    )
+
+
+@router.get(
     "/v1/runs/{run_id}",
     response_model=RunStatus,
     tags=["runs"],
@@ -497,6 +595,73 @@ def get_run_trajectory_replay_manifest_route(
     or validation details.
     """
     return get_verified_run_trajectory_replay_manifest(
+        store=_store(request), tenant_id=x_tenant_id, run_id=run_id
+    )
+
+
+@router.post(
+    "/v1/runs/{run_id}/metric-observations",
+    response_model=RunMetricObservationSet,
+    status_code=201,
+    tags=["runs"],
+    summary="Extract and store a run's immutable metric observation set",
+)
+def extract_run_metric_observations_route(
+    run_id: str,
+    request: Request,
+    x_tenant_id: str = Header(alias="X-Tenant-ID"),
+) -> RunMetricObservationSet:
+    """Explicitly extract and store the immutable raw observation set of a 2.0.0 run.
+
+    Post-execution extraction only: the recorded run and trajectory
+    inputs are verified, the run must be COMPLETE under the recorded
+    runtime version 2.0.0 (legacy 1.0.0 and unsupported versions return
+    the typed 409 conflict; unfinished runs the typed 409
+    invalid_state), the stored ``RunTrajectoryExecution`` is loaded
+    through the store boundary and fully verified with the existing
+    authoritative integrity pipeline, and one raw observation is
+    extracted per observation binding embedded in the run's exact
+    compiled world - from the verified execution's final state only, in
+    canonical metric-id order, with the metric unit copied from the
+    embedded scenario. The complete set is stored only after every
+    validation and integrity check succeeds; any failure writes nothing.
+    Unknown or foreign runs return the typed 404; a second extraction of
+    the same run returns the typed 409 conflict and never overwrites.
+    Extraction never evaluates transitions, replays, aggregates,
+    calculates outcomes, produces evidence/scores/rankings, or loads a
+    domain pack, and no operational-activity event is recorded.
+    """
+    return extract_run_metric_observations(
+        store=_store(request), tenant_id=x_tenant_id, run_id=run_id
+    )
+
+
+@router.get(
+    "/v1/runs/{run_id}/metric-observations",
+    response_model=RunMetricObservationSet,
+    tags=["runs"],
+    summary="Fetch a run's verified metric observation set",
+)
+def get_run_metric_observations_route(
+    run_id: str,
+    request: Request,
+    x_tenant_id: str = Header(alias="X-Tenant-ID"),
+) -> RunMetricObservationSet:
+    """Fetch the immutable metric observation set of a 2.0.0 run, fully verified.
+
+    Strictly read-only: the recorded run and trajectory inputs are
+    verified, the run must be COMPLETE under runtime version 2.0.0, the
+    stored set is loaded through the store boundary, the authoritative
+    execution is verified, and the stored set is returned only after the
+    verifier regenerates the expected set in memory and requires exact
+    equality (identifier, ordering, values, provenance, content hash).
+    This endpoint never performs extraction: a missing or foreign set
+    returns the typed 404 and nothing is ever created. Corrupted or
+    tampered records fail through the typed 409 integrity mapping
+    without leaking raw observed values, hashes, state values, guards,
+    targets, policies, internal reasons, or validation details.
+    """
+    return get_verified_run_metric_observation_set(
         store=_store(request), tenant_id=x_tenant_id, run_id=run_id
     )
 

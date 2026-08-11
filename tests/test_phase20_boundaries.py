@@ -1,17 +1,19 @@
-"""Phase 19 boundary scans.
+"""Phase 20 boundary scans.
 
-Proves the new contract module, the declaration service, the store
-collection, and the world-compiler/integrity extensions contain no
-NEXUS/LEGION imports or calls, no network/provider/filesystem/time/
-randomness surface, no dynamic loading or executable expressions, no
-domain-pack imports, no domain-specific vocabulary, no
-extraction/outcome/evidence/recommendation-producing calls, and no
-trajectory/execution/replay access; that the declaration service exposes
-exactly the focused declaration surface; that the structural event kind
-tuple remains exactly the existing three kinds; that Phase 18 matrix
-behavior remains registered and untouched; that PUBLIC_CONTRACTS remains
-exactly 32 with the new binding appended after the unchanged 31 existing
-contracts; and that runtime/execution/replay signatures are unchanged.
+Proves the new contract module, the extraction/verification service, and
+the store collection contain no NEXUS/LEGION imports or calls, no
+network/provider/filesystem/time/randomness surface, no dynamic loading
+or executable expressions, no domain-pack imports, no domain-specific
+vocabulary, no outcome/aggregation/evidence/ranking/recommendation
+production, no transition evaluation or replay triggering, and no
+automatic extraction during campaign execution; that the extraction
+service exposes exactly the focused surface; that the structural event
+kind tuple remains exactly the existing three kinds; that Phase 17/18/19
+behavior stays registered and untouched; that PUBLIC_CONTRACTS remains
+exactly 35 with ``CampaignMetricStatisticsMatrix`` appended last
+(Phase 20's ``RunMetricObservationSet``
+keeps its own slot); and that runtime/execution/replay signatures and
+the runtime version constants are unchanged.
 """
 
 from __future__ import annotations
@@ -27,17 +29,15 @@ from kalhas.contracts.v1.simulation import RunEventKind
 
 KALHAS_ROOT = Path(__file__).resolve().parents[1] / "kalhas"
 
-_PHASE19_MODULES = (
-    "contracts/v1/metric_observation.py",
-    "application/domain_metric_observation_service.py",
+_PHASE20_MODULES = (
+    "contracts/v1/run_metric_observation.py",
+    "application/run_metric_observation_service.py",
     "application/in_memory_store.py",
-    "application/world_compiler.py",
-    "application/world_integrity.py",
 )
 
-#: The exact 31 contracts registered before Phase 19, in registration
-#: order - Phase 19 must append without touching any of them.
-_PRE_PHASE19_CONTRACTS = (
+#: The exact 32 contracts registered before Phase 20, in registration
+#: order - Phase 20 must append without touching any of them.
+_PRE_PHASE20_CONTRACTS = (
     "ScenarioSpec",
     "ContextBundle",
     "ClarificationQuestion",
@@ -69,6 +69,18 @@ _PRE_PHASE19_CONTRACTS = (
     "RunTrajectoryExecution",
     "RunTrajectoryReplayManifest",
     "CampaignTrajectoryMatrix",
+    "DomainMetricObservationBinding",
+)
+
+#: Modules that must never integrate extraction automatically.
+_AUTOMATIC_INTEGRATION_MODULES = (
+    "application/structural_runtime.py",
+    "application/campaign_service.py",
+    "application/campaign_lifecycle.py",
+    "application/replay_service.py",
+    "application/run_trajectory_runtime.py",
+    "application/run_planner.py",
+    "application/campaign_trajectory_query_service.py",
 )
 
 _FORBIDDEN_IMPORT = re.compile(r"^\s*(?:from|import)\s+(?:nexus|legion)(?:\s|\.|$)", re.IGNORECASE)
@@ -82,14 +94,15 @@ _NETWORK_SURFACE = re.compile(
 _BEHAVIOR_TOKENS = re.compile(r"\b(callback|executable|callable)\b")
 _DOMAIN_VOCABULARY = re.compile(r"\b(maritime|logistics|port|fuel|vessel|cargo)\b")
 _OUTCOME_TOKENS = re.compile(
-    r"\b(outcome|evidence|recommendation|decision_brief|point_estimate|probability|score)\b"
+    r"\b(outcome|evidence|recommendation|decision_brief|point_estimate|probability|score|"
+    r"distribution|rank)\b"
 )
-# Extraction/evaluation/replay entry points Phase 19 must never call.
+# Evaluation/replay/execution/sampling entry points Phase 20 must never call.
 _FORBIDDEN_CALLS = re.compile(
     r"^(?:build_run_trajectory_execution|replay_run|evaluate_trajectory|execute_run|"
     r"execute_campaign|prepare_strategy_trajectory_plans|evaluate_campaign|"
-    r"derive_initial_state|validate_state|state_hash|extract_metric_value|"
-    r"aggregate_observations|sample_uncertainty)$"
+    r"derive_initial_state|validate_state|state_hash|sample_uncertainty|"
+    r"aggregate_observations|extract_metric_value)$"
 )
 
 
@@ -120,13 +133,13 @@ def _call_names(module: ast.Module) -> list[tuple[int, str]]:
 
 
 def test_no_nexus_or_legion_imports() -> None:
-    for relative in _PHASE19_MODULES:
+    for relative in _PHASE20_MODULES:
         for line_no, line in enumerate(_module_source(relative).splitlines(), start=1):
             assert not _FORBIDDEN_IMPORT.match(line), f"forbidden import in {relative}:{line_no}"
 
 
 def test_no_dynamic_loading_or_network_surface() -> None:
-    for relative in _PHASE19_MODULES:
+    for relative in _PHASE20_MODULES:
         code = _code_only(_module_source(relative))
         assert not _DYNAMIC_LOADING.search(code), f"dynamic loading tokens in {relative}"
         assert not _NETWORK_SURFACE.search(code), f"network/filesystem/time tokens in {relative}"
@@ -135,13 +148,13 @@ def test_no_dynamic_loading_or_network_surface() -> None:
 
 
 def test_no_domain_specific_vocabulary() -> None:
-    for relative in _PHASE19_MODULES:
+    for relative in _PHASE20_MODULES:
         source = _module_source(relative)
         assert not _DOMAIN_VOCABULARY.search(source), f"domain vocabulary in {relative}"
 
 
 def test_no_outcome_evidence_or_recommendation_production() -> None:
-    for relative in _PHASE19_MODULES:
+    for relative in _PHASE20_MODULES:
         module = ast.parse(_module_source(relative))
         calls = [
             (lineno, name) for lineno, name in _call_names(module) if _OUTCOME_TOKENS.search(name)
@@ -149,17 +162,17 @@ def test_no_outcome_evidence_or_recommendation_production() -> None:
         assert not calls, f"outcome-producing calls in {relative}: {calls}"
 
 
-def test_phase19_path_never_calls_extraction_execution_or_evaluation() -> None:
-    for relative in _PHASE19_MODULES:
+def test_phase20_never_calls_evaluation_execution_or_replay() -> None:
+    for relative in _PHASE20_MODULES:
         module = ast.parse(_module_source(relative))
         calls = [
             (lineno, name) for lineno, name in _call_names(module) if _FORBIDDEN_CALLS.match(name)
         ]
-        assert not calls, f"extraction/execution/replay/evaluation calls in {relative}: {calls}"
+        assert not calls, f"evaluation/execution/replay calls in {relative}: {calls}"
 
 
 def test_contract_module_imports_only_shared_building_blocks() -> None:
-    module = ast.parse(_module_source("contracts/v1/metric_observation.py"))
+    module = ast.parse(_module_source("contracts/v1/run_metric_observation.py"))
     imports: list[str] = []
     for node in ast.walk(module):
         if isinstance(node, ast.Import):
@@ -168,15 +181,16 @@ def test_contract_module_imports_only_shared_building_blocks() -> None:
             imports.append(node.module)
     assert imports == [
         "__future__",
+        "math",
         "typing",
         "pydantic",
+        "kalhas.contracts.v1.metric_observation",
         "kalhas.contracts.v1.shared",
-        "kalhas.contracts.v1.state_model",
     ], imports
 
 
-def test_declaration_service_exposes_only_focused_functions() -> None:
-    module = ast.parse(_module_source("application/domain_metric_observation_service.py"))
+def test_extraction_service_exposes_only_focused_functions() -> None:
+    module = ast.parse(_module_source("application/run_metric_observation_service.py"))
     functions = sorted(
         {
             node.name
@@ -186,43 +200,49 @@ def test_declaration_service_exposes_only_focused_functions() -> None:
         }
     )
     assert functions == [
-        "build_domain_metric_observation",
-        "declare_domain_metric_observation",
-        "domain_metric_observation_content_hash",
-        "domain_metric_observation_identifier",
-        "get_domain_metric_observation",
-        "list_domain_metric_observations",
+        "build_run_metric_observation_set",
+        "extract_run_metric_observations",
+        "get_verified_run_metric_observation_set",
+        "run_metric_observation_set_content_hash",
+        "run_metric_observation_set_identifier",
+        "verify_run_metric_observation_set_record",
     ], functions
 
 
-def test_declaration_service_signature_accepts_no_adapters_or_execution_inputs() -> None:
-    from kalhas.application.domain_metric_observation_service import (
-        declare_domain_metric_observation,
+def test_extraction_service_signature_accepts_no_adapters_or_execution_inputs() -> None:
+    from kalhas.application.run_metric_observation_service import (
+        extract_run_metric_observations,
+        get_verified_run_metric_observation_set,
     )
 
-    parameters = list(inspect.signature(declare_domain_metric_observation).parameters)
-    assert parameters == [
+    assert list(inspect.signature(extract_run_metric_observations).parameters) == [
         "store",
         "tenant_id",
-        "scenario_id",
-        "manifest_id",
-        "state_model_id",
-        "metric_id",
-        "state_field_id",
-        "declared_at",
-        "metadata",
-    ], parameters
+        "run_id",
+    ]
+    assert list(inspect.signature(get_verified_run_metric_observation_set).parameters) == [
+        "store",
+        "tenant_id",
+        "run_id",
+    ]
 
 
 def test_store_has_no_update_delete_or_repair_surface() -> None:
     source = _module_source("application/in_memory_store.py")
     for token in (
-        "update_domain_metric_observation",
-        "delete_domain_metric_observation",
-        "repair_domain_metric_observation",
-        "replace_domain_metric_observation",
+        "update_run_metric_observation_set",
+        "delete_run_metric_observation_set",
+        "repair_run_metric_observation_set",
+        "replace_run_metric_observation_set",
     ):
         assert token not in source
+
+
+def test_no_automatic_extraction_during_campaign_execution() -> None:
+    for relative in _AUTOMATIC_INTEGRATION_MODULES:
+        source = _module_source(relative)
+        assert "run_metric_observation" not in source, f"{relative} integrates extraction"
+        assert "extract_run_metric_observations" not in source
 
 
 def test_structural_event_kinds_are_exactly_three() -> None:
@@ -233,37 +253,44 @@ def test_structural_event_kinds_are_exactly_three() -> None:
     )
 
 
-def test_phase18_matrix_behavior_unchanged() -> None:
-    """The Phase 18 matrix contract stays registered at its slot."""
+def test_phase17_18_19_behavior_unchanged() -> None:
+    """The Phase 16-19 contracts stay registered at their exact slots."""
     from kalhas.contracts.v1.campaign_trajectory import CampaignTrajectoryMatrix
+    from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
 
     names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
     assert names[30] == "CampaignTrajectoryMatrix"
+    assert names[31] == "DomainMetricObservationBinding"
     assert CampaignTrajectoryMatrix in PUBLIC_CONTRACTS
+    assert DomainMetricObservationBinding in PUBLIC_CONTRACTS
 
 
 def test_public_contracts_remain_exactly_thirty_four() -> None:
     assert len(PUBLIC_CONTRACTS) == 35
 
 
-def test_existing_v1_contracts_unchanged_and_binding_appended() -> None:
+def test_existing_v1_contracts_unchanged_and_set_appended() -> None:
     names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
-    assert names[:31] == _PRE_PHASE19_CONTRACTS
-    assert names[31] == "DomainMetricObservationBinding"
+    assert names[:32] == _PRE_PHASE20_CONTRACTS
+    assert names[32] == "RunMetricObservationSet"
+    assert names[33] == "CampaignMetricObservationMatrix"
 
 
 def test_contract_fields_carry_no_executable_types() -> None:
-    from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
+    from kalhas.contracts.v1.run_metric_observation import (
+        RunMetricObservationSet,
+        RunMetricObservationValue,
+    )
 
-    for name, field in DomainMetricObservationBinding.model_fields.items():
-        annotation = str(field.annotation)
-        assert not re.search(r"\b(?:Callable|exec|lambda)\b", annotation), (
-            f"DomainMetricObservationBinding.{name}"
-        )
+    for contract in (RunMetricObservationSet, RunMetricObservationValue):
+        for name, field in contract.model_fields.items():
+            annotation = str(field.annotation)
+            assert not re.search(r"\b(?:Callable|exec|lambda)\b", annotation), (
+                f"{contract.__name__}.{name}"
+            )
 
 
-def test_runtime_and_replay_signatures_unchanged() -> None:
-    """Phase 19 must not touch runtime/execution/replay entry points."""
+def test_runtime_versions_and_execution_signatures_unchanged() -> None:
     from kalhas.application.replay_service import replay_run
     from kalhas.application.run_planner import (
         LEGACY_STRUCTURAL_RUNTIME_VERSION,
@@ -282,3 +309,34 @@ def test_runtime_and_replay_signatures_unchanged() -> None:
         "campaign_id",
     ]
     assert list(inspect.signature(replay_run).parameters) == ["store", "tenant_id", "run_id"]
+
+
+def test_observation_set_runtime_literal_matches_authoritative_constant() -> None:
+    from typing import get_args
+
+    from kalhas.application.run_planner import TRAJECTORY_RUNTIME_VERSION
+    from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
+    from kalhas.contracts.v1.trajectory_execution import TRAJECTORY_RUNTIME_VERSION_LITERAL
+
+    annotation = RunMetricObservationSet.model_fields["runtime_version"].annotation
+    assert get_args(annotation) == ("2.0.0",)
+    assert TRAJECTORY_RUNTIME_VERSION_LITERAL == TRAJECTORY_RUNTIME_VERSION == "2.0.0"
+    # The set schema constrains the literal to the authoritative version.
+    schema = RunMetricObservationSet.model_json_schema()
+    assert schema["properties"]["runtime_version"]["const"] == "2.0.0"
+
+
+def test_no_new_operational_activity_kinds() -> None:
+    from kalhas.contracts.v1.activity import OperationalActivityKind
+
+    kinds = [kind.value for kind in OperationalActivityKind]
+    assert "metric" not in " ".join(kinds)
+    assert "observation" not in " ".join(kinds)
+
+
+def test_no_colony_changes() -> None:
+    source = _module_source("api/routes.py")
+    assert "/colony/" in source
+    assert "COLONY_UI_DIR" in source
+    for relative in _PHASE20_MODULES:
+        assert "colony" not in _code_only(_module_source(relative))

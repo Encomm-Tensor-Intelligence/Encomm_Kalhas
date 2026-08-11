@@ -40,6 +40,9 @@ from kalhas.application.domain_errors import (
     DomainStateModelNotFoundError,
     DomainStateTransitionAlreadyExistsError,
     DomainStateTransitionNotFoundError,
+    RunMetricObservationAlreadyExistsError,
+    RunMetricObservationIntegrityError,
+    RunMetricObservationNotFoundError,
     RunNotFoundError,
     RunTrajectoryExecutionAlreadyExistsError,
     RunTrajectoryExecutionIntegrityError,
@@ -63,6 +66,7 @@ from kalhas.contracts.v1.domain_pack import (
 from kalhas.contracts.v1.execution import ReplayManifest, RunStatus
 from kalhas.contracts.v1.integrity import RunInputIntegrityManifest
 from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
+from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
 from kalhas.contracts.v1.run_plan import RunPlan
 from kalhas.contracts.v1.scenario import ScenarioSpec
 from kalhas.contracts.v1.shared import AwareDatetime, JsonValue
@@ -260,6 +264,47 @@ def revalidate_stored_domain_metric_observation(
         ) from None
 
 
+def revalidate_stored_run_metric_observation_set(
+    observation_set: object,
+    tenant_id: str,
+    run_id: str,
+) -> None:
+    """Strictly revalidate one stored observation set against its complete contract.
+
+    ``model_copy``/``model_construct`` and private-store injection can
+    produce a ``RunMetricObservationSet`` instance whose contract
+    validators never ran - for example a wrong-typed raw value, a
+    non-finite float, a boolean or string accepted as a numeric raw
+    value, an invalid hash pattern, a non-2.0.0 runtime literal, a
+    wrong ``observation_point`` literal, or a non-canonical observation
+    ordering. Revalidating the record's Python-mode serialized data with
+    ``strict=True`` re-runs every field rule, including the nested
+    ``RunMetricObservationValue`` contracts and the canonical metric-id
+    ordering rule, so a validator-bypassed stored record is rejected
+    before any field of it is trusted. The temporary revalidated object
+    is discarded; the actual stored snapshot is what callers continue to
+    verify. Any failure raises :class:`RunMetricObservationIntegrityError`
+    with a safe generic public message - validation details, raw
+    observed values, hashes, and metadata values are never exposed - and
+    storage is never repaired, normalized, replaced, or rewritten.
+    """
+    if not isinstance(observation_set, RunMetricObservationSet):
+        raise RunMetricObservationIntegrityError(
+            run_id, reason="stored metric observation set violates its contract"
+        )
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+            )
+            serialized = observation_set.model_dump(mode="python")
+        RunMetricObservationSet.model_validate(serialized, strict=True)
+    except (ValidationError, TypeError, AttributeError):
+        raise RunMetricObservationIntegrityError(
+            run_id, reason="stored metric observation set violates its contract"
+        ) from None
+
+
 class InMemoryScenarioStore:
     """Process-local store for scenarios, worlds, campaigns, and run plans."""
 
@@ -296,6 +341,7 @@ class InMemoryScenarioStore:
         self._run_trajectory_replay_manifests: dict[
             tuple[str, str], RunTrajectoryReplayManifest
         ] = {}
+        self._run_metric_observation_sets: dict[tuple[str, str], RunMetricObservationSet] = {}
 
     def put_scenario(self, scenario: ScenarioSpec) -> None:
         """Store a scenario; raises ScenarioAlreadyExistsError on duplicates."""
@@ -580,6 +626,59 @@ class InMemoryScenarioStore:
             return _deep_copy_contract(self._run_trajectory_replay_manifests[(tenant_id, run_id)])
         except KeyError as exc:
             raise RunTrajectoryReplayManifestNotFoundError(tenant_id, run_id) from exc
+
+    def put_run_metric_observation_set(
+        self,
+        tenant_id: str,
+        run_id: str,
+        observation_set: RunMetricObservationSet,
+    ) -> None:
+        """Store a run's immutable metric observation set; rejects duplicates.
+
+        Exactly one observation set may exist per tenant + run: a second
+        write - even an identical artifact - raises
+        RunMetricObservationAlreadyExistsError and never overwrites the
+        original. The supplied artifact must carry exactly the key's
+        ownership (tenant and run identifiers) and must strictly
+        revalidate against its complete contract (serializer-based
+        strict revalidation - a validator-bypassed instance with
+        wrong-typed or non-finite raw values, invalid hashes, a
+        non-2.0.0 runtime literal, or non-canonical observation ordering
+        is rejected before any field is trusted), otherwise a safe typed
+        integrity error is raised and nothing is written. The stored
+        artifact is a deep defensive copy. There is no update, delete,
+        repair, or replace surface.
+        """
+        key = (tenant_id, run_id)
+        if key in self._run_metric_observation_sets:
+            raise RunMetricObservationAlreadyExistsError(tenant_id, run_id)
+        # Defense in depth: the complete contract is strictly revalidated
+        # (including nested observation values, raw-value kind rules, and
+        # the canonical ordering rule) before the artifact may be
+        # written, so a validator-bypassed instance can never enter
+        # storage through this surface. The getter re-verifies anyway,
+        # because private internal storage can be corrupted without
+        # passing through put_*.
+        revalidate_stored_run_metric_observation_set(observation_set, tenant_id, run_id)
+        if observation_set.tenant_id != tenant_id or observation_set.run_id != run_id:
+            raise RunMetricObservationIntegrityError(
+                run_id, reason="metric observation set ownership mismatch"
+            )
+        self._run_metric_observation_sets[key] = _deep_copy_contract(observation_set)
+
+    def get_run_metric_observation_set(
+        self, tenant_id: str, run_id: str
+    ) -> RunMetricObservationSet:
+        """Fetch a run's metric observation set.
+
+        Returns a fresh deep copy. Raises
+        RunMetricObservationNotFoundError when absent; unknown and
+        foreign observation sets are indistinguishable.
+        """
+        try:
+            return _deep_copy_contract(self._run_metric_observation_sets[(tenant_id, run_id)])
+        except KeyError as exc:
+            raise RunMetricObservationNotFoundError(tenant_id, run_id) from exc
 
     def put_domain_pack_manifest(self, manifest: DomainPackManifest) -> None:
         """Store an immutable domain pack manifest; rejects duplicates.

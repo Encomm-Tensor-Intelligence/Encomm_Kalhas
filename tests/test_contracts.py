@@ -10,6 +10,8 @@ import pytest
 from kalhas.contracts.v1 import PUBLIC_CONTRACTS
 from kalhas.contracts.v1.activity import OperationalActivityEvent
 from kalhas.contracts.v1.campaign import CampaignSpec, CampaignStatus
+from kalhas.contracts.v1.campaign_metric_observation import CampaignMetricObservationMatrix
+from kalhas.contracts.v1.campaign_metric_statistics import CampaignMetricStatisticsMatrix
 from kalhas.contracts.v1.campaign_trajectory import CampaignTrajectoryMatrix
 from kalhas.contracts.v1.domain_pack import (
     DomainCapabilityDeclaration,
@@ -19,6 +21,7 @@ from kalhas.contracts.v1.domain_pack import (
 from kalhas.contracts.v1.execution import ReplayManifest, RunStatus
 from kalhas.contracts.v1.integrity import RunInputIntegrityManifest
 from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
+from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
 from kalhas.contracts.v1.run_plan import RunPlan
 from kalhas.contracts.v1.scenario import (
     ClarificationQuestion,
@@ -260,6 +263,221 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
         "declared_at": NOW,
         "metadata": {},
+    },
+    RunMetricObservationSet: {
+        "identifier": "metric-observation-set-1",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "run_id": "run-1",
+        "campaign_id": "campaign-1",
+        "run_plan_id": "plan-1",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-1",
+        "world_content_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "strategy_candidate_id": "mock-baseline",
+        "strategy_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "scenario_seed_id": "seed-1",
+        "runtime_version": "2.0.0",
+        "input_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "trajectory_execution_id": "trajectory-execution-1",
+        "trajectory_execution_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "observations": [
+            {
+                "metric_id": "m-1",
+                "metric_unit": "units",
+                "binding_id": "observation-1",
+                "binding_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "manifest_id": "manifest-1",
+                "state_model_identifier": "state-model-1",
+                "state_model_id": "sm-1",
+                "state_model_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "state_field_id": "level",
+                "state_field_value_kind": "integer",
+                "observation_point": "final_state",
+                "trajectory_plan_id": "trajectory-plan-1",
+                "trajectory_plan_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "trajectory_result_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "raw_value": 7,
+            },
+            {
+                "metric_id": "m-2",
+                "metric_unit": "percent",
+                "binding_id": "observation-2",
+                "binding_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "manifest_id": "manifest-1",
+                "state_model_identifier": "state-model-1",
+                "state_model_id": "sm-1",
+                "state_model_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "state_field_id": "ratio",
+                "state_field_value_kind": "number",
+                "observation_point": "final_state",
+                "trajectory_plan_id": "trajectory-plan-1",
+                "trajectory_plan_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "trajectory_result_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "raw_value": 2.5,
+            },
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "observed_at": NOW,
+    },
+    CampaignMetricObservationMatrix: {
+        "identifier": "metric-observation-matrix-0123456789abcdef",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "campaign_id": "campaign-1",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "runtime_version": "2.0.0",
+        "comparison_mode": "identical_conditions",
+        "ordered_strategy_candidate_ids": ["sc-1"],
+        "ordered_scenario_seed_ids": ["seed-1"],
+        "ordered_metric_ids": ["m-1", "m-2"],
+        "cells": [
+            {
+                "sequence_position": 0,
+                "strategy_position": 0,
+                "seed_position": 0,
+                "run_id": "run-plan-0123456789abcdef",
+                "run_plan_id": "plan-0123456789abcdef",
+                "strategy_candidate_id": "sc-1",
+                "scenario_seed_id": "seed-1",
+                "input_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+                "trajectory_execution_id": "trajectory-execution-0123456789abcdef",
+                "trajectory_execution_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "metric_observation_set_id": "metric-observation-set-1",
+                "metric_observation_set_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "observations": [
+                    {
+                        "metric_id": "m-1",
+                        "metric_unit": "units",
+                        "binding_id": "observation-1",
+                        "binding_content_hash": (
+                            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                        ),
+                        "manifest_id": "manifest-1",
+                        "state_model_identifier": "state-model-1",
+                        "state_model_id": "sm-1",
+                        "state_model_content_hash": (
+                            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                        ),
+                        "state_field_id": "level",
+                        "state_field_value_kind": "integer",
+                        "observation_point": "final_state",
+                        "trajectory_plan_id": "trajectory-plan-1",
+                        "trajectory_plan_content_hash": (
+                            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                        ),
+                        "trajectory_result_content_hash": (
+                            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                        ),
+                        "raw_value": 7,
+                    },
+                    {
+                        "metric_id": "m-2",
+                        "metric_unit": "percent",
+                        "binding_id": "observation-2",
+                        "binding_content_hash": (
+                            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                        ),
+                        "manifest_id": "manifest-1",
+                        "state_model_identifier": "state-model-1",
+                        "state_model_id": "sm-1",
+                        "state_model_content_hash": (
+                            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                        ),
+                        "state_field_id": "ratio",
+                        "state_field_value_kind": "number",
+                        "observation_point": "final_state",
+                        "trajectory_plan_id": "trajectory-plan-1",
+                        "trajectory_plan_content_hash": (
+                            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                        ),
+                        "trajectory_result_content_hash": (
+                            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                        ),
+                        "raw_value": 2.5,
+                    },
+                ],
+            }
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "assembled_at": NOW,
+    },
+    CampaignMetricStatisticsMatrix: {
+        "identifier": "metric-statistics-matrix-0123456789abcdef",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "campaign_id": "campaign-1",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "runtime_version": "2.0.0",
+        "comparison_mode": "identical_conditions",
+        "statistics_mode": "descriptive",
+        "source_metric_observation_matrix_id": "metric-observation-matrix-0123456789abcdef",
+        "source_metric_observation_matrix_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "ordered_strategy_candidate_ids": ["sc-1"],
+        "ordered_scenario_seed_ids": ["seed-1"],
+        "ordered_metric_ids": ["m-1", "m-2"],
+        "summaries": [
+            {
+                "strategy_position": 0,
+                "metric_position": 0,
+                "strategy_candidate_id": "sc-1",
+                "metric_id": "m-1",
+                "metric_unit": "units",
+                "ordered_observed_values": [1],
+                "observation_count": 1,
+                "minimum": 1.0,
+                "maximum": 1.0,
+                "arithmetic_mean": 1.0,
+                "median": 1.0,
+                "population_standard_deviation": 0.0,
+            },
+            {
+                "strategy_position": 0,
+                "metric_position": 1,
+                "strategy_candidate_id": "sc-1",
+                "metric_id": "m-2",
+                "metric_unit": "percent",
+                "ordered_observed_values": [2.5],
+                "observation_count": 1,
+                "minimum": 2.5,
+                "maximum": 2.5,
+                "arithmetic_mean": 2.5,
+                "median": 2.5,
+                "population_standard_deviation": 0.0,
+            },
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "summarized_at": NOW,
     },
     OperationalActivityEvent: {
         "identifier": "activity-0",

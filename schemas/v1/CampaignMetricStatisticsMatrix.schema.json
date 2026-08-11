@@ -1,0 +1,224 @@
+{
+  "$defs": {
+    "CampaignStrategyMetricStatistics": {
+      "additionalProperties": false,
+      "description": "One immutable strategy x metric descriptive-statistics summary.\n\nSummarizes the exact ordered raw observed values of one metric for\none strategy across the campaign's identical ordered shared seeds:\nthe strategy and metric positions and identities, the authoritative\nmetric unit, the exact observed values preserved in the exact Phase\n21 seed order (raw integers remain integers, raw floats remain\nfloats - never converted, rounded, clipped, normalized, weighted,\nor unit-converted), the observation count, and the exact finite\nderived descriptive statistics (minimum, maximum, arithmetic mean,\nmedian, population standard deviation). The observed collection is\nnon-empty because campaigns have at least one shared seed, the\ncount must equal the collection length, minimum and maximum must\nequal the exact observed extrema, all derived statistics must be\nfinite, and a single observation has population standard deviation\nexactly ``0.0``.\n\nThe summary is descriptive statistics only: it ranks nothing,\nscores nothing, declares no winner, compares nothing against\nobjectives or targets, creates no pass/fail judgment, and produces\nno outcomes, evidence, recommendations, or decision briefs.",
+      "properties": {
+        "arithmetic_mean": {
+          "title": "Arithmetic Mean",
+          "type": "number"
+        },
+        "maximum": {
+          "title": "Maximum",
+          "type": "number"
+        },
+        "median": {
+          "title": "Median",
+          "type": "number"
+        },
+        "metric_id": {
+          "minLength": 1,
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "metric_position": {
+          "minimum": 0,
+          "title": "Metric Position",
+          "type": "integer"
+        },
+        "metric_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Metric Unit"
+        },
+        "minimum": {
+          "title": "Minimum",
+          "type": "number"
+        },
+        "observation_count": {
+          "minimum": 1,
+          "title": "Observation Count",
+          "type": "integer"
+        },
+        "ordered_observed_values": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Ordered Observed Values",
+          "type": "array"
+        },
+        "population_standard_deviation": {
+          "title": "Population Standard Deviation",
+          "type": "number"
+        },
+        "strategy_candidate_id": {
+          "minLength": 1,
+          "title": "Strategy Candidate Id",
+          "type": "string"
+        },
+        "strategy_position": {
+          "minimum": 0,
+          "title": "Strategy Position",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "strategy_position",
+        "metric_position",
+        "strategy_candidate_id",
+        "metric_id",
+        "ordered_observed_values",
+        "observation_count",
+        "minimum",
+        "maximum",
+        "arithmetic_mean",
+        "median",
+        "population_standard_deviation"
+      ],
+      "title": "CampaignStrategyMetricStatistics",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The deterministic descriptive-statistics matrix of one completed 2.0.0 campaign.\n\nThe complete strategy x metric descriptive-statistics summary of a\ncompleted runtime-2.0.0 campaign, derived exclusively from its\ncompletely verified Phase 21 ``CampaignMetricObservationMatrix``:\nthe campaign/scenario/world identity and world content hash, the\ntrajectory runtime version (always ``\"2.0.0\"``), the comparison\nmode (always ``identical_conditions``), the statistics mode (always\n``descriptive``), the exact source matrix reference (deterministic\nidentifier and content hash), the exact ordered strategy, seed, and\nmetric identifiers, and the complete summary tuple in the exact\nstrategy-major, metric-minor order - every strategy has exactly one\nsummary for every metric, and an empty metric collection requires\nempty summaries. ``summarized_at`` is the authoritative Phase 21\nmatrix ``assembled_at`` - never the wall clock - and the identifier\nis deterministic from the campaign identity, the world identity,\nthe runtime version, and the source matrix identity.\n\nThe matrix is descriptive statistics only: it never ranks or scores\nstrategies, declares a winner, compares against objectives or\ntargets, creates pass/fail judgments, produces ``MetricOutcome`` or\n``OutcomeVector``, creates evidence or ``DecisionBrief``, produces\nrecommendations, interprets domain meaning, normalizes or converts\nunits, samples uncertainty, or executes, replays, or extracts\nanything.",
+  "properties": {
+    "campaign_id": {
+      "minLength": 1,
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "comparison_mode": {
+      "const": "identical_conditions",
+      "default": "identical_conditions",
+      "title": "Comparison Mode",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "ordered_metric_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Ordered Metric Ids",
+      "type": "array"
+    },
+    "ordered_scenario_seed_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Ordered Scenario Seed Ids",
+      "type": "array"
+    },
+    "ordered_strategy_candidate_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Ordered Strategy Candidate Ids",
+      "type": "array"
+    },
+    "runtime_version": {
+      "const": "2.0.0",
+      "title": "Runtime Version",
+      "type": "string"
+    },
+    "scenario_id": {
+      "minLength": 1,
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_metric_observation_matrix_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Metric Observation Matrix Content Hash",
+      "type": "string"
+    },
+    "source_metric_observation_matrix_id": {
+      "minLength": 1,
+      "title": "Source Metric Observation Matrix Id",
+      "type": "string"
+    },
+    "statistics_mode": {
+      "const": "descriptive",
+      "title": "Statistics Mode",
+      "type": "string"
+    },
+    "summaries": {
+      "items": {
+        "$ref": "#/$defs/CampaignStrategyMetricStatistics"
+      },
+      "title": "Summaries",
+      "type": "array"
+    },
+    "summarized_at": {
+      "format": "date-time",
+      "title": "Summarized At",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "world_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "World Content Hash",
+      "type": "string"
+    },
+    "world_version_id": {
+      "minLength": 1,
+      "title": "World Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "campaign_id",
+    "scenario_id",
+    "world_version_id",
+    "world_content_hash",
+    "runtime_version",
+    "statistics_mode",
+    "source_metric_observation_matrix_id",
+    "source_metric_observation_matrix_content_hash",
+    "ordered_strategy_candidate_ids",
+    "ordered_scenario_seed_ids",
+    "ordered_metric_ids",
+    "summaries",
+    "content_hash",
+    "summarized_at"
+  ],
+  "title": "CampaignMetricStatisticsMatrix",
+  "type": "object"
+}

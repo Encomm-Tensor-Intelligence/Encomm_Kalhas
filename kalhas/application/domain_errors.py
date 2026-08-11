@@ -1013,3 +1013,114 @@ class DomainMetricObservationIntegrityError(KalhasDomainError):
             f"referenced state model for tenant {tenant_id!r}; the observation "
             "binding was rejected"
         )
+
+
+class RunMetricObservationNotFoundError(KalhasDomainError):
+    """A run metric observation set is absent or belongs to another tenant.
+
+    Unknown and foreign observation sets are indistinguishable: both
+    raise the same typed error, so no tenant can learn about another
+    tenant's observation sets.
+    """
+
+    def __init__(self, tenant_id: str, run_id: str) -> None:
+        self.tenant_id = tenant_id
+        self.run_id = run_id
+        super().__init__(
+            f"Metric observation set for run {run_id!r} not found for tenant {tenant_id!r}"
+        )
+
+
+class RunMetricObservationAlreadyExistsError(KalhasDomainError):
+    """A run metric observation set already exists for the run.
+
+    Observation sets are immutable: a second extraction of the same run
+    is rejected and never overwrites the stored artifact.
+    """
+
+    def __init__(self, tenant_id: str, run_id: str) -> None:
+        self.tenant_id = tenant_id
+        self.run_id = run_id
+        super().__init__(
+            f"Metric observation set for run {run_id!r} already exists for tenant "
+            f"{tenant_id!r} and is immutable; it will not be replaced"
+        )
+
+
+class RunMetricObservationIntegrityError(KalhasDomainError):
+    """A run metric observation artifact or its inputs are inconsistent or tampered.
+
+    Raised when a stored ``RunMetricObservationSet`` fails deterministic
+    verification (contract revalidation, identifier, ownership,
+    regeneration equality), or when the authoritative inputs it must be
+    derived from are missing, ambiguous, or inconsistent - a binding
+    without exactly one trajectory result, a missing final-state field,
+    a numeric kind/value mismatch, or a corrupted execution/world/
+    binding/artifact. The public message stays safe and generic - it
+    never exposes raw state or observed values, hashes, guard/target
+    values, strategy policy content, metadata values, internal integrity
+    reasons, validator diagnostics, or another tenant's identifiers or
+    records - and no partial artifact is ever written or returned. The
+    optional ``reason`` attribute is for internal diagnostics only.
+    """
+
+    def __init__(self, run_id: str, reason: str | None = None) -> None:
+        self.run_id = run_id
+        self.reason = reason
+        super().__init__(
+            f"Metric observation extraction for run {run_id!r} failed integrity "
+            "verification and was rejected"
+        )
+
+
+class CampaignMetricObservationMatrixIntegrityError(KalhasDomainError):
+    """A campaign metric-observation matrix cannot be assembled from the stored records.
+
+    Raised when a COMPLETE runtime-2.0.0 campaign is missing or carries
+    inconsistent or corrupted matrix inputs - a missing, foreign,
+    partial, inconsistent, or corrupted Phase 20 ``RunMetricObservationSet``
+    for any run of the verified campaign trajectory matrix, or an
+    internally built matrix that violates its contract. The public
+    message stays safe and generic - it never exposes raw observation
+    values, hashes, state snapshots, guard/target values, strategy
+    policy content, metadata values, internal integrity reasons,
+    validator diagnostics, or another tenant's records - and a partial
+    matrix is never returned. The optional ``reason`` attribute is for
+    internal diagnostics only.
+    """
+
+    def __init__(self, campaign_id: str, reason: str | None = None) -> None:
+        self.campaign_id = campaign_id
+        self.reason = reason
+        super().__init__(
+            f"Campaign {campaign_id!r} failed metric observation matrix integrity "
+            "verification and was rejected"
+        )
+
+
+class CampaignMetricStatisticsIntegrityError(KalhasDomainError):
+    """A campaign metric-statistics matrix cannot be derived from the verified observations.
+
+    Raised when the deterministic descriptive statistics of a COMPLETE
+    runtime-2.0.0 campaign cannot be derived from its completely
+    verified Phase 21 ``CampaignMetricObservationMatrix``: a source
+    matrix failing structural identity, cell, provenance, or strict
+    raw-value verification; a valid exact raw integer too large to
+    convert to a finite float; a derived statistic that overflows or
+    becomes non-finite; or an internally built statistics matrix that
+    violates its own contract. The public message stays safe and
+    generic - it never exposes raw observed values, calculated
+    statistics, hashes, state values, field names, strategy policy
+    content, metadata values, internal integrity reasons, validator
+    diagnostics, or another tenant's records - and a partial statistics
+    matrix is never returned. The optional ``reason`` attribute is for
+    internal diagnostics only.
+    """
+
+    def __init__(self, campaign_id: str, reason: str | None = None) -> None:
+        self.campaign_id = campaign_id
+        self.reason = reason
+        super().__init__(
+            f"Campaign {campaign_id!r} failed metric statistics integrity verification "
+            "and was rejected"
+        )

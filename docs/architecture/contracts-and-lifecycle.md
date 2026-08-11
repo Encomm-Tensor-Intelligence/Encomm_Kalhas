@@ -1802,3 +1802,433 @@ new tests (plus 4 new parametrized contract cases in
 tests/test_contracts.py); the four existing contract-count assertions
 were updated 31 -> 32; the complete pre-Phase-19 suite remains green as
 part of the full 1480-test regression run.
+
+## Phase 20: deterministic run metric-observation extraction
+
+Phase 19 introduced immutable `DomainMetricObservationBinding`
+declarations: a binding connects one `ScenarioSpec` metric to one
+numeric field of a `DomainStateModel` and declares *where a value may
+be observed*. Phase 20 adds the other half of the bridge - **raw
+extraction and provenance recording only**:
+
+```
+DomainMetricObservationBinding
+    -> verified RunTrajectoryExecution.final_state
+    -> immutable raw metric observations
+```
+
+`RunMetricObservationValue` is one extracted raw observation. It carries
+the exact provenance required to prove where the value came from:
+`metric_id`; `metric_unit` copied from the authoritative embedded
+`ScenarioSpec` when the metric declares one; the observation binding's
+identifier and content hash; the manifest and state-model
+identity/content hashes; `state_field_id`; `state_field_value_kind`
+(literal `"integer"` | `"number"` only); `observation_point` (exactly
+`"final_state"`); the trajectory-plan identity and content hash plus
+the exact result content hash required to locate the authoritative
+final state inside the verified execution; and `raw_value`, an exact
+finite numeric value. Numeric validation is strict and coercion-free:
+booleans are never accepted as integers or numbers, integer bindings
+require an actual `int`, number bindings accept an actual finite `int`
+or `float`, NaN and Infinity are rejected anywhere, and the extracted
+value is preserved exactly - no normalization, scaling, transformation,
+or unit conversion.
+
+`RunMetricObservationSet` is the complete immutable observation
+collection of one run: run/campaign/plan/scenario identity, the verified
+compiled world and the recorded strategy with their content hashes, the
+recorded seed identity, `runtime_version` (literal `"2.0.0"`), the run
+input hash, the verified `RunTrajectoryExecution` identifier and
+content hash, the exact ordered observation tuple canonicalized by
+`metric_id` (strictly increasing, duplicates rejected by the contract),
+the deterministic `content_hash` over the complete canonical payload
+excluding `content_hash` itself, and `observed_at` from the
+authoritative execution's `executed_at` - never wall-clock time. The
+set identifier is deterministically derived from the stable
+run/runtime identity
+(`metric-observation-set-{sha256(canonical_json({run_id,
+runtime_version}))[:16]}`). An empty observation tuple is valid only
+when the verified compiled world contains no binding snapshots.
+`RunMetricObservationSet` is registered as the **33rd** top-level
+public contract (`PUBLIC_CONTRACTS` 32 -> 33, appended after the
+unchanged `DomainMetricObservationBinding`, no existing v1 contract
+field changed) with a checked-in JSON Schema artifact.
+
+Extraction is an **explicit post-execution operation** served by
+`extract_run_metric_observations`: (1) the existing Phase 16/17
+verifier loads and verifies every recorded trajectory input (including
+full `verify_world_snapshot` recompilation); (2) the recorded runtime
+must be exactly `"2.0.0"` and the run COMPLETE; (3) the stored
+`RunTrajectoryExecution` is loaded only through the store boundary and
+fully verified with the existing authoritative integrity pipeline
+before any final state is read; (4) only the bindings embedded in the
+run's exact compiled world are used - newer scenario-level declarations
+added after world compilation are never consulted; (5) every binding is
+extracted in canonical `metric_id` order after scenario/world/manifest/
+state-model/field provenance verification, exactly-one
+`RunStateTrajectoryResult` resolution (missing and ambiguous results
+rejected), exact state-model identifier/id/manifest/content-hash
+agreement, `final_state[state_field_id]` presence, strict raw-value
+kind validation, and unit copying from the embedded scenario; (6) the
+complete set is stored only after every validation and integrity check
+succeeds - any failure writes nothing. Extraction never evaluates or
+re-executes transitions, rebuilds or repairs an execution, triggers
+replay, reads `initial_state` as an observation, chooses transitions or
+plans, samples or consumes uncertainty/seeds, invokes LEGION or NEXUS,
+loads/imports/instantiates/executes domain packs, or performs network,
+provider, filesystem, database, randomness, or wall-clock operations.
+
+`verify_run_metric_observation_set_record` verifies a stored set by
+strict contract revalidation (validator-bypassed artifacts, booleans or
+wrong-typed/non-finite raw values, invalid literals/hash patterns, and
+non-canonical ordering rejected), authoritative input/execution
+verification, and deterministic in-memory regeneration of the expected
+set, requiring exact canonical-JSON equality - identifier, ordering,
+values, provenance, and content hash. The stored artifact is never
+repaired, normalized, reordered, overwritten, or silently accepted.
+`get_verified_run_metric_observation_set` returns a stored set only
+after that full verification and never creates an artifact when none
+exists.
+
+The store keeps exactly one `RunMetricObservationSet` per
+`(tenant_id, run_id)`: duplicate creation - even an identical second
+write - is rejected and never overwrites; every write and read crosses
+a deep defensive copy boundary; strict complete contract revalidation
+runs on write and read; incorrect ownership keys are rejected; foreign
+tenants are indistinguishable from missing; rejected writes leave
+storage byte-identical; and there is no update, delete, repair, or
+replace surface.
+
+API endpoints (both X-Tenant-ID scoped, `ApiErrorResponse` envelope
+with request-id behavior): `POST /v1/runs/{run_id}/metric-observations`
+returns 201 with the exact set after explicit extraction; `GET
+/v1/runs/{run_id}/metric-observations` returns the stored set only
+after full verification and is strictly read-only. Typed mappings:
+unknown/foreign run or missing artifact 404 `not_found`; legacy 1.0.0
+or unsupported runtime 409 `conflict`; run not COMPLETE 409
+`invalid_state`; duplicate extraction 409 `conflict`; missing/ambiguous
+binding results, missing fields, numeric kind/value mismatches, and
+corrupted execution/world/binding/artifact 409 `integrity_error`;
+request/header validation 422 `validation_error`. Public error messages
+never expose raw state or observed values, hashes, guard/target values,
+strategy policy content, metadata values, another tenant's identifiers
+or records, or internal integrity reasons or validator diagnostics. No
+operational-activity event is recorded and no Colony changes exist.
+
+Phase 20 does not aggregate observations, calculate outcomes or
+distributions, produce evidence, scores, rankings, recommendations, or
+decision briefs, normalize/transform/convert metrics, sample
+uncertainty, compare strategies, add runtime versions, extract
+automatically during execution, add operational-activity kinds, change
+Colony, integrate real NEXUS/LEGION, perform live actions, contact
+external providers/network, persist to filesystem/database, or add
+dependencies. Runtime 1.0.0/2.0.0 behavior, RunPlan generation,
+campaign/run lifecycle, trajectory planning, transition evaluation,
+`RunTrajectoryExecution` generation and hashes, `RunEvent` and its
+three structural kinds, replay behavior and replay-manifest hashes,
+Phase 17 artifact queries, the Phase 18 campaign trajectory matrix, and
+Phase 19 declaration behavior and compiled observation snapshots are
+unchanged. **Phase 21 has not started.**
+
+New Phase 20 suites: `tests/test_run_metric_observation_contracts.py`,
+`tests/test_run_metric_observation_service.py`,
+`tests/test_run_metric_observation_store.py`,
+`tests/test_run_metric_observation_integrity.py`,
+`tests/test_api_phase20.py`, `tests/test_phase20_boundaries.py`, plus
+the shared `tests/phase20_helpers.py` - 175 new tests; the six existing
+contract-count assertions were updated 32 -> 33 and the
+`tests/test_contracts.py` valid-payload registry gained
+`RunMetricObservationSet`; the complete pre-Phase-20 suite remains
+green as part of the full regression run.
+
+## Phase 21: deterministic campaign metric-observation matrix
+
+**Status: COMPLETE.** Phase 21 assembles the complete campaign
+observation matrix of one completed runtime-2.0.0 campaign: the exact
+authoritative strategy x shared-seed raw-observation layout. The phase
+chain is: Phase 18 establishes the authoritative fair strategy x
+shared-seed run layout (`CampaignTrajectoryMatrix`); Phase 20 produces
+exactly one verified raw observation set per completed run
+(`RunMetricObservationSet`, extracted explicitly and never
+automatically); Phase 21 binds every completely verified Phase 20 set
+to its exact Phase 18 trajectory cell and produces the immutable
+comparison-ready `CampaignMetricObservationMatrix`.
+
+### Contracts
+
+`CampaignMetricObservationMatrix` is the 34th public contract, appended
+last; `CampaignMetricObservationCell` and the Phase 20
+`RunMetricObservationValue` stay nested (never registered, no standalone
+schema artifacts). Both matrix and cell are frozen with
+`extra="forbid"`; the runtime version literal is exactly `"2.0.0"` and
+the comparison mode exactly `"identical_conditions"`; all hash fields
+follow the `^[0-9a-f]{64}$` pattern; `assembled_at` is timezone-aware.
+The structural validator enforces: unique strategy candidate ids, unique
+seed ids, unique and strictly increasing metric ids; non-empty
+strategy/seed/cell collections; the complete Cartesian product present
+exactly once; contiguous sequence positions from zero; strategy and
+seed position bounds; exact strategy-major/seed-minor RunPlan order;
+cell strategy/seed identity matching the declared positions; and every
+cell's observation metric collection equal to `ordered_metric_ids`
+exactly (missing, additional, duplicate, or reordered observations or
+cells rejected). `ordered_metric_ids` is empty only when every cell's
+observations are empty. Nested raw values are validated through the
+reused Phase 20 `RunMetricObservationValue` contract: booleans, strings,
+NaN, and Infinity are rejected, and integer raw values stay integers.
+
+### Pure builder (`build_campaign_metric_observation_matrix`)
+
+Takes the recorded `CampaignSpec`, the completely verified Phase 18
+`CampaignTrajectoryMatrix` (authoritative layout and cell order), and
+the exact ordered tuple of completely verified Phase 20
+`RunMetricObservationSet` artifacts - one per trajectory cell. It
+verifies runtime version (2.0.0 only), identical tenant ownership,
+exact campaign/scenario/world identity agreement, the exact campaign
+strategy and seed order, the exact observation-set count, and per cell
+the exact run/run-plan/strategy/seed/input/world/trajectory-execution
+identity and content-hash agreement. The same metric's immutable
+binding provenance must agree exactly across cells; run-specific
+trajectory-plan/result provenance is preserved exactly without
+cross-strategy equality requirements; raw values are copied exactly,
+never converted or interpreted. The identifier is deterministic from
+the campaign/world/runtime identity, the content hash covers the
+complete canonical serialization excluding `content_hash`, and
+`assembled_at` is the recorded campaign `created_at` - never the wall
+clock. The builder is pure: no store access, no NEXUS/LEGION calls, no
+domain packs, no wall clock, randomness, network, providers,
+filesystem, or database, no mutation of inputs, and no silent sorting
+or repair - incorrect orders are rejected.
+
+### Verified query (`get_verified_campaign_metric_observation_matrix`)
+
+Strictly read-only, tenant-scoped, all-or-nothing:
+
+1. The campaign and status load tenant-scoped; unknown or foreign
+   campaigns raise the store's typed not-found error (404).
+2. The campaign must be exactly COMPLETE (`CampaignNotCompleteError`,
+   409 invalid_state).
+3. The verified Phase 18 `CampaignTrajectoryMatrix` is obtained through
+   the existing verified query service - Phase 18 verification is never
+   reimplemented or weakened, and its typed mappings (404, 409 conflict
+   for legacy/unsupported runtime, 409 integrity_error for missing or
+   corrupted matrix inputs) pass through unchanged.
+4. For every trajectory cell in exact order, the run's Phase 20
+   `RunMetricObservationSet` is obtained through the existing verified
+   Phase 20 query path. Every artifact must already exist; nothing is
+   ever extracted automatically.
+5. Missing, foreign, partial, inconsistent, or corrupted Phase 20
+   artifacts inside a COMPLETE campaign raise
+   `CampaignMetricObservationMatrixIntegrityError` (409 integrity_error).
+6. The complete matrix is built in memory through the pure builder and
+   returned directly without being stored; a matrix violating its own
+   contract at construction time is also a typed integrity failure.
+
+No partial matrix is ever returned; the query never executes, replays,
+evaluates, regenerates, repairs, or writes anything, records no
+operational activity, and changes no lifecycle state.
+
+### API
+
+`GET /v1/campaigns/{campaign_id}/metric-observation-matrix` returns the
+direct `CampaignMetricObservationMatrix` (200) only after the complete
+verified collection succeeds; repeated GET responses are byte-identical.
+The OpenAPI surface exposes GET only - no POST/PUT/PATCH/DELETE exists
+for this path. Error envelope is the single typed `ApiErrorResponse`:
+404 NOT_FOUND, 409 INVALID_STATE, 409 CONFLICT, 409 INTEGRITY_ERROR,
+422 VALIDATION_ERROR (missing `X-Tenant-ID`). Public messages never
+leak raw observation values, hashes, state values, guard/target values,
+policy content, metadata, internal reasons, or another tenant's
+records.
+
+### Tests
+
+New Phase 21 suites: `tests/test_campaign_metric_observation_contracts.py`,
+`tests/test_campaign_metric_observation_runtime.py`,
+`tests/test_campaign_metric_observation_query_service.py`,
+`tests/test_api_phase21.py`, `tests/test_phase21_boundaries.py`, plus
+the shared `tests/phase21_helpers.py` - 156 new tests. Coverage
+includes the full contract shape matrix (Cartesian invariants, nested
+bool/string/NaN/Infinity raw-value rejection, schema round-trip and
+export), the complete builder tamper matrix (missing/additional/
+duplicated/reordered/foreign/mismatched inputs, differing metric
+collections, differing binding provenance, legitimately differing
+run-specific provenance, empty-bindings worlds, input immutability,
+byte-identical repeated builds), the verified query pipeline (Phase 18
+authoritative layout, Phase 20 getter used for every run, validator-
+bypassed bool/NaN corruption, missing/corrupted sets, preserved Phase
+18 mappings, no extraction/execution/replay/storage, unchanged store
+snapshot), the API surface (GET-only, typed error mappings, no-leak
+bodies, byte-identical repeats, no activity/Colony changes), and the
+boundary scans (no store access in the builder, no extraction in the
+query, no matrix storage anywhere, no statistics/outcomes/evidence/
+ranking/recommendations, no normalization/unit conversion, no NEXUS/
+LEGION/domain-pack/network/filesystem/database/wall-clock/randomness,
+no runtime/execution/replay/lifecycle/RunEvent changes, Phase 18-20
+behavior unchanged, PUBLIC_CONTRACTS exactly 34 with the previous 33
+unchanged and the matrix last). The existing contract-count assertions
+were updated 33 -> 34 and the `tests/test_contracts.py` valid-payload
+registry gained `CampaignMetricObservationMatrix`; the complete
+pre-Phase-21 suite remains green as part of the full regression run.
+
+### Non-goals (unchanged through Phase 21)
+
+No aggregation, distributions, outcomes, evidence, scoring, ranking,
+recommendations, or decision briefs exist yet; no normalization,
+transformation, or unit conversion; no automatic Phase 20 extraction;
+no matrix storage; no new runtime versions; no execution, replay, or
+lifecycle changes; no operational-activity or Colony changes; no real
+NEXUS/LEGION integration; no live actions, external providers/network,
+filesystem/database persistence, or new dependencies. Runtime
+1.0.0/2.0.0 behavior, RunPlan generation, campaign/run lifecycle,
+trajectory planning, transition evaluation, `RunTrajectoryExecution`
+generation and hashes, `RunEvent` and its structural kinds, replay
+behavior and replay-manifest hashes, Phase 17 artifact queries, the
+Phase 18 campaign trajectory matrix, Phase 19 declaration behavior, and
+Phase 20 extraction behavior are unchanged. **Phase 22 has not
+started.**
+
+## Phase 22: deterministic campaign metric statistics
+
+**Status: COMPLETE.** Phase 22 derives the descriptive-statistics
+matrix of one completed runtime-2.0.0 campaign exclusively from its
+completely verified Phase 21 `CampaignMetricObservationMatrix`. The
+phase chain is: Phase 21 supplies the verified raw strategy x seed
+observation matrix; Phase 22 summarizes each strategy's exact metric
+observations across the campaign's identical ordered shared seeds with
+the one fixed deterministic descriptive-statistics definition - no
+declared `MetricDefinition.aggregation` policy is ever interpreted, no
+strategy is ranked or scored, no winner is declared, and no
+OutcomeVector, evidence, or recommendation exists yet.
+
+### Contracts
+
+`CampaignMetricStatisticsMatrix` is the 35th public contract, appended
+last; `CampaignStrategyMetricStatistics` stays nested (never registered,
+no standalone schema artifact). Both are frozen with `extra="forbid"`;
+the runtime version literal is exactly `"2.0.0"`, the comparison mode
+exactly `"identical_conditions"`, and the statistics mode exactly
+`"descriptive"`; all hash fields follow the `^[0-9a-f]{64}$` pattern;
+`summarized_at` is timezone-aware. The summary validator enforces:
+non-empty exact finite observed values (booleans, strings, None,
+containers, NaN, and Infinity rejected before any coercion; raw
+integers stay integers and raw floats stay floats), observation count
+equal to the collection length, minimum and maximum equal to the exact
+observed extrema, finite derived statistics, and a single observation's
+population standard deviation exactly `0.0`. The matrix validator
+enforces: unique strategy/seed ids, unique and strictly increasing
+metric ids; summaries covering every strategy x metric pair exactly
+once in the exact strategy-major/metric-minor order with contiguous
+positions and identity-vs-position agreement; every summary's observed
+value length equal to the seed count; and empty `ordered_metric_ids`
+requiring empty `summaries` (duplicate, missing, additional, reordered,
+or out-of-range summaries rejected).
+
+### Pure builder (`build_campaign_metric_statistics_matrix`)
+
+Takes exactly one completely verified Phase 21
+`CampaignMetricObservationMatrix`. It verifies the source runtime is
+exactly `2.0.0` (`UnsupportedRuntimeVersionError` otherwise), the
+comparison mode is exactly `identical_conditions`, the source
+deterministic identifier pattern and self-covering content hash, the
+exact strategy x seed cell shape with every cell's sequence/strategy/
+seed positions and identities bound exactly, the exact metric
+collection in every cell, per-metric identical binding provenance
+across all cells, and every raw value strictly again
+(`raw_value_matches_numeric_kind`: no bool, string, None, container,
+non-finite float, or malformed kind/value combination). It then
+computes per strategy x metric over the exact ordered seed observations
+the fixed descriptive statistics - minimum and maximum (built-in
+`min`/`max`), arithmetic mean (`math.fsum(float(v) ...)/N`), median
+(numeric sort; odd count middle value, even count
+`math.fsum((float(left), float(right)))/2`), and population standard
+deviation (defined mean, `math.fsum` of exact square deviations,
+population denominator N, `math.sqrt`; one value gives exactly `0.0`) -
+standard library only, no NumPy/pandas. A valid exact raw integer too
+large to convert to a finite float, or any derived statistic that
+overflows or becomes non-finite, rejects the complete matrix with
+`CampaignMetricStatisticsIntegrityError` - never clamped, rounded,
+replaced, or partially returned. Raw integers remain integers and raw
+floats remain floats in `ordered_observed_values`. The identifier is
+deterministic from the campaign/world/runtime/source-matrix identity,
+the content hash covers the complete canonical serialization excluding
+`content_hash`, and `summarized_at` is the authoritative Phase 21
+matrix `assembled_at` - never the wall clock. A zero-metric source
+matrix yields a valid statistics matrix with `summaries=()`. The
+builder is pure: no store access, no NEXUS/LEGION calls, no domain
+packs, no wall clock, randomness, network, providers, filesystem, or
+database, no mutation of inputs, and no silent sorting or repair -
+incorrect orders are rejected.
+
+### Verified query (`get_verified_campaign_metric_statistics`)
+
+Strictly read-only, tenant-scoped, all-or-nothing:
+
+1. The campaign and status load tenant-scoped; unknown or foreign
+   campaigns raise the store's typed not-found error (404).
+2. The campaign must be exactly COMPLETE (`CampaignNotCompleteError`,
+   409 invalid_state).
+3. The completely verified Phase 21 `CampaignMetricObservationMatrix`
+   is obtained through the existing verified query service - Phase 18,
+   20, and 21 verification is never reimplemented or weakened, and its
+   typed mappings (404, 409 conflict for legacy/unsupported runtime,
+   409 integrity_error for missing or corrupted earlier-phase
+   artifacts) pass through unchanged.
+4. The descriptive-statistics matrix is built in memory through the
+   pure Phase 22 builder and returned directly without being stored;
+   Phase 22 calculation, consistency, overflow, or non-finite failures
+   - or a matrix violating its own contract at construction time -
+   raise `CampaignMetricStatisticsIntegrityError` (409 integrity_error).
+
+No partial matrix is ever returned; the query never executes, replays,
+evaluates, regenerates, repairs, extracts, writes, or stores anything,
+creates no missing Phase 20 artifacts, records no operational activity,
+and changes no lifecycle state.
+
+### API
+
+`GET /v1/campaigns/{campaign_id}/metric-statistics` returns the direct
+`CampaignMetricStatisticsMatrix` (200) only after the complete verified
+chain succeeds; repeated GET responses are byte-identical. The OpenAPI
+surface exposes GET only - no POST/PUT/PATCH/DELETE exists for this
+path. Error envelope is the single typed `ApiErrorResponse`: 404
+NOT_FOUND, 409 INVALID_STATE, 409 CONFLICT, 409 INTEGRITY_ERROR, 422
+VALIDATION_ERROR (missing `X-Tenant-ID`). Public messages never leak
+raw observation values, calculated statistics, hashes, state values,
+field names, policy content, metadata, internal reasons, or another
+tenant's records.
+
+### Tests
+
+Five focused suites: `test_campaign_metric_statistics_contracts.py`
+(frozen/strict contracts, raw-value strictness, structural invariants,
+schema round-trip/export, 35-contract registration),
+`test_campaign_metric_statistics_runtime.py` (exact algorithm values,
+seed-order preservation, determinism, no input mutation, full tamper
+matrix), `test_campaign_metric_statistics_query_service.py`
+(authoritative Phase 21 pipeline, typed mappings, read-only/no-write
+proofs), `test_api_phase22.py` (200 direct response, typed error
+mappings, no-leak bodies, GET-only OpenAPI, byte-identical repeats),
+and `test_phase22_boundaries.py` (module scans, no storage surface, no
+execution/extraction/replay, no outcome/ranking/normalization
+production, no new dependencies/runtime versions, unchanged
+Phase 18-21 behavior).
+
+### Non-goals (unchanged through Phase 22)
+
+No ranking, scoring, winner declaration, objective/target comparison,
+pass/fail judgments, `MetricOutcome`, `OutcomeVector`,
+`DistributionSummary`, evidence, `DecisionBrief`, recommendations,
+declared aggregation-policy interpretation, quantiles/confidence
+intervals, normalization/transformation/unit conversion, uncertainty
+sampling, new runtime versions, automatic Phase 20 extraction,
+statistics storage, execution/replay/lifecycle changes,
+operational-activity or Colony changes, real NEXUS/LEGION integration,
+live actions, external providers/network, filesystem/database
+persistence, or new dependencies. Runtime 1.0.0/2.0.0 behavior, RunPlan
+generation, campaign/run lifecycle, trajectory planning, transition
+evaluation, `RunTrajectoryExecution` generation and hashes, `RunEvent`
+and its structural kinds, replay behavior and replay-manifest hashes,
+Phase 17 artifact queries, the Phase 18 campaign trajectory matrix,
+Phase 19 declaration behavior, Phase 20 extraction behavior, and the
+Phase 21 metric-observation matrix are unchanged. **Phase 23 has not
+started.**

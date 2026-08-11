@@ -91,8 +91,8 @@ def _multi_cell_payload(
 
 
 class TestRegistration:
-    def test_public_contract_count_is_31(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 32
+    def test_public_contract_count_is_35(self) -> None:
+        assert len(PUBLIC_CONTRACTS) == 35
 
     def test_only_the_versioned_matrix_is_registered(self) -> None:
         registered = {contract.__name__ for contract in PUBLIC_CONTRACTS}
@@ -108,9 +108,17 @@ class TestRegistration:
         assert "RunTrajectoryExecution" in names
         assert "RunTrajectoryReplayManifest" in names
         assert "CampaignTrajectoryMatrix" in names
-        # Phase 19 appended the observation binding after the matrix; the
-        # matrix keeps its own slot and the new contract is last.
-        assert names[-1] == "DomainMetricObservationBinding"
+        # Phase 19 appended the observation binding after the matrix,
+        # Phase 20 appended the observation set after the binding,
+        # Phase 21 appended the metric-observation matrix after the set,
+        # and Phase 22 appends the metric-statistics matrix last; the
+        # matrix keeps its own slot, the binding stays immediately after
+        # it, and the newest contract is last.
+        matrix_index = names.index("CampaignTrajectoryMatrix")
+        assert names[matrix_index + 1] == "DomainMetricObservationBinding"
+        assert names[matrix_index + 2] == "RunMetricObservationSet"
+        assert names[matrix_index + 3] == "CampaignMetricObservationMatrix"
+        assert names[-1] == "CampaignMetricStatisticsMatrix"
 
 
 class TestRunCell:

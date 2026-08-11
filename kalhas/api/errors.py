@@ -17,6 +17,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from kalhas.application.campaign_lifecycle import CampaignTransitionError
 from kalhas.application.domain_errors import (
     CampaignAlreadyExistsError,
+    CampaignMetricObservationMatrixIntegrityError,
+    CampaignMetricStatisticsIntegrityError,
     CampaignNotCompleteError,
     CampaignNotFoundError,
     CampaignNotRunningError,
@@ -49,6 +51,9 @@ from kalhas.application.domain_errors import (
     MalformedWorldError,
     ReplayHashMismatchError,
     RunInputIntegrityError,
+    RunMetricObservationAlreadyExistsError,
+    RunMetricObservationIntegrityError,
+    RunMetricObservationNotFoundError,
     RunNotCompleteError,
     RunNotFoundError,
     RunNotPlannedError,
@@ -151,6 +156,7 @@ def register_error_handlers(app: FastAPI) -> None:
                 RunNotFoundError,
                 RunTrajectoryExecutionNotFoundError,
                 RunTrajectoryReplayManifestNotFoundError,
+                RunMetricObservationNotFoundError,
                 DomainPackNotFoundError,
                 DomainPackBindingNotFoundError,
                 DomainCapabilityDeclarationNotFoundError,
@@ -173,6 +179,7 @@ def register_error_handlers(app: FastAPI) -> None:
                 DomainStateTransitionAlreadyExistsError,
                 RunTrajectoryExecutionAlreadyExistsError,
                 RunTrajectoryReplayManifestConflictError,
+                RunMetricObservationAlreadyExistsError,
                 UnsupportedRuntimeVersionError,
                 TrajectoryPlansRequiredError,
             ),
@@ -217,6 +224,9 @@ def register_error_handlers(app: FastAPI) -> None:
                 RunTrajectoryExecutionIntegrityError,
                 TrajectoryReplayMismatchError,
                 CampaignTrajectoryMatrixIntegrityError,
+                RunMetricObservationIntegrityError,
+                CampaignMetricObservationMatrixIntegrityError,
+                CampaignMetricStatisticsIntegrityError,
             ),
         ):
             status, code, message = 409, ErrorCode.INTEGRITY_ERROR, str(exc)
