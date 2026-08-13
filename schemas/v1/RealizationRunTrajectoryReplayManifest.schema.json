@@ -1,0 +1,140 @@
+{
+  "additionalProperties": false,
+  "description": "Provenance manifest of an exact observation-aware replay of a realization execution.\n\nBinds the replay to the run, campaign, and the stored runtime-3\n``RealizationRunTrajectoryExecution`` artifact (by its deterministic\nidentifier), records the verified world/strategy/seed identities, the\nexact world realization identity and content hash, the realization\ntrajectory runtime version, the run input hash, and the exact ordered\nplan-set hash, and attests that the independently regenerated execution\nhash equals the recorded expected execution hash and that the\nindependently regenerated runtime-3 metric-observation set hash equals\nthe recorded expected observation-set hash - with\n``replay_classification`` always ``\"exact\"``. ``replayed_at`` is\ndeterministic (the recorded RunPlan creation time) - never the wall\nclock. The ``content_hash`` is self-covering: it is the canonical\ndigest over the complete payload excluding ``content_hash`` itself, so\ntampering any field - including the observation-set reference and\nhashes - fails the recompute at every trust boundary.",
+  "properties": {
+    "campaign_id": {
+      "minLength": 1,
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "expected_execution_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Expected Execution Hash",
+      "type": "string"
+    },
+    "expected_observation_set_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Expected Observation Set Hash",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "input_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Input Hash",
+      "type": "string"
+    },
+    "realization_run_metric_observation_set_id": {
+      "minLength": 1,
+      "title": "Realization Run Metric Observation Set Id",
+      "type": "string"
+    },
+    "realization_run_trajectory_execution_id": {
+      "minLength": 1,
+      "title": "Realization Run Trajectory Execution Id",
+      "type": "string"
+    },
+    "recomputed_execution_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Recomputed Execution Hash",
+      "type": "string"
+    },
+    "recomputed_observation_set_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Recomputed Observation Set Hash",
+      "type": "string"
+    },
+    "replay_classification": {
+      "const": "exact",
+      "default": "exact",
+      "title": "Replay Classification",
+      "type": "string"
+    },
+    "replayed_at": {
+      "format": "date-time",
+      "title": "Replayed At",
+      "type": "string"
+    },
+    "run_id": {
+      "minLength": 1,
+      "title": "Run Id",
+      "type": "string"
+    },
+    "runtime_version": {
+      "const": "3.0.0",
+      "title": "Runtime Version",
+      "type": "string"
+    },
+    "scenario_seed_id": {
+      "minLength": 1,
+      "title": "Scenario Seed Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "strategy_candidate_id": {
+      "minLength": 1,
+      "title": "Strategy Candidate Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "trajectory_plan_set_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Trajectory Plan Set Hash",
+      "type": "string"
+    },
+    "world_realization_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "World Realization Content Hash",
+      "type": "string"
+    },
+    "world_realization_id": {
+      "minLength": 1,
+      "title": "World Realization Id",
+      "type": "string"
+    },
+    "world_version_id": {
+      "minLength": 1,
+      "title": "World Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "run_id",
+    "campaign_id",
+    "realization_run_trajectory_execution_id",
+    "realization_run_metric_observation_set_id",
+    "world_version_id",
+    "strategy_candidate_id",
+    "scenario_seed_id",
+    "world_realization_id",
+    "world_realization_content_hash",
+    "runtime_version",
+    "input_hash",
+    "trajectory_plan_set_hash",
+    "expected_execution_hash",
+    "recomputed_execution_hash",
+    "expected_observation_set_hash",
+    "recomputed_observation_set_hash",
+    "replayed_at",
+    "content_hash"
+  ],
+  "title": "RealizationRunTrajectoryReplayManifest",
+  "type": "object"
+}

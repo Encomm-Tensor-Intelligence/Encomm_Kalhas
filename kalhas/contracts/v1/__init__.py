@@ -32,6 +32,22 @@ from kalhas.contracts.v1.objective_evaluation import (
     CampaignObjectiveEvaluationMatrix,
     ScenarioEvaluationProfile,
 )
+from kalhas.contracts.v1.realization_campaign_metric_observation import (
+    RealizationCampaignMetricObservationMatrix,
+)
+from kalhas.contracts.v1.realization_campaign_metric_statistics import (
+    RealizationCampaignMetricStatisticsMatrix,
+)
+from kalhas.contracts.v1.realization_campaign_trajectory import (
+    RealizationCampaignTrajectoryMatrix,
+)
+from kalhas.contracts.v1.realization_run_metric_observation import (
+    RealizationRunMetricObservationSet,
+)
+from kalhas.contracts.v1.realization_trajectory_execution import (
+    RealizationRunTrajectoryExecution,
+    RealizationRunTrajectoryReplayManifest,
+)
 from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
 from kalhas.contracts.v1.run_plan import RunPlan
 from kalhas.contracts.v1.scenario import (
@@ -122,6 +138,12 @@ PUBLIC_CONTRACTS: tuple[type[VersionedContract], ...] = (
     WorldUncertaintyModel,
     WorldRealization,
     CampaignWorldRealizationMatrix,
+    RealizationRunTrajectoryExecution,
+    RealizationRunTrajectoryReplayManifest,
+    RealizationCampaignTrajectoryMatrix,
+    RealizationRunMetricObservationSet,
+    RealizationCampaignMetricObservationMatrix,
+    RealizationCampaignMetricStatisticsMatrix,
 )
 __all__ = [
     "API_VERSION",
@@ -152,6 +174,12 @@ __all__ = [
     "OperationalActivityKind",
     "OutcomeVector",
     "PUBLIC_CONTRACTS",
+    "RealizationCampaignMetricObservationMatrix",
+    "RealizationCampaignMetricStatisticsMatrix",
+    "RealizationCampaignTrajectoryMatrix",
+    "RealizationRunMetricObservationSet",
+    "RealizationRunTrajectoryExecution",
+    "RealizationRunTrajectoryReplayManifest",
     "ReplayManifest",
     "RunEvent",
     "RunInputIntegrityManifest",

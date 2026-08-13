@@ -299,7 +299,10 @@ class TestMatrixEndpoint:
     def test_unsupported_runtime_returns_typed_409_conflict(self, client: TestClient) -> None:
         world_version_id = _scenario_and_world(client)
         payload = campaign_payload("campaign-1", world_version_id)
-        payload["runtime_version"] = "3.0.0"
+        # The preparation API accepts the default runtime 2.0.0; the
+        # unsupported recorded runtime is then injected through private
+        # test seams to simulate corrupted/externally loaded recorded
+        # state (not an application preparation path).
         assert client.post("/v1/campaigns", headers=HEADERS, json=payload).status_code == 201
         assert (
             client.post(
@@ -308,6 +311,10 @@ class TestMatrixEndpoint:
             == 200
         )
         store = _store(client)
+        plans = store.get_run_plans(TENANT, "campaign-1")
+        from tests.phase25_helpers import inject_unsupported_recorded_runtime
+
+        inject_unsupported_recorded_runtime(store, campaign_id="campaign-1", plan=plans[0])
         status = store.get_campaign_status(TENANT, "campaign-1")
         from kalhas.contracts.v1.campaign import CampaignState
 
@@ -318,7 +325,7 @@ class TestMatrixEndpoint:
         assert response.status_code == 409
         body = cast(dict[str, Any], response.json())
         assert body["code"] == ErrorCode.CONFLICT.value
-        assert "3.0.0" in body["message"]
+        assert "9.9.9" in body["message"]
 
     def test_missing_execution_returns_safe_409_integrity(self, client: TestClient) -> None:
         _v2_complete_flow(client)

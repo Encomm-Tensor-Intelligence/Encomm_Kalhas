@@ -446,10 +446,17 @@ class TestTypedRejections:
 
     def test_unsupported_runtime_rejected(self) -> None:
         store, world_id = build_complete_observation_run(execute=False)[:2]
-        # Re-prepare a second campaign under an unsupported recorded version.
+        # Re-prepare a second valid runtime-2 campaign, then simulate
+        # corrupted recorded state through private test seams (not an
+        # application preparation path): both the stored RunPlan and its
+        # matching RunStatus are re-stamped with an unsupported recorded
+        # runtime.
         from kalhas.application.campaign_service import prepare_campaign
+        from kalhas.application.run_planner import TRAJECTORY_RUNTIME_VERSION
 
-        prepare_campaign(
+        from tests.phase25_helpers import inject_unsupported_recorded_runtime
+
+        prepared = prepare_campaign(
             store=store,
             legion=MockLegionAdapter(),
             tenant_id=TENANT,
@@ -460,9 +467,11 @@ class TestTypedRejections:
             campaign_name="Unsupported campaign",
             seed_ensemble=(build_seed(),),
             created_at=datetime(2026, 1, 5, 12, 0, 0, tzinfo=UTC),
-            runtime_version="3.0.0",
+            runtime_version=TRAJECTORY_RUNTIME_VERSION,
         )
-        run_id = run_identifier(store.get_run_plans(TENANT, "campaign-unsupported")[0])
+        run_id = inject_unsupported_recorded_runtime(
+            store, campaign_id="campaign-unsupported", plan=prepared.run_plans[0]
+        )
         with pytest.raises(UnsupportedRuntimeVersionError):
             extract_run_metric_observations(store=store, tenant_id=TENANT, run_id=run_id)
 

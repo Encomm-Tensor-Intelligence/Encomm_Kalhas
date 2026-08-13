@@ -189,7 +189,7 @@ class TestBindingJsonSafety:
 
 class TestBindingRegistration:
     def test_public_contract_count_is_exactly_40(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 40
+        assert len(PUBLIC_CONTRACTS) == 46
 
     def test_binding_is_registered(self) -> None:
         assert DomainMetricObservationBinding in PUBLIC_CONTRACTS

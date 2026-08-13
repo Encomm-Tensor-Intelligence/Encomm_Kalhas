@@ -141,7 +141,7 @@ def _non_lexical_objective_matrix() -> CampaignObjectiveEvaluationMatrix:
 
 class TestRegistration:
     def test_public_contract_count_is_exactly_40(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 40
+        assert len(PUBLIC_CONTRACTS) == 46
 
     def test_first_37_contracts_unchanged_and_in_exact_order(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
@@ -151,6 +151,12 @@ class TestRegistration:
         assert names[37] == "WorldUncertaintyModel"
         assert names[38] == "WorldRealization"
         assert names[39] == "CampaignWorldRealizationMatrix"
+        assert names[40] == "RealizationRunTrajectoryExecution"
+        assert names[41] == "RealizationRunTrajectoryReplayManifest"
+        assert names[42] == "RealizationCampaignTrajectoryMatrix"
+        assert names[43] == "RealizationRunMetricObservationSet"
+        assert names[44] == "RealizationCampaignMetricObservationMatrix"
+        assert names[45] == "RealizationCampaignMetricStatisticsMatrix"
 
     def test_only_the_two_new_phase23_contracts_registered(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)

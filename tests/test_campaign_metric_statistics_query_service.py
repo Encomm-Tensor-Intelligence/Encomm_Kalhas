@@ -32,6 +32,7 @@ from kalhas.application.in_memory_store import InMemoryScenarioStore
 from kalhas.application.run_metric_observation_service import (
     extract_run_metric_observations,
 )
+from kalhas.application.run_planner import TRAJECTORY_RUNTIME_VERSION
 from kalhas.application.structural_runtime import execute_campaign
 from kalhas.contracts.v1.campaign_metric_statistics import CampaignMetricStatisticsMatrix
 from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
@@ -228,8 +229,17 @@ class TestTypedMappings:
     def test_unsupported_runtime_raises_unsupported(self) -> None:
         from kalhas.contracts.v1.campaign import CampaignState
 
+        from tests.phase25_helpers import inject_unsupported_recorded_runtime
+
         store, world_id = build_store()
-        prepare(store, world_id, runtime_version="3.0.0")
+        # Prepare a valid runtime-2 campaign, then simulate corrupted
+        # recorded state through private test seams (not an application
+        # preparation path): the selected RunPlan and its matching
+        # RunStatus are re-stamped with an unsupported recorded runtime.
+        prepared = prepare(store, world_id, runtime_version=TRAJECTORY_RUNTIME_VERSION)
+        inject_unsupported_recorded_runtime(
+            store, campaign_id="campaign-1", plan=prepared.run_plans[0]
+        )
         start(store)
         status = store.get_campaign_status(TENANT, "campaign-1")
         store.update_campaign_status(

@@ -64,6 +64,16 @@ from kalhas.application.objective_evaluation_errors import (
 from kalhas.application.objective_evaluation_identity import (
     verify_evaluation_profile_identity,
 )
+from kalhas.application.realization_errors import (
+    RealizationRunMetricObservationAlreadyExistsError,
+    RealizationRunMetricObservationIntegrityError,
+    RealizationRunMetricObservationNotFoundError,
+    RealizationRunTrajectoryExecutionAlreadyExistsError,
+    RealizationRunTrajectoryExecutionIntegrityError,
+    RealizationRunTrajectoryExecutionNotFoundError,
+    RealizationRunTrajectoryReplayManifestConflictError,
+    RealizationRunTrajectoryReplayManifestNotFoundError,
+)
 from kalhas.application.world_uncertainty_errors import (
     WorldUncertaintyModelAlreadyExistsError,
     WorldUncertaintyModelIntegrityError,
@@ -83,6 +93,13 @@ from kalhas.contracts.v1.execution import ReplayManifest, RunStatus
 from kalhas.contracts.v1.integrity import RunInputIntegrityManifest
 from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
 from kalhas.contracts.v1.objective_evaluation import ScenarioEvaluationProfile
+from kalhas.contracts.v1.realization_run_metric_observation import (
+    RealizationRunMetricObservationSet,
+)
+from kalhas.contracts.v1.realization_trajectory_execution import (
+    RealizationRunTrajectoryExecution,
+    RealizationRunTrajectoryReplayManifest,
+)
 from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
 from kalhas.contracts.v1.run_plan import RunPlan
 from kalhas.contracts.v1.scenario import ScenarioSpec
@@ -221,6 +238,96 @@ def revalidate_stored_trajectory_replay_manifest(manifest: object, run_id: str) 
             manifest.tenant_id,
             run_id,
             reason="stored trajectory replay manifest violates its contract",
+        ) from None
+
+
+def revalidate_stored_realization_run_trajectory_execution(execution: object, run_id: str) -> None:
+    """Strictly revalidate one stored runtime-3 trajectory execution.
+
+    The same serializer-based strict revalidation pattern as the
+    runtime-2 execution record: a validator-bypassed
+    ``RealizationRunTrajectoryExecution`` (wrong-typed result, invalid
+    hash pattern, or a non-3.0.0 runtime literal) is rejected before any
+    field of it is trusted. Any failure raises
+    :class:`RealizationRunTrajectoryExecutionIntegrityError`; storage is
+    never repaired, normalized, replaced, or rewritten.
+    """
+    if not isinstance(execution, RealizationRunTrajectoryExecution):
+        raise RealizationRunTrajectoryExecutionIntegrityError(
+            run_id, reason="stored realization trajectory execution violates its contract"
+        )
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+            )
+            serialized = execution.model_dump(mode="python")
+        RealizationRunTrajectoryExecution.model_validate(serialized, strict=True)
+    except (ValidationError, TypeError, AttributeError):
+        raise RealizationRunTrajectoryExecutionIntegrityError(
+            run_id, reason="stored realization trajectory execution violates its contract"
+        ) from None
+
+
+def revalidate_stored_realization_run_trajectory_replay_manifest(
+    manifest: object, run_id: str
+) -> None:
+    """Strictly revalidate one stored runtime-3 trajectory replay manifest.
+
+    The same serializer-based strict revalidation pattern as the
+    runtime-2 manifest record: a validator-bypassed
+    ``RealizationRunTrajectoryReplayManifest`` (wrong-typed fields,
+    invalid hash patterns, a non-3.0.0 runtime literal, or a
+    non-``\"exact\"`` classification) is rejected before any field of it
+    is trusted. Any failure raises
+    :class:`RealizationRunTrajectoryReplayManifestConflictError`;
+    storage is never repaired or rewritten.
+    """
+    if not isinstance(manifest, RealizationRunTrajectoryReplayManifest):
+        raise RealizationRunTrajectoryReplayManifestConflictError(
+            run_id, reason="stored realization replay manifest violates its contract"
+        )
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+            )
+            serialized = manifest.model_dump(mode="python")
+        RealizationRunTrajectoryReplayManifest.model_validate(serialized, strict=True)
+    except (ValidationError, TypeError, AttributeError):
+        raise RealizationRunTrajectoryReplayManifestConflictError(
+            run_id, reason="stored realization replay manifest violates its contract"
+        ) from None
+
+
+def revalidate_stored_realization_run_metric_observation_set(
+    observation_set: object, run_id: str
+) -> None:
+    """Strictly revalidate one stored runtime-3 metric-observation set.
+
+    The same serializer-based strict revalidation pattern as the
+    runtime-2 observation set: a validator-bypassed
+    ``RealizationRunMetricObservationSet`` (wrong-typed or non-finite
+    raw values, invalid hashes, a non-3.0.0 runtime literal, or
+    non-canonical observation ordering) is rejected before any field of
+    it is trusted. Any failure raises
+    :class:`RealizationRunMetricObservationIntegrityError`; storage is
+    never repaired, normalized, replaced, or rewritten.
+    """
+    if not isinstance(observation_set, RealizationRunMetricObservationSet):
+        raise RealizationRunMetricObservationIntegrityError(
+            run_id, reason="stored realization observation set violates its contract"
+        )
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+            )
+            serialized = observation_set.model_dump(mode="python")
+        RealizationRunMetricObservationSet.model_validate(serialized, strict=True)
+    except (ValidationError, TypeError, AttributeError):
+        raise RealizationRunMetricObservationIntegrityError(
+            run_id, reason="stored realization observation set violates its contract"
         ) from None
 
 
@@ -489,6 +596,15 @@ class InMemoryScenarioStore:
             tuple[str, str], RunTrajectoryReplayManifest
         ] = {}
         self._run_metric_observation_sets: dict[tuple[str, str], RunMetricObservationSet] = {}
+        self._realization_run_trajectory_executions: dict[
+            tuple[str, str], RealizationRunTrajectoryExecution
+        ] = {}
+        self._realization_run_trajectory_replay_manifests: dict[
+            tuple[str, str], RealizationRunTrajectoryReplayManifest
+        ] = {}
+        self._realization_run_metric_observation_sets: dict[
+            tuple[str, str], RealizationRunMetricObservationSet
+        ] = {}
 
     def put_scenario(self, scenario: ScenarioSpec) -> None:
         """Store a scenario; raises ScenarioAlreadyExistsError on duplicates."""
@@ -826,6 +942,134 @@ class InMemoryScenarioStore:
             return _deep_copy_contract(self._run_metric_observation_sets[(tenant_id, run_id)])
         except KeyError as exc:
             raise RunMetricObservationNotFoundError(tenant_id, run_id) from exc
+
+    def put_realization_run_trajectory_execution(
+        self,
+        tenant_id: str,
+        run_id: str,
+        execution: RealizationRunTrajectoryExecution,
+    ) -> None:
+        """Store a run's immutable runtime-3 trajectory execution artifact.
+
+        The record is strictly revalidated against its complete contract
+        (serializer-based strict revalidation - a validator-bypassed
+        instance is rejected before any field is trusted) and stored as a
+        deep defensive copy. Execution artifacts are immutable: a second
+        identical write is accepted idempotently, while a differing
+        artifact raises RealizationRunTrajectoryExecutionAlreadyExistsError
+        and never replaces the original. There is no update, delete,
+        repair, or per-result surface.
+        """
+        revalidate_stored_realization_run_trajectory_execution(execution, run_id)
+        key = (tenant_id, run_id)
+        if key in self._realization_run_trajectory_executions:
+            if self._realization_run_trajectory_executions[key] != execution:
+                raise RealizationRunTrajectoryExecutionAlreadyExistsError(tenant_id, run_id)
+            return
+        self._realization_run_trajectory_executions[key] = _deep_copy_contract(execution)
+
+    def get_realization_run_trajectory_execution(
+        self, tenant_id: str, run_id: str
+    ) -> RealizationRunTrajectoryExecution:
+        """Fetch a run's runtime-3 trajectory execution artifact.
+
+        Returns a fresh deep copy. Raises
+        RealizationRunTrajectoryExecutionNotFoundError when absent;
+        unknown and foreign executions are indistinguishable.
+        """
+        try:
+            return _deep_copy_contract(
+                self._realization_run_trajectory_executions[(tenant_id, run_id)]
+            )
+        except KeyError as exc:
+            raise RealizationRunTrajectoryExecutionNotFoundError(tenant_id, run_id) from exc
+
+    def put_realization_run_trajectory_replay_manifest(
+        self,
+        tenant_id: str,
+        run_id: str,
+        manifest: RealizationRunTrajectoryReplayManifest,
+    ) -> None:
+        """Record a run's immutable runtime-3 trajectory replay manifest.
+
+        The record is strictly revalidated against its complete contract
+        and stored as a deep defensive copy. Manifests are immutable: an
+        identical rewrite is accepted idempotently, while a different
+        manifest raises RealizationRunTrajectoryReplayManifestConflictError
+        and never overwrites the stored record. There is no update,
+        delete, repair, or replace surface.
+        """
+        revalidate_stored_realization_run_trajectory_replay_manifest(manifest, run_id)
+        key = (tenant_id, run_id)
+        if key in self._realization_run_trajectory_replay_manifests:
+            if self._realization_run_trajectory_replay_manifests[key] != manifest:
+                raise RealizationRunTrajectoryReplayManifestConflictError(run_id)
+            return
+        self._realization_run_trajectory_replay_manifests[key] = _deep_copy_contract(manifest)
+
+    def get_realization_run_trajectory_replay_manifest(
+        self, tenant_id: str, run_id: str
+    ) -> RealizationRunTrajectoryReplayManifest:
+        """Fetch a run's runtime-3 trajectory replay manifest.
+
+        Returns a fresh deep copy. Raises
+        RealizationRunTrajectoryReplayManifestNotFoundError when absent;
+        unknown and foreign manifests are indistinguishable.
+        """
+        try:
+            return _deep_copy_contract(
+                self._realization_run_trajectory_replay_manifests[(tenant_id, run_id)]
+            )
+        except KeyError as exc:
+            raise RealizationRunTrajectoryReplayManifestNotFoundError(tenant_id, run_id) from exc
+
+    def put_realization_run_metric_observation_set(
+        self,
+        tenant_id: str,
+        run_id: str,
+        observation_set: RealizationRunMetricObservationSet,
+    ) -> None:
+        """Store a run's immutable runtime-3 observation set; rejects duplicates.
+
+        Exactly one observation set may exist per tenant + run: a second
+        write - even an identical artifact - raises
+        RealizationRunMetricObservationAlreadyExistsError and never
+        overwrites the original. The supplied artifact must carry exactly
+        the key's ownership (tenant and run identifiers) and must strictly
+        revalidate against its complete contract (serializer-based strict
+        revalidation - a validator-bypassed instance with wrong-typed or
+        non-finite raw values, invalid hashes, a non-3.0.0 runtime
+        literal, or non-canonical observation ordering is rejected before
+        any field is trusted), otherwise a safe typed integrity error is
+        raised and nothing is written. The stored artifact is a deep
+        defensive copy. There is no update, delete, repair, or replace
+        surface.
+        """
+        key = (tenant_id, run_id)
+        if key in self._realization_run_metric_observation_sets:
+            raise RealizationRunMetricObservationAlreadyExistsError(tenant_id, run_id)
+        revalidate_stored_realization_run_metric_observation_set(observation_set, run_id)
+        if observation_set.tenant_id != tenant_id or observation_set.run_id != run_id:
+            raise RealizationRunMetricObservationIntegrityError(
+                run_id, reason="realization metric observation set ownership mismatch"
+            )
+        self._realization_run_metric_observation_sets[key] = _deep_copy_contract(observation_set)
+
+    def get_realization_run_metric_observation_set(
+        self, tenant_id: str, run_id: str
+    ) -> RealizationRunMetricObservationSet:
+        """Fetch a run's runtime-3 metric observation set.
+
+        Returns a fresh deep copy. Raises
+        RealizationRunMetricObservationNotFoundError when absent; unknown
+        and foreign observation sets are indistinguishable.
+        """
+        try:
+            return _deep_copy_contract(
+                self._realization_run_metric_observation_sets[(tenant_id, run_id)]
+            )
+        except KeyError as exc:
+            raise RealizationRunMetricObservationNotFoundError(tenant_id, run_id) from exc
 
     def put_domain_pack_manifest(self, manifest: DomainPackManifest) -> None:
         """Store an immutable domain pack manifest; rejects duplicates.

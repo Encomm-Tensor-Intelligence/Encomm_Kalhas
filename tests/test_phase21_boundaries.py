@@ -318,7 +318,7 @@ def test_phase18_19_20_behavior_unchanged() -> None:
 
 
 def test_public_contracts_remain_exactly_forty() -> None:
-    assert len(PUBLIC_CONTRACTS) == 40
+    assert len(PUBLIC_CONTRACTS) == 46
 
 
 def test_existing_v1_contracts_unchanged_and_matrix_appended_last() -> None:
@@ -386,18 +386,21 @@ def test_matrix_runtime_literal_matches_authoritative_constant() -> None:
     assert schema["properties"]["comparison_mode"]["const"] == "identical_conditions"
 
 
-def test_no_new_runtime_version_constant() -> None:
+def test_runtime_version_constants_are_phase25_aware() -> None:
     from kalhas.application.run_planner import (
         LEGACY_STRUCTURAL_RUNTIME_VERSION,
+        REALIZATION_TRAJECTORY_RUNTIME_VERSION,
         RUNTIME_VERSION,
         TRAJECTORY_RUNTIME_VERSION,
     )
 
-    source = _module_source("application/run_planner.py")
-    assert "3.0.0" not in source
-    # The recorded runtime versions remain exactly the two known ones.
+    # The recorded runtime-2 planning constants remain exactly unchanged.
     assert {LEGACY_STRUCTURAL_RUNTIME_VERSION, TRAJECTORY_RUNTIME_VERSION} == {"1.0.0", "2.0.0"}
+    assert LEGACY_STRUCTURAL_RUNTIME_VERSION == "1.0.0"
+    assert TRAJECTORY_RUNTIME_VERSION == "2.0.0"
     assert RUNTIME_VERSION == TRAJECTORY_RUNTIME_VERSION
+    # Phase 25 adds the separate runtime-3 planner constant.
+    assert REALIZATION_TRAJECTORY_RUNTIME_VERSION == "3.0.0"
 
 
 def test_structural_event_kinds_are_exactly_nine() -> None:

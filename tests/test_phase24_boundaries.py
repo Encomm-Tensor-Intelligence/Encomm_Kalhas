@@ -100,7 +100,7 @@ def _module_source(relative: str) -> str:
 
 class TestContractBoundary:
     def test_public_contract_count_exactly_40(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 40
+        assert len(PUBLIC_CONTRACTS) == 46
 
     def test_original_contracts_unchanged(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
@@ -153,6 +153,12 @@ class TestSchemaBoundary:
                 "WorldUncertaintyModel.schema.json",
                 "WorldRealization.schema.json",
                 "CampaignWorldRealizationMatrix.schema.json",
+                "RealizationRunTrajectoryExecution.schema.json",
+                "RealizationRunTrajectoryReplayManifest.schema.json",
+                "RealizationCampaignTrajectoryMatrix.schema.json",
+                "RealizationRunMetricObservationSet.schema.json",
+                "RealizationCampaignMetricObservationMatrix.schema.json",
+                "RealizationCampaignMetricStatisticsMatrix.schema.json",
             ]
         )
         assert schema_files == expected
@@ -273,10 +279,26 @@ class TestArchitectureBoundary:
             assert "phase_25" not in source.lower()
 
     def test_runtime_2_planning_surface_untouched(self) -> None:
-        run_planner = _module_source("application/run_planner.py")
-        assert "run_input_hash" in run_planner
-        assert "uncertainty" not in run_planner
-        assert "world_realization" not in run_planner
+        import inspect
+
+        from kalhas.application import run_planner as run_planner_module
+
+        # Phase 25 intentionally adds separate runtime-3 planner symbols to
+        # the same module, so the compatibility canary is scoped to the
+        # historical runtime-2 primitives themselves: their function
+        # bodies must still contain no uncertainty, no world-realization,
+        # and no runtime-3-specific behavior.
+        for function_name in ("run_input_hash", "plan_runs"):
+            source = inspect.getsource(getattr(run_planner_module, function_name))
+            assert "uncertainty" not in source, f"{function_name} gained an uncertainty dependency"
+            assert "world_realization" not in source, (
+                f"{function_name} gained a world-realization dependency"
+            )
+            assert "3.0.0" not in source, f"{function_name} gained runtime-3 behavior"
+        # The historical constants remain unchanged.
+        assert run_planner_module.LEGACY_STRUCTURAL_RUNTIME_VERSION == "1.0.0"
+        assert run_planner_module.TRAJECTORY_RUNTIME_VERSION == "2.0.0"
+        assert run_planner_module.RUNTIME_VERSION == run_planner_module.TRAJECTORY_RUNTIME_VERSION
 
     def test_no_executable_types_in_phase24_contracts(self) -> None:
         from kalhas.contracts.v1.world_realization import (

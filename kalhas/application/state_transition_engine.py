@@ -10,8 +10,18 @@ with the model, the transitions, or the engine's working state. It is
 deliberately **not** a simulation scheduler, runtime, or decision
 engine:
 
-- It derives the initial state **only** from
-  ``DomainStateModel.state_fields[].initial_value``.
+- The historical default path derives the initial state from
+  ``DomainStateModel.state_fields[].initial_value`` (and records the
+  scenario seed as provenance only). Runtime 3.0.0 may alternatively
+  supply an explicit, complete realized initial state through the
+  optional ``initial_state`` keyword; that supplied state is fully
+  validated against the model before transition zero, its canonical
+  hash becomes the authoritative ``initial_state_hash``, and the engine
+  itself never chooses, samples, or generates that state - it only
+  accepts what the caller verified.
+- No caller input is ever mutated: the model, the transitions, the
+  supplied initial state, and the caller's mappings/containers are
+  copied or frozen on entry and never written back to.
 - It evaluates transitions **only in the caller-provided order**; it
   never chooses, reorders, searches for, prioritizes, or loops
   transitions, and it never inspects strategy policies or invokes domain
@@ -514,15 +524,29 @@ def evaluate_trajectory(
     transitions: Sequence[DomainStateTransition],
     *,
     max_attempts: int = DEFAULT_MAX_TRANSITION_ATTEMPTS,
+    initial_state: StateLike | None = None,
 ) -> TrajectoryEvaluation:
     """Evaluate the supplied transition sequence strictly in caller order.
 
     The initial state is derived solely from the model's declared
-    initial values and validated against the model. Every transition is
-    verified to belong to the supplied model (ownership/identity fields
-    - tenant, scenario, binding, pack id, pack version, manifest, and
-    state-model - plus the authoritative content hashes) **before any
-    evaluation happens**, and every transition's declared guard/target
+    initial values - unless an explicit ``initial_state`` mapping is
+    supplied (the Phase 25 realization-aware runtime passes the realized
+    initial state here). With ``initial_state=None`` the behavior is
+    byte-for-byte the historical path: ``derive_initial_state`` then
+    validation. A supplied initial state is deep-copied into fresh
+    working state (the caller's mapping is never mutated, and no nested
+    reference is shared with the engine's working state) and **fully
+    validated against the model's field definitions before the first
+    transition** - unknown or missing fields, exact value kinds
+    (booleans are never accepted as integers or numbers, non-finite
+    floats rejected everywhere), and canonical ``allowed_values``
+    membership are all enforced; the validated realized initial state's
+    canonical hash becomes the evaluation's authoritative
+    ``initial_state_hash``. Every transition is verified to belong to
+    the supplied model (ownership/identity fields - tenant, scenario,
+    binding, pack id, pack version, manifest, and state-model - plus
+    the authoritative content hashes) **before any evaluation
+    happens**, and every transition's declared guard/target
     specification is then validated up front against the model's field
     definitions (non-empty targets, existing field keys, exact value
     kinds, allowed values, no nested non-finite values) - so a
@@ -543,7 +567,8 @@ def evaluate_trajectory(
     The returned :class:`TrajectoryEvaluation` carries deep-frozen
     immutable snapshots of the initial and final states (nested mappings
     and arrays included) that share no mutable references with the
-    model, the transitions, or the engine's internal working state.
+    model, the transitions, the supplied initial state, or the engine's
+    internal working state.
 
     ``max_attempts`` bounds the explicitly requested trajectory: a
     sequence longer than the bound raises
@@ -556,10 +581,15 @@ def evaluate_trajectory(
         raise TrajectoryLimitExceededError(len(transitions), max_attempts)
     validate_transition_catalog(state_model, transitions)
 
-    initial_state = derive_initial_state(state_model)
-    validate_state(initial_state, state_model)
-    initial_state_hash = state_hash(initial_state)
-    state: dict[str, JsonValue] = initial_state
+    if initial_state is None:
+        initial_state_working = derive_initial_state(state_model)
+    else:
+        initial_state_working = {
+            key: copy.deepcopy(_to_plain_value(value)) for key, value in initial_state.items()
+        }
+    validate_state(initial_state_working, state_model)
+    initial_state_hash = state_hash(initial_state_working)
+    state: dict[str, JsonValue] = initial_state_working
 
     attempts: list[TransitionAttempt] = []
     for position, transition in enumerate(transitions):
@@ -588,7 +618,7 @@ def evaluate_trajectory(
     )
     return TrajectoryEvaluation(
         state_model_id=state_model.state_model_id,
-        initial_state=_freeze_state(initial_state),
+        initial_state=_freeze_state(initial_state_working),
         initial_state_hash=initial_state_hash,
         attempts=ordered_attempts,
         final_state=_freeze_state(state),

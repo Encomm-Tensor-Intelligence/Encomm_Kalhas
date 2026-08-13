@@ -92,7 +92,7 @@ def _multi_cell_payload(
 
 class TestRegistration:
     def test_public_contract_count_is_40(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 40
+        assert len(PUBLIC_CONTRACTS) == 46
 
     def test_only_the_versioned_matrix_is_registered(self) -> None:
         registered = {contract.__name__ for contract in PUBLIC_CONTRACTS}
@@ -121,11 +121,17 @@ class TestRegistration:
         assert names[matrix_index + 1] == "DomainMetricObservationBinding"
         assert names[matrix_index + 2] == "RunMetricObservationSet"
         assert names[matrix_index + 3] == "CampaignMetricObservationMatrix"
-        assert names[-5] == "ScenarioEvaluationProfile"
-        assert names[-4] == "CampaignObjectiveEvaluationMatrix"
-        assert names[-3] == "WorldUncertaintyModel"
-        assert names[-2] == "WorldRealization"
-        assert names[-1] == "CampaignWorldRealizationMatrix"
+        assert names[-11] == "ScenarioEvaluationProfile"
+        assert names[-10] == "CampaignObjectiveEvaluationMatrix"
+        assert names[-9] == "WorldUncertaintyModel"
+        assert names[-8] == "WorldRealization"
+        assert names[-7] == "CampaignWorldRealizationMatrix"
+        assert names[-6] == "RealizationRunTrajectoryExecution"
+        assert names[-5] == "RealizationRunTrajectoryReplayManifest"
+        assert names[-4] == "RealizationCampaignTrajectoryMatrix"
+        assert names[-3] == "RealizationRunMetricObservationSet"
+        assert names[-2] == "RealizationCampaignMetricObservationMatrix"
+        assert names[-1] == "RealizationCampaignMetricStatisticsMatrix"
 
 
 class TestRunCell:

@@ -33,6 +33,7 @@ from kalhas.application.domain_errors import (
 from kalhas.application.in_memory_store import InMemoryScenarioStore
 from kalhas.application.run_planner import (
     LEGACY_STRUCTURAL_RUNTIME_VERSION,
+    TRAJECTORY_RUNTIME_VERSION,
     run_identifier,
 )
 from kalhas.application.strategy_trajectory_service import (
@@ -178,8 +179,17 @@ class TestRejections:
             _query(store)
 
     def test_unsupported_runtime_rejected(self) -> None:
+        from tests.phase25_helpers import inject_unsupported_recorded_runtime
+
         store, world_id = build_store()
-        prepare(store, world_id, runtime_version="3.0.0")
+        # Prepare a valid runtime-2 campaign, then simulate corrupted
+        # recorded state through private test seams (not an application
+        # preparation path): the selected RunPlan and its matching
+        # RunStatus are re-stamped with an unsupported recorded runtime.
+        prepared = prepare(store, world_id, runtime_version=TRAJECTORY_RUNTIME_VERSION)
+        inject_unsupported_recorded_runtime(
+            store, campaign_id="campaign-1", plan=prepared.run_plans[0]
+        )
         start(store)
         # Force COMPLETE so the query reaches the recorded-runtime gate.
         status = store.get_campaign_status(TENANT, "campaign-1")
@@ -190,7 +200,7 @@ class TestRejections:
         )
         with pytest.raises(UnsupportedRuntimeVersionError) as exc_info:
             _query(store)
-        assert "3.0.0" in str(exc_info.value)
+        assert "9.9.9" in str(exc_info.value)
 
     def test_missing_execution_in_complete_campaign_is_integrity_failure(self) -> None:
         store, _ = _complete_v2_store()

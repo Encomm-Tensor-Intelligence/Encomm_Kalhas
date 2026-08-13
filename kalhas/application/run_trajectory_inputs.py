@@ -35,8 +35,10 @@ from kalhas.application.domain_errors import (
 )
 from kalhas.application.in_memory_store import InMemoryScenarioStore
 from kalhas.application.input_integrity import VerifiedRunInputs, verify_run_inputs
+from kalhas.application.realization_identity import verify_realization_provenance
 from kalhas.application.run_planner import (
     LEGACY_STRUCTURAL_RUNTIME_VERSION,
+    REALIZATION_TRAJECTORY_RUNTIME_VERSION,
     TRAJECTORY_RUNTIME_VERSION,
 )
 from kalhas.application.strategy_trajectory_service import (
@@ -45,7 +47,9 @@ from kalhas.application.strategy_trajectory_service import (
     get_strategy_trajectory_plans,
     strategy_candidate_content_hash,
 )
+from kalhas.application.world_integrity import extract_world_catalog
 from kalhas.contracts.v1.trajectory import StrategyTrajectoryPlan
+from kalhas.contracts.v1.world_realization import WorldRealization
 
 
 @dataclass(frozen=True)
@@ -59,12 +63,15 @@ class VerifiedRunTrajectoryInputs:
     order; empty for a world with no transition-capable models) and
     ``catalogs`` is the closed transition-capable catalog set of the
     verified compiled world (empty for legacy runs, which never consume
-    trajectory plans).
+    trajectory plans). ``realization`` is set only for recorded runtime
+    3.0.0 runs: the exact realization reconstructed once by the base
+    input verifier and reused here - never reconstructed or resampled.
     """
 
     inputs: VerifiedRunInputs
     plans: tuple[StrategyTrajectoryPlan, ...]
     catalogs: tuple[ModelTrajectoryCatalog, ...]
+    realization: WorldRealization | None = None
 
 
 def _reject(run_id: str, reason: str) -> RunTrajectoryExecutionIntegrityError:
@@ -97,8 +104,29 @@ def verify_run_trajectory_inputs(
         # required, loaded, or consumed.
         return VerifiedRunTrajectoryInputs(inputs=verified, plans=(), catalogs=())
 
-    if recorded_version != TRAJECTORY_RUNTIME_VERSION:
+    if recorded_version not in (
+        TRAJECTORY_RUNTIME_VERSION,
+        REALIZATION_TRAJECTORY_RUNTIME_VERSION,
+    ):
         raise UnsupportedRuntimeVersionError(recorded_version, operation="trajectory resolution")
+
+    # Runtime 3.0.0 reuses the realization reconstructed exactly once by
+    # the base input verifier (never reconstructed or resampled here) and
+    # re-derives its provenance against the verified world, the recorded
+    # seed, and the world's embedded uncertainty model (or its verified
+    # absence) before any plan field is trusted.
+    realization: WorldRealization | None = None
+    if recorded_version == REALIZATION_TRAJECTORY_RUNTIME_VERSION:
+        realization = verified.realization
+        if realization is None:
+            raise _reject(run_id, "realization missing after input verification")
+        verify_realization_provenance(
+            run_id=run_id,
+            world=verified.world,
+            seed=verified.seed,
+            realization=realization,
+            uncertainty_model=extract_world_catalog(verified.world).uncertainty_model,
+        )
 
     # Phase 15 collection-level integrity: the service getter verifies
     # the complete stored collection - matrix length and order, unique
@@ -122,7 +150,9 @@ def verify_run_trajectory_inputs(
         # non-empty collection for such a world (defense in depth here).
         if collection:
             raise _reject(run_id, "unexpected trajectory plans for a world with no transitions")
-        return VerifiedRunTrajectoryInputs(inputs=verified, plans=(), catalogs=())
+        return VerifiedRunTrajectoryInputs(
+            inputs=verified, plans=(), catalogs=(), realization=realization
+        )
 
     if not collection:
         raise TrajectoryPlansRequiredError(run_id)
@@ -140,4 +170,6 @@ def verify_run_trajectory_inputs(
         if plan.strategy_content_hash != strategy_candidate_content_hash(verified.strategy):
             raise _reject(run_id, "trajectory plan strategy content hash mismatch")
 
-    return VerifiedRunTrajectoryInputs(inputs=verified, plans=selected, catalogs=catalogs)
+    return VerifiedRunTrajectoryInputs(
+        inputs=verified, plans=selected, catalogs=catalogs, realization=realization
+    )

@@ -171,11 +171,16 @@ class TestExtractionApi:
 
         from kalhas.adapters.mocks import MockLegionAdapter
         from kalhas.application.campaign_service import prepare_campaign
-        from kalhas.application.run_planner import run_identifier
+        from kalhas.application.run_planner import TRAJECTORY_RUNTIME_VERSION
 
         from tests.phase4_helpers import build_request, build_seed
+        from tests.phase25_helpers import inject_unsupported_recorded_runtime
 
-        prepare_campaign(
+        # Prepare a valid runtime-2 campaign, then simulate corrupted
+        # recorded state through private test seams (not an application
+        # preparation path): both the stored RunPlan and its matching
+        # RunStatus are re-stamped with an unsupported recorded runtime.
+        prepared = prepare_campaign(
             store=store,
             legion=MockLegionAdapter(),
             tenant_id=TENANT,
@@ -186,9 +191,11 @@ class TestExtractionApi:
             campaign_name="Unsupported campaign",
             seed_ensemble=(build_seed(),),
             created_at=datetime(2026, 1, 5, 12, 0, 0, tzinfo=UTC),
-            runtime_version="3.0.0",
+            runtime_version=TRAJECTORY_RUNTIME_VERSION,
         )
-        unsupported_run = run_identifier(store.get_run_plans(TENANT, "campaign-unsupported")[0])
+        unsupported_run = inject_unsupported_recorded_runtime(
+            store, campaign_id="campaign-unsupported", plan=prepared.run_plans[0]
+        )
         response = client.post(f"/v1/runs/{unsupported_run}/metric-observations", headers=HEADERS)
         assert response.status_code == 409
         assert ApiErrorResponse.model_validate(response.json()).code == ErrorCode.CONFLICT

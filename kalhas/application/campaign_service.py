@@ -18,12 +18,19 @@ from kalhas.adapters.legion import LegionAdapter
 from kalhas.application.campaign_lifecycle import transition
 from kalhas.application.domain_errors import (
     CampaignPreparationError,
+    UnsupportedRuntimeVersionError,
     WorldNotFoundError,
     WorldScenarioMismatchError,
     WorldSnapshotIntegrityError,
 )
 from kalhas.application.in_memory_store import InMemoryScenarioStore
-from kalhas.application.run_planner import RUNTIME_VERSION, plan_runs, run_identifier
+from kalhas.application.run_planner import (
+    LEGACY_STRUCTURAL_RUNTIME_VERSION,
+    RUNTIME_VERSION,
+    TRAJECTORY_RUNTIME_VERSION,
+    plan_runs,
+    run_identifier,
+)
 from kalhas.application.world_integrity import verify_world_snapshot
 from kalhas.contracts.v1.campaign import CampaignSpec, CampaignState, CampaignStatus
 from kalhas.contracts.v1.execution import RunState, RunStatus
@@ -68,7 +75,16 @@ def prepare_campaign(
     Tenant invariants are enforced here with typed domain errors: the
     explicit tenant must own the scenario, the world, the strategy request,
     every seed, and every returned strategy candidate.
+
+    This service supports exactly the structural (1.0.0) and trajectory
+    (2.0.0) runtime versions. Runtime 3.0.0 campaigns are prepared by
+    ``prepare_realization_campaign`` in ``realization_campaign_service``;
+    any other recorded value is rejected with a typed
+    :class:`UnsupportedRuntimeVersionError` before any store read, world
+    verification, LEGION call, or write.
     """
+    if runtime_version not in (LEGACY_STRUCTURAL_RUNTIME_VERSION, TRAJECTORY_RUNTIME_VERSION):
+        raise UnsupportedRuntimeVersionError(runtime_version, operation="campaign preparation")
     scenario = store.get_scenario(tenant_id, scenario_id)
     world = store.get_world(tenant_id, world_version_id)
     if world.source_scenario_id != scenario.identifier:

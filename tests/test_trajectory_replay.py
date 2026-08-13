@@ -30,6 +30,7 @@ from kalhas.application.in_memory_store import InMemoryScenarioStore
 from kalhas.application.replay_service import replay_run
 from kalhas.application.run_planner import (
     LEGACY_STRUCTURAL_RUNTIME_VERSION,
+    TRAJECTORY_RUNTIME_VERSION,
     run_identifier,
 )
 from kalhas.application.run_trajectory_runtime import (
@@ -50,6 +51,7 @@ from tests.phase16_helpers import (
     build_trajectory_store,
     build_transition,
 )
+from tests.phase25_helpers import inject_unsupported_recorded_runtime
 
 HASH_64 = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 
@@ -82,9 +84,15 @@ class TestLegacyReplay:
 
     def test_unsupported_version_rejected_before_replay_manifests(self) -> None:
         store, world_id = build_store()
-        prepared = prepare(store, world_id, runtime_version="3.0.0")
+        # Prepare a valid runtime-2 campaign, then simulate corrupted
+        # recorded state through private test seams (not an application
+        # preparation path): both the stored RunPlan and its matching
+        # RunStatus are re-stamped with an unsupported recorded runtime.
+        prepared = prepare(store, world_id, runtime_version=TRAJECTORY_RUNTIME_VERSION)
         start(store)
-        run_id = run_identifier(prepared.run_plans[0])
+        run_id = inject_unsupported_recorded_runtime(
+            store, campaign_id="campaign-1", plan=prepared.run_plans[0]
+        )
         status = store.get_run_status(TENANT, run_id)
         # Fake a COMPLETE status so replay reaches the runtime gate.
         store.put_run_status(

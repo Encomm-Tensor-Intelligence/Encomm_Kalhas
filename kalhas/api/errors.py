@@ -47,6 +47,7 @@ from kalhas.application.domain_errors import (
     DomainStateTransitionNotFoundError,
     DomainStateTransitionValuesError,
     InvalidScenarioError,
+    InvalidTrajectoryDraftError,
     KalhasDomainError,
     MalformedWorldError,
     ReplayHashMismatchError,
@@ -84,6 +85,20 @@ from kalhas.application.objective_evaluation_errors import (
     EvaluationProfileReachTargetRequiredError,
     EvaluationProfileToleranceRuleError,
     EvaluationProfileValidationError,
+)
+from kalhas.application.realization_errors import (
+    RealizationCampaignMetricObservationMatrixIntegrityError,
+    RealizationCampaignMetricStatisticsIntegrityError,
+    RealizationCampaignTrajectoryMatrixIntegrityError,
+    RealizationReplayManifestConflictError,
+    RealizationRunMetricObservationAlreadyExistsError,
+    RealizationRunMetricObservationIntegrityError,
+    RealizationRunMetricObservationNotFoundError,
+    RealizationRunTrajectoryExecutionAlreadyExistsError,
+    RealizationRunTrajectoryExecutionIntegrityError,
+    RealizationRunTrajectoryExecutionNotFoundError,
+    RealizationRunTrajectoryReplayManifestConflictError,
+    RealizationRunTrajectoryReplayManifestNotFoundError,
 )
 from kalhas.application.world_uncertainty_errors import (
     CampaignWorldRealizationMatrixIntegrityError,
@@ -189,6 +204,9 @@ def register_error_handlers(app: FastAPI) -> None:
                 DomainStateTransitionNotFoundError,
                 EvaluationProfileNotFoundError,
                 WorldUncertaintyModelNotFoundError,
+                RealizationRunTrajectoryExecutionNotFoundError,
+                RealizationRunTrajectoryReplayManifestNotFoundError,
+                RealizationRunMetricObservationNotFoundError,
             ),
         ):
             status, code, message = 404, ErrorCode.NOT_FOUND, str(exc)
@@ -213,6 +231,10 @@ def register_error_handlers(app: FastAPI) -> None:
                 WorldUncertaintyModelAlreadyExistsError,
                 WorldUncertaintyModelDeclarationAfterCompilationError,
                 WorldRealizationSamplingError,
+                RealizationRunTrajectoryExecutionAlreadyExistsError,
+                RealizationRunTrajectoryReplayManifestConflictError,
+                RealizationReplayManifestConflictError,
+                RealizationRunMetricObservationAlreadyExistsError,
             ),
         ):
             status, code, message = 409, ErrorCode.CONFLICT, str(exc)
@@ -236,6 +258,7 @@ def register_error_handlers(app: FastAPI) -> None:
                 EvaluationProfileInvalidScaleError,
                 EvaluationProfileValidationError,
                 WorldUncertaintyModelValidationError,
+                InvalidTrajectoryDraftError,
             ),
         ):
             status, code, message = 422, ErrorCode.VALIDATION_ERROR, str(exc)
@@ -271,6 +294,11 @@ def register_error_handlers(app: FastAPI) -> None:
                 WorldUncertaintyModelIntegrityError,
                 WorldRealizationIntegrityError,
                 CampaignWorldRealizationMatrixIntegrityError,
+                RealizationRunTrajectoryExecutionIntegrityError,
+                RealizationRunMetricObservationIntegrityError,
+                RealizationCampaignTrajectoryMatrixIntegrityError,
+                RealizationCampaignMetricObservationMatrixIntegrityError,
+                RealizationCampaignMetricStatisticsIntegrityError,
             ),
         ):
             status, code, message = 409, ErrorCode.INTEGRITY_ERROR, str(exc)

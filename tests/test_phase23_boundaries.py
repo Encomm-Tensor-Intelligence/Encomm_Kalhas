@@ -357,7 +357,7 @@ def test_phase_18_19_20_21_22_behavior_unchanged() -> None:
 
 
 def test_public_contracts_remain_exactly_forty() -> None:
-    assert len(PUBLIC_CONTRACTS) == 40
+    assert len(PUBLIC_CONTRACTS) == 46
 
 
 def test_existing_v1_contracts_unchanged_and_phase23_contracts_appended_last() -> None:

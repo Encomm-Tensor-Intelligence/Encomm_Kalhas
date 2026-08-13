@@ -25,6 +25,22 @@ from kalhas.contracts.v1.objective_evaluation import (
     CampaignObjectiveEvaluationMatrix,
     ScenarioEvaluationProfile,
 )
+from kalhas.contracts.v1.realization_campaign_metric_observation import (
+    RealizationCampaignMetricObservationMatrix,
+)
+from kalhas.contracts.v1.realization_campaign_metric_statistics import (
+    RealizationCampaignMetricStatisticsMatrix,
+)
+from kalhas.contracts.v1.realization_campaign_trajectory import (
+    RealizationCampaignTrajectoryMatrix,
+)
+from kalhas.contracts.v1.realization_run_metric_observation import (
+    RealizationRunMetricObservationSet,
+)
+from kalhas.contracts.v1.realization_trajectory_execution import (
+    RealizationRunTrajectoryExecution,
+    RealizationRunTrajectoryReplayManifest,
+)
 from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
 from kalhas.contracts.v1.run_plan import RunPlan
 from kalhas.contracts.v1.scenario import (
@@ -1306,6 +1322,226 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         ],
         "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
         "assembled_at": NOW,
+    },
+    RealizationRunTrajectoryExecution: {
+        "identifier": "realization-trajectory-execution-0123456789abcdef",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "run_id": "run-1",
+        "campaign_id": "campaign-1",
+        "run_plan_id": "plan-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "strategy_candidate_id": "mock-baseline",
+        "strategy_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "scenario_seed_id": "seed-1",
+        "world_realization_id": "world-realization-0123456789abcdef",
+        "world_realization_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "runtime_version": "3.0.0",
+        "input_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "trajectory_plan_set_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "results": [],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "executed_at": NOW,
+    },
+    RealizationRunTrajectoryReplayManifest: {
+        "identifier": "realization-replay-run-1",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "run_id": "run-1",
+        "campaign_id": "campaign-1",
+        "realization_run_trajectory_execution_id": (
+            "realization-trajectory-execution-0123456789abcdef"
+        ),
+        "realization_run_metric_observation_set_id": (
+            "realization-metric-observation-set-0123456789abcdef"
+        ),
+        "world_version_id": "world-0123456789abcdef",
+        "strategy_candidate_id": "mock-baseline",
+        "scenario_seed_id": "seed-1",
+        "world_realization_id": "world-realization-0123456789abcdef",
+        "world_realization_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "runtime_version": "3.0.0",
+        "input_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "trajectory_plan_set_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "expected_execution_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "recomputed_execution_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "expected_observation_set_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "recomputed_observation_set_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "replay_classification": "exact",
+        "replayed_at": NOW,
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    },
+    RealizationCampaignTrajectoryMatrix: {
+        "identifier": "realization-trajectory-matrix-0123456789abcdef",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "campaign_id": "campaign-1",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "runtime_version": "3.0.0",
+        "comparison_mode": "identical_conditions",
+        "ordered_strategy_candidate_ids": ["mock-baseline"],
+        "ordered_scenario_seed_ids": ["seed-1"],
+        "ordered_world_realization_ids": ["world-realization-0123456789abcdef"],
+        "ordered_world_realization_content_hashes": [
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        "cells": [
+            {
+                "sequence_position": 0,
+                "strategy_position": 0,
+                "seed_position": 0,
+                "run_id": "run-1",
+                "run_plan_id": "plan-1",
+                "strategy_candidate_id": "mock-baseline",
+                "scenario_seed_id": "seed-1",
+                "input_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+                "realization_run_trajectory_execution_id": (
+                    "realization-trajectory-execution-0123456789abcdef"
+                ),
+                "realization_run_trajectory_execution_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "trajectory_plan_set_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "result_content_hashes": [],
+                "world_realization_id": "world-realization-0123456789abcdef",
+                "world_realization_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+            }
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "assembled_at": NOW,
+    },
+    RealizationRunMetricObservationSet: {
+        "identifier": "realization-metric-observation-set-0123456789abcdef",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "run_id": "run-1",
+        "campaign_id": "campaign-1",
+        "run_plan_id": "plan-1",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "strategy_candidate_id": "mock-baseline",
+        "strategy_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "scenario_seed_id": "seed-1",
+        "world_realization_id": "world-realization-0123456789abcdef",
+        "world_realization_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "runtime_version": "3.0.0",
+        "input_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "realization_run_trajectory_execution_id": (
+            "realization-trajectory-execution-0123456789abcdef"
+        ),
+        "realization_run_trajectory_execution_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "observations": [],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "observed_at": NOW,
+    },
+    RealizationCampaignMetricObservationMatrix: {
+        "identifier": "realization-metric-observation-matrix-0123456789abcdef",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "campaign_id": "campaign-1",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "runtime_version": "3.0.0",
+        "comparison_mode": "identical_conditions",
+        "ordered_strategy_candidate_ids": ["mock-baseline"],
+        "ordered_scenario_seed_ids": ["seed-1"],
+        "ordered_metric_ids": [],
+        "ordered_world_realization_ids": ["world-realization-0123456789abcdef"],
+        "ordered_world_realization_content_hashes": [
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        "cells": [
+            {
+                "sequence_position": 0,
+                "strategy_position": 0,
+                "seed_position": 0,
+                "run_id": "run-1",
+                "run_plan_id": "plan-1",
+                "strategy_candidate_id": "mock-baseline",
+                "scenario_seed_id": "seed-1",
+                "input_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+                "realization_run_trajectory_execution_id": (
+                    "realization-trajectory-execution-0123456789abcdef"
+                ),
+                "realization_run_trajectory_execution_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "realization_run_metric_observation_set_id": (
+                    "realization-metric-observation-set-0123456789abcdef"
+                ),
+                "realization_run_metric_observation_set_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "world_realization_id": "world-realization-0123456789abcdef",
+                "world_realization_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "observations": [],
+            }
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "assembled_at": NOW,
+    },
+    RealizationCampaignMetricStatisticsMatrix: {
+        "identifier": "realization-metric-statistics-matrix-0123456789abcdef",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "campaign_id": "campaign-1",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "runtime_version": "3.0.0",
+        "comparison_mode": "identical_conditions",
+        "statistics_mode": "descriptive",
+        "source_metric_observation_matrix_id": (
+            "realization-metric-observation-matrix-0123456789abcdef"
+        ),
+        "source_metric_observation_matrix_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "ordered_strategy_candidate_ids": ["mock-baseline"],
+        "ordered_scenario_seed_ids": ["seed-1"],
+        "ordered_metric_ids": [],
+        "ordered_world_realization_ids": ["world-realization-0123456789abcdef"],
+        "ordered_world_realization_content_hashes": [
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        "summaries": [],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "summarized_at": NOW,
     },
 }
 

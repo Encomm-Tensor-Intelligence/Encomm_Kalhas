@@ -73,7 +73,15 @@ from kalhas.application.in_memory_store import (
     revalidate_stored_trajectory_plan,
 )
 from kalhas.application.input_integrity import verify_run_inputs
-from kalhas.application.run_planner import TRAJECTORY_RUNTIME_VERSION, plan_runs, run_identifier
+from kalhas.application.realization_campaign_service import (
+    preflight_realization_run_plan_matrix,
+)
+from kalhas.application.run_planner import (
+    REALIZATION_TRAJECTORY_RUNTIME_VERSION,
+    TRAJECTORY_RUNTIME_VERSION,
+    plan_runs,
+    run_identifier,
+)
 from kalhas.application.state_transition_engine import validate_transition_catalog
 from kalhas.application.world_integrity import extract_world_catalog, verify_world_snapshot
 from kalhas.contracts.v1.campaign import CampaignSpec, CampaignState
@@ -466,6 +474,38 @@ def preflight_run_plan_matrix(
 _preflight_run_plan_matrix = preflight_run_plan_matrix
 
 
+def _dispatch_run_plan_preflight(
+    store: InMemoryScenarioStore,
+    tenant_id: str,
+    campaign: CampaignSpec,
+    world: WorldVersion,
+) -> None:
+    """Dispatch run-plan preflight from the recorded stored runtime only.
+
+    Phase 25: trajectory planning of a runtime-3.0.0 campaign must
+    preflight its realization-aware plan matrix, while runtime 2.0.0
+    keeps the historical preflight unchanged. The dispatch reads only
+    the recorded ``RunPlan.runtime_version`` from the stored matrix;
+    exactly one preflight is called and each preflight owns its
+    verification (no ``verify_run_inputs`` call happens before the
+    selected preflight). Recorded ``1.0.0`` or any unknown version is
+    rejected with the typed unsupported-runtime error using the
+    established trajectory-plan-preparation wording.
+    """
+    stored_plans = store.get_run_plans(tenant_id, campaign.identifier)
+    if not stored_plans:
+        raise RunInputIntegrityError(campaign.identifier, reason="stored run-plan matrix missing")
+    recorded_version = stored_plans[0].runtime_version
+    if recorded_version == TRAJECTORY_RUNTIME_VERSION:
+        preflight_run_plan_matrix(store, tenant_id, campaign, world)
+    elif recorded_version == REALIZATION_TRAJECTORY_RUNTIME_VERSION:
+        preflight_realization_run_plan_matrix(store, tenant_id, campaign, world)
+    else:
+        raise UnsupportedRuntimeVersionError(
+            recorded_version, operation="trajectory plan preparation"
+        )
+
+
 def prepare_strategy_trajectory_plans(
     *,
     store: InMemoryScenarioStore,
@@ -507,7 +547,10 @@ def prepare_strategy_trajectory_plans(
     else:
         raise TrajectoryPlansAlreadyPreparedError(tenant_id, campaign_id)
     world, _ = _load_verified_world(store, tenant_id, campaign.world_version_id)
-    _preflight_run_plan_matrix(store, tenant_id, campaign, world)
+    # Run-plan preflight is dispatched from the recorded stored runtime:
+    # runtime 2.0.0 keeps the historical preflight, runtime 3.0.0 uses
+    # the realization-aware preflight, anything else is rejected.
+    _dispatch_run_plan_preflight(store, tenant_id, campaign, world)
 
     stored_candidates = {
         candidate.identifier: candidate

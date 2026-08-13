@@ -8,6 +8,7 @@ seed order. Every run references the same immutable world version.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Literal
 
 from kalhas.application.hashing import canonical_json, sha256_hex
@@ -15,9 +16,11 @@ from kalhas.contracts.v1.run_plan import RunPlan
 from kalhas.contracts.v1.scenario import ScenarioSeed
 from kalhas.contracts.v1.shared import AwareDatetime
 from kalhas.contracts.v1.strategy import StrategyCandidate
+from kalhas.contracts.v1.world_realization import WorldRealization
 
 LEGACY_STRUCTURAL_RUNTIME_VERSION = "1.0.0"
 TRAJECTORY_RUNTIME_VERSION: Literal["2.0.0"] = "2.0.0"
+REALIZATION_TRAJECTORY_RUNTIME_VERSION: Literal["3.0.0"] = "3.0.0"
 RUNTIME_VERSION = TRAJECTORY_RUNTIME_VERSION
 
 
@@ -40,6 +43,33 @@ def run_input_hash(
             "seed": seed.model_dump(mode="json"),
             "strategy": strategy.model_dump(mode="json"),
             "world_content_hash": world_content_hash,
+        }
+    )
+    return sha256_hex(canonical)
+
+
+def run_realization_input_hash(
+    *,
+    world_content_hash: str,
+    strategy: StrategyCandidate,
+    seed: ScenarioSeed,
+    world_realization_content_hash: str,
+    runtime_version: str = REALIZATION_TRAJECTORY_RUNTIME_VERSION,
+) -> str:
+    """Deterministic SHA-256 over world, strategy, seed, realization, and runtime version.
+
+    The runtime-3.0.0 run-input hash covers the verified base world
+    content hash, the exact strategy content, the exact seed content,
+    the exact world realization content hash (bounding this strategy's
+    run to the seed's shared realization), and the runtime version.
+    """
+    canonical = canonical_json(
+        {
+            "runtime_version": runtime_version,
+            "seed": seed.model_dump(mode="json"),
+            "strategy": strategy.model_dump(mode="json"),
+            "world_content_hash": world_content_hash,
+            "world_realization_content_hash": world_realization_content_hash,
         }
     )
     return sha256_hex(canonical)
@@ -109,6 +139,60 @@ def plan_runs(
                         world_content_hash=world_content_hash,
                         strategy=strategy,
                         seed=seed,
+                        runtime_version=runtime_version,
+                    ),
+                    created_at=created_at,
+                )
+            )
+    return tuple(plans)
+
+
+def plan_realization_runs(
+    *,
+    campaign_id: str,
+    tenant_id: str,
+    world_version_id: str,
+    world_content_hash: str,
+    strategies: tuple[StrategyCandidate, ...],
+    seeds: tuple[ScenarioSeed, ...],
+    created_at: AwareDatetime,
+    realizations: Mapping[str, WorldRealization],
+    runtime_version: str = REALIZATION_TRAJECTORY_RUNTIME_VERSION,
+) -> tuple[RunPlan, ...]:
+    """Generate one runtime-3.0.0 RunPlan per (strategy, seed) pair.
+
+    Mirrors :func:`plan_runs` exactly (strategy-major, seed-minor
+    ordering; identical plan identifiers), except that every plan's
+    input hash is the runtime-3 digest
+    :func:`run_realization_input_hash`, which binds the seed's shared
+    world realization content hash into the strategy's run input. A
+    realization must exist for every seed in the ensemble; a missing
+    realization raises :class:`KeyError` before any plan is returned.
+    """
+    plans: list[RunPlan] = []
+    for strategy in strategies:
+        for seed in seeds:
+            realization = realizations[seed.identifier]
+            plans.append(
+                RunPlan(
+                    identifier=run_plan_identifier(
+                        campaign_id=campaign_id,
+                        world_version_id=world_version_id,
+                        strategy_candidate_id=strategy.identifier,
+                        scenario_seed_id=seed.identifier,
+                        runtime_version=runtime_version,
+                    ),
+                    tenant_id=tenant_id,
+                    campaign_id=campaign_id,
+                    world_version_id=world_version_id,
+                    strategy_candidate_id=strategy.identifier,
+                    scenario_seed_id=seed.identifier,
+                    runtime_version=runtime_version,
+                    input_hash=run_realization_input_hash(
+                        world_content_hash=world_content_hash,
+                        strategy=strategy,
+                        seed=seed,
+                        world_realization_content_hash=realization.content_hash,
                         runtime_version=runtime_version,
                     ),
                     created_at=created_at,

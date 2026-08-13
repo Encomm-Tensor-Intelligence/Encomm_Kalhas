@@ -3,14 +3,16 @@
 Date: 2026-08-11 (updated after the explicit push request)  
 Repository: `C:\Users\xampos\Desktop\Encomm-Kalhas`  
 Branch: `main`  
-Current HEAD: `6b14ca1` (`KALHAS: domain-neutral decision-world kernel through Phase 22`)
+Current HEAD: `215729d` (`KALHAS: domain-neutral decision-world kernel through Phase 22`)
 
 ## Read this first
 
 This repository is complete and independently verified through **Phase 22**, and the
 complete Phase 20, 21, and 22 implementation is **committed and pushed** to
-`https://github.com/Xamposs/Encomm_Kalhas` (branch `main`) at commit `6b14ca1`.
-The working tree is clean.
+`https://github.com/Xamposs/Encomm_Kalhas` (branch `main`) at commit `215729d`.
+There are no uncommitted production or test changes. The only working-tree change is
+this handoff file, updated locally so that it records the final pushed commit hash;
+preserve it when moving into the next chat.
 
 The committed state is the authoritative current implementation. Do not reset, revert,
 discard, overwrite, or selectively reconstruct history.
@@ -332,7 +334,7 @@ been reviewed against the frozen v1 surface.
 ## Recommended working protocol for the next chat
 
 1. Read `AGENTS.md` and this handoff.
-2. Confirm `HEAD == 6b14ca1` and that the complete Phase 20–22 implementation is
+2. Confirm `HEAD == 215729d` and that the complete Phase 20–22 implementation is
    committed and pushed to `origin/main`.
 3. Run all baseline gates.
 4. Inspect the Phase 22 implementation and final documentation.
@@ -350,7 +352,8 @@ Work in C:\Users\xampos\Desktop\Encomm-Kalhas.
 Read AGENTS.md and KALHAS_HANDOFF_PHASE_22.md completely before taking action.
 The repository is complete and independently verified through Phase 22 and the
 complete Phase 20–22 implementation is committed and pushed to origin/main at
-HEAD 6b14ca1. Preserve every existing change: do not reset, revert, or discard.
+HEAD 215729d. The only expected local working-tree change is the updated handoff
+file itself. Preserve every existing change: do not reset, revert, or discard.
 Commit or push only when the user explicitly asks.
 
 First confirm the current baseline with schema export, full pytest, ruff check, ruff
