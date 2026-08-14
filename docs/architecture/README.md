@@ -1329,3 +1329,138 @@ registered as a top-level contract).
   network/filesystem/database; no new dependencies; no operational-
   activity kinds; no Colony changes; no Phase 25 work; no commits or
   pushes.
+
+
+## Phase 25: realization-aware trajectory runtime 3.0.0
+
+**Status: COMPLETE**, included in one local closure commit (the local
+Phase 25 closure commit containing this documentation; **not pushed** -
+`origin/main` remains at
+`f40e83de468ca14100d011454d15eb3dd561c810` and local `main` is exactly
+one commit ahead; push is intentionally deferred until Phases 26 and 27
+are complete; see `KALHAS_HANDOFF_PHASE_25.md`). **Phase 26 has not
+begun.** This section supersedes the historical statements above that
+Phase 25 "has not started" / "no Phase 25 work".
+
+### Architecture
+
+- **One verification core, three runtimes.** `verify_run_inputs` loads
+  and verifies every authoritative record (status, plan, campaign,
+  world + manifest via `verify_world_snapshot`, strategy, seed,
+  stored-vs-embedded uncertainty model), then dispatches only the
+  input-hash recomputation on the recorded `RunPlan.runtime_version`:
+  1.0.0/2.0.0 recompute the frozen runtime-2 digest with the identical
+  historical statements; 3.0.0 reconstructs the Phase 24 realization
+  exactly once at `run_plan.created_at` and recomputes the runtime-3
+  digest. `verify_run_trajectory_inputs` is the single runtime-3
+  trajectory entry: closed compiled-world catalogs, exact stored plan
+  tuple, realization provenance re-derivation, and
+  `VerifiedRunTrajectoryInputs.realization`. Execution, replay,
+  observation extraction, all three matrix queries, preflight, and the
+  verify-inputs endpoint all consume this one chain.
+- **Preparation and planning.** `prepare_realization_campaign` gates on
+  exactly 3.0.0 before any store read; verifies world integrity and
+  model consistency; builds the `CampaignWorldRealizationMatrix` once
+  (K realizations, never K x S; derived, never stored); plans the
+  strategy-major/seed-minor run matrix with
+  `plan_realization_runs`, binding each seed's realization content hash
+  into every strategy's `run_realization_input_hash`. The read-only
+  `preflight_realization_run_plan_matrix` rebuilds the exact matrix and
+  requires tuple equality before any LEGION call or write; campaign
+  execution calls it exactly once before the first run.
+  `prepare_strategy_trajectory_plans` dispatches preflight by recorded
+  runtime and binds every draft through the fail-closed
+  `MockLegionAdapter(declared_transition_sequences=...)` seam (logical
+  id -> deterministic identifier resolution; unknown/ambiguous ids
+  raise `InvalidTrajectoryDraftError`; canonical default only for
+  undeclared strategies; KALHAS re-validates every draft).
+- **Execution.** `execute_realization_run` (per-run) and
+  `execute_realization_campaign` (complete-matrix preflight first, then
+  exact stored order) evaluate the real engine from the realized
+  initial state and write the immutable
+  `RealizationRunTrajectoryExecution` (realization id/hash, plan-set
+  hash, ordered results, self-covering content hash, `executed_at` =
+  `run_plan.created_at`). Attempt records are bound
+  position-by-position to the authoritative plan references (closes the
+  fully-rehashed alternate-transition attack). Pre-existing artifacts,
+  even identical, are never overwritten; any pre-write failure leaves
+  zero writes.
+- **Observations and replay.** Extraction is an explicit POST that
+  verifies the stored execution, reads only
+  `final_state[state_field_id]` per embedded binding with strict
+  numeric-kind rules, and stores the observation set exactly once.
+  Replay **requires prior extraction** (typed 404, zero writes
+  otherwise), independently regenerates execution + observation set +
+  structural events, requires canonical-JSON equality, and writes the
+  generic + runtime-3 manifest pair (the runtime-3 manifest is
+  self-covering over the full payload including observation-set
+  hashes). The two manifests are sequential writes: a mid-write
+  interruption can leave a missing manifest, recovered idempotently by
+  the next replay (identical bytes); a corrupted manifest blocks replay
+  and is never replaced. Repeated replay is byte-identical.
+- **Derived matrices, read-only queries.** The trajectory matrix
+  (strategy-major/seed-minor cells, seed-aligned realization tuples,
+  cell<->tuple agreement), the metric-observation matrix (per-cell
+  verified observation sets, preserved raw values), and the
+  descriptive-statistics matrix (frozen Phase 22 functions only) are
+  built purely in memory and served by verified queries that re-verify
+  world snapshot, stored plan matrix, and every per-cell artifact -
+  zero writes, zero activity, byte-identical repeats. Realizations and
+  matrices are **derived, never stored**.
+- **Module ownership.** The adapter boundary is used only during
+  planning (`campaign_service`, `strategy_trajectory_service`,
+  `realization_campaign_service` - exactly the `LegionAdapter`
+  protocol); execution, replay, observation, and matrix modules never
+  import or invoke LEGION/NEXUS. Runtime-2 and Phase-24 modules carry
+  no runtime-3 dependency and are unchanged. No runtime-3 module uses
+  network, providers, databases, filesystems, wall clocks, randomness,
+  UUIDs, `random.seed`, or domain-pack execution; timestamps come only
+  from recorded `created_at` values.
+- **Fail-closed boundaries.** Runtime gates fire before any downstream
+  service call on every runtime-3 endpoint and runtime-2 artifact
+  endpoint; empty run-plan tuples fail closed with the typed
+  unsupported-runtime 409; public error messages stay generic (values
+  and hashes remain internal reasons); GETs and extraction record no
+  operational activity; no outcome, ranking, score, evidence,
+  recommendation, or decision-brief surface exists anywhere in the
+  runtime-3 modules.
+
+### Contracts, schemas, API
+
+- 6 new public contracts at indexes 40-45 (46 total), exact order:
+  `RealizationRunTrajectoryExecution`,
+  `RealizationRunTrajectoryReplayManifest`,
+  `RealizationCampaignTrajectoryMatrix`,
+  `RealizationRunMetricObservationSet`,
+  `RealizationCampaignMetricObservationMatrix`,
+  `RealizationCampaignMetricStatisticsMatrix`; 3 nested unregistered
+  value objects; 6 new schema artifacts (46 total); indexes 0-39 and
+  the 40 historical schema artifacts unchanged.
+- Exactly 6 new paths / 7 operations (`kalhas/api/routes_realization.py`):
+  GET realization-trajectory-execution, GET
+  realization-trajectory-replay-manifest, POST + GET
+  realization-metric-observations (201/200), GET
+  realization-trajectory-matrix, GET
+  realization-metric-observation-matrix, GET
+  realization-metric-statistics - all rejecting recorded runtime !=
+  3.0.0 with 409, GETs read-only with no activity, extraction recording
+  no activity, single `ApiErrorResponse` envelope unchanged.
+- Runtime-2 compatibility is test-enforced: runtime-2 golden digests,
+  artifacts, OpenAPI `$ref`s, and the Phase 17/20/22 canary suites pass
+  unchanged; runtime-2 and Phase-24 sources are untouched.
+
+### Acceptance proof (84/103)
+
+Fixed seeds seed-0/seed-2 realize the two branches of a discrete
+uncertainty binding on the integer `level` field (branch X = 5, branch
+Y = 9). Two declared guarded transitions - `t-x` (guard `level == 5`,
+target `level -> 84`) and `t-y` (guard `level == 9`, target
+`level -> 103`) - are proposed in opposite orders by the two strategies
+(`mock-a`: `[t-x, t-y]`; `mock-b`: `[t-y, t-x]`). Exactly one guard
+succeeds per seed, so the real engine produces 84 for seed-0 and 103
+for seed-2 under both strategies; attempt records prove each outcome;
+observation matrices are exactly `[84, 103]` per strategy in seed
+order; per-strategy statistics are min 84.0 / max 103.0 / mean 93.5 /
+median 93.5 / population std 9.5; replay regenerates identical
+execution and observation hashes; repeated preparation and queries are
+byte-deterministic; no input contract is mutated.

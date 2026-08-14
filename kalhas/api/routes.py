@@ -5,7 +5,10 @@ and world endpoints backed by the in-memory store and the local mock
 integration surface.
 """
 
+from collections.abc import Callable
+from functools import wraps
 from pathlib import Path
+from typing import Any, TypeVar, cast
 
 from fastapi import APIRouter, Header, HTTPException, Query, Request
 from fastapi.responses import FileResponse
@@ -50,6 +53,7 @@ from kalhas.application.domain_capability_declaration_service import (
     declare_capability_inputs,
     list_declarations,
 )
+from kalhas.application.domain_errors import UnsupportedRuntimeVersionError
 from kalhas.application.domain_metric_observation_service import (
     declare_domain_metric_observation,
     list_domain_metric_observations,
@@ -89,10 +93,20 @@ from kalhas.application.operational_activity import (
     record_scenario_registered,
     record_world_compiled,
 )
+from kalhas.application.realization_campaign_service import (
+    prepare_realization_campaign,
+)
+from kalhas.application.realization_execution import execute_realization_campaign
+from kalhas.application.realization_replay import replay_realization_run
 from kalhas.application.replay_service import replay_run
 from kalhas.application.run_metric_observation_service import (
     extract_run_metric_observations,
     get_verified_run_metric_observation_set,
+)
+from kalhas.application.run_planner import (
+    LEGACY_STRUCTURAL_RUNTIME_VERSION,
+    REALIZATION_TRAJECTORY_RUNTIME_VERSION,
+    TRAJECTORY_RUNTIME_VERSION,
 )
 from kalhas.application.runtime import get_runtime_mode
 from kalhas.application.structural_runtime import execute_campaign
@@ -151,6 +165,79 @@ def _store(request: Request) -> InMemoryScenarioStore:
 def _require_tenant_match(scenario: ScenarioSpec, x_tenant_id: str) -> None:
     if scenario.tenant_id != x_tenant_id:
         raise HTTPException(status_code=422, detail="tenant_id must match the X-Tenant-ID header")
+
+
+def _require_not_realization_run(
+    store: InMemoryScenarioStore, tenant_id: str, run_id: str, *, operation: str
+) -> None:
+    """Reject a recorded runtime-3.0.0 run on a runtime-2-only endpoint (typed 409)."""
+    status = store.get_run_status(tenant_id, run_id)
+    if status.runtime_version == REALIZATION_TRAJECTORY_RUNTIME_VERSION:
+        raise UnsupportedRuntimeVersionError(status.runtime_version, operation=operation)
+
+
+def _require_not_realization_campaign(
+    store: InMemoryScenarioStore, tenant_id: str, campaign_id: str, *, operation: str
+) -> None:
+    """Reject a recorded runtime-3.0.0 campaign on a runtime-2-only endpoint (typed 409)."""
+    plans = store.get_run_plans(tenant_id, campaign_id)
+    for plan in plans:
+        if plan.runtime_version == REALIZATION_TRAJECTORY_RUNTIME_VERSION:
+            raise UnsupportedRuntimeVersionError(plan.runtime_version, operation=operation)
+
+
+T = TypeVar("T")
+
+
+def _reject_realization_run_route(
+    operation: str,
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
+    """Route decorator gate: reject a recorded runtime-3.0.0 run (typed 409).
+
+    The recorded-runtime check runs before the decorated runtime-2-only
+    route body, so no runtime-2 service is ever invoked for a runtime-3
+    record. The decorator form keeps the route body limited to store
+    resolution and the query-service call, preserving the historical
+    AST delegation canaries while still enforcing the Phase 25 gate.
+    """
+
+    def decorate(route: Callable[..., T]) -> Callable[..., T]:
+        @wraps(route)
+        def wrapper(*args: Any, **kwargs: Any) -> T:
+            request = cast(Request, kwargs["request"])
+            x_tenant_id = str(kwargs["x_tenant_id"])
+            run_id = str(kwargs["run_id"])
+            _require_not_realization_run(_store(request), x_tenant_id, run_id, operation=operation)
+            return route(*args, **kwargs)
+
+        return wrapper
+
+    return decorate
+
+
+def _reject_realization_campaign_route(
+    operation: str,
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
+    """Route decorator gate: reject a recorded runtime-3.0.0 campaign (typed 409).
+
+    Same semantics and ordering as ``_reject_realization_run_route`` for
+    the campaign-level runtime-2-only endpoints.
+    """
+
+    def decorate(route: Callable[..., T]) -> Callable[..., T]:
+        @wraps(route)
+        def wrapper(*args: Any, **kwargs: Any) -> T:
+            request = cast(Request, kwargs["request"])
+            x_tenant_id = str(kwargs["x_tenant_id"])
+            campaign_id = str(kwargs["campaign_id"])
+            _require_not_realization_campaign(
+                _store(request), x_tenant_id, campaign_id, operation=operation
+            )
+            return route(*args, **kwargs)
+
+        return wrapper
+
+    return decorate
 
 
 @router.get("/health", response_model=HealthResponse, tags=["system"], summary="Liveness probe")
@@ -255,20 +342,46 @@ def create_campaign_route(
 
     Tenant validation for the strategy request, seeds, and candidates is
     enforced by the application service with typed domain errors.
+    Runtime dispatch derives exclusively from the request-body
+    ``runtime_version`` before any preparation work: recorded 1.0.0 and
+    2.0.0 use the historical preparation service, recorded 3.0.0 uses
+    the realization-aware preparation service, and any other value
+    raises the typed unsupported-runtime error (409 conflict) with zero
+    reads, LEGION calls, or writes. The campaign-prepared operational
+    activity event is recorded exactly once, only after successful
+    preparation.
     """
-    prepared = prepare_campaign(
-        store=_store(request),
-        legion=_mock_legion(request),
-        tenant_id=x_tenant_id,
-        scenario_id=request_body.scenario_id,
-        world_version_id=request_body.world_version_id,
-        strategy_request=request_body.strategy_request,
-        campaign_id=request_body.campaign_id,
-        campaign_name=request_body.campaign_name,
-        seed_ensemble=request_body.seed_ensemble,
-        created_at=request_body.created_at,
-        runtime_version=request_body.runtime_version,
-    )
+    runtime_version = request_body.runtime_version
+    if runtime_version in (LEGACY_STRUCTURAL_RUNTIME_VERSION, TRAJECTORY_RUNTIME_VERSION):
+        prepared = prepare_campaign(
+            store=_store(request),
+            legion=_mock_legion(request),
+            tenant_id=x_tenant_id,
+            scenario_id=request_body.scenario_id,
+            world_version_id=request_body.world_version_id,
+            strategy_request=request_body.strategy_request,
+            campaign_id=request_body.campaign_id,
+            campaign_name=request_body.campaign_name,
+            seed_ensemble=request_body.seed_ensemble,
+            created_at=request_body.created_at,
+            runtime_version=runtime_version,
+        )
+    elif runtime_version == REALIZATION_TRAJECTORY_RUNTIME_VERSION:
+        prepared = prepare_realization_campaign(
+            store=_store(request),
+            legion=_mock_legion(request),
+            tenant_id=x_tenant_id,
+            scenario_id=request_body.scenario_id,
+            world_version_id=request_body.world_version_id,
+            strategy_request=request_body.strategy_request,
+            campaign_id=request_body.campaign_id,
+            campaign_name=request_body.campaign_name,
+            seed_ensemble=request_body.seed_ensemble,
+            created_at=request_body.created_at,
+            runtime_version=runtime_version,
+        )
+    else:
+        raise UnsupportedRuntimeVersionError(runtime_version, operation="campaign preparation")
     record_campaign_prepared(
         _store(request),
         tenant_id=x_tenant_id,
@@ -350,11 +463,36 @@ def execute_campaign_route(
     """Execute all planned runs in order (campaign must be RUNNING).
 
     Structural execution only: no outcomes, evidence, or recommendations.
-    Completes the campaign when every run is COMPLETE.
+    Completes the campaign when every run is COMPLETE. Runtime dispatch
+    derives exclusively from the tenant-scoped recorded run plans, never
+    from request or query input: recorded 1.0.0 and 2.0.0 use the
+    historical structural execution service, recorded 3.0.0 uses the
+    realization-aware execution service, and any other recorded runtime
+    - including an empty recorded plan tuple, which has no recorded
+    runtime to dispatch on - raises the typed unsupported-runtime error
+    (409 conflict) before any artifact read or write. The
+    campaign-executed operational activity event is recorded exactly
+    once, only after successful execution.
     """
-    statuses = execute_campaign(
-        store=_store(request), tenant_id=x_tenant_id, campaign_id=campaign_id
-    )
+    plans = _store(request).get_run_plans(x_tenant_id, campaign_id)
+    if not plans:
+        # Fail closed: an empty recorded plan tuple has no recorded runtime
+        # to dispatch on, so neither execution service may run.
+        raise UnsupportedRuntimeVersionError("", operation="campaign execution")
+    recorded_runtime = plans[0].runtime_version
+    if recorded_runtime in (
+        LEGACY_STRUCTURAL_RUNTIME_VERSION,
+        TRAJECTORY_RUNTIME_VERSION,
+    ):
+        statuses = execute_campaign(
+            store=_store(request), tenant_id=x_tenant_id, campaign_id=campaign_id
+        )
+    elif recorded_runtime == REALIZATION_TRAJECTORY_RUNTIME_VERSION:
+        statuses = execute_realization_campaign(
+            store=_store(request), tenant_id=x_tenant_id, campaign_id=campaign_id
+        )
+    else:
+        raise UnsupportedRuntimeVersionError(recorded_runtime, operation="campaign execution")
     final_status = _store(request).get_campaign_status(x_tenant_id, campaign_id)
     record_campaign_executed(
         _store(request),
@@ -372,6 +510,7 @@ def execute_campaign_route(
     tags=["campaigns"],
     summary="Fetch a completed campaign's verified trajectory matrix",
 )
+@_reject_realization_campaign_route(operation="trajectory matrix retrieval")
 def get_campaign_trajectory_matrix_route(
     campaign_id: str,
     request: Request,
@@ -395,7 +534,10 @@ def get_campaign_trajectory_matrix_route(
     inconsistent, or corrupted matrix inputs or executions the typed 409
     integrity_error - without leaking internal reasons, hashes, state
     values, guards, targets, policies, or validation details. The GET
-    performs no write and creates no operational-activity event.
+    performs no write and creates no operational-activity event. A
+    recorded runtime 3.0.0 is rejected with the typed 409 conflict
+    before the runtime-2 service is invoked; runtime-3 matrices are
+    served exclusively by the realization-prefixed endpoint.
     """
     return get_verified_campaign_trajectory_matrix(
         store=_store(request), tenant_id=x_tenant_id, campaign_id=campaign_id
@@ -436,8 +578,17 @@ def get_campaign_metric_observation_matrix_route(
     integrity_error - without leaking raw observation values, hashes,
     state values, guards, targets, policies, metadata, internal
     reasons, or validation details. The GET performs no write and
-    creates no operational-activity event.
+    creates no operational-activity event. A recorded runtime 3.0.0 is
+    rejected with the typed 409 conflict before the runtime-2 service
+    is invoked; runtime-3 matrices are served exclusively by the
+    realization-prefixed endpoint.
     """
+    _require_not_realization_campaign(
+        _store(request),
+        x_tenant_id,
+        campaign_id,
+        operation="metric observation matrix retrieval",
+    )
     return get_verified_campaign_metric_observation_matrix(
         store=_store(request), tenant_id=x_tenant_id, campaign_id=campaign_id
     )
@@ -480,8 +631,14 @@ def get_campaign_metric_statistics_route(
     typed 409 integrity_error - without leaking raw observation values,
     calculated statistics, hashes, state values, field names, policies,
     metadata, internal reasons, or validation details. The GET performs
-    no write and creates no operational-activity event.
+    no write and creates no operational-activity event. A recorded
+    runtime 3.0.0 is rejected with the typed 409 conflict before the
+    runtime-2 service is invoked; runtime-3 statistics are served
+    exclusively by the realization-prefixed endpoint.
     """
+    _require_not_realization_campaign(
+        _store(request), x_tenant_id, campaign_id, operation="metric statistics retrieval"
+    )
     return get_verified_campaign_metric_statistics(
         store=_store(request), tenant_id=x_tenant_id, campaign_id=campaign_id
     )
@@ -533,8 +690,25 @@ def replay_run_route(
 
     The stream is genuinely regenerated from recorded inputs; the manifest
     is returned only when the recomputed hash matches the expected hash.
+    Runtime dispatch derives exclusively from the tenant-scoped recorded
+    ``RunStatus.runtime_version``, never from request or query input:
+    recorded 1.0.0 and 2.0.0 use the historical replay service, recorded
+    3.0.0 uses the observation-aware realization replay service (which
+    requires the metric observations to have been explicitly extracted
+    first), and any other recorded runtime raises the typed
+    unsupported-runtime error (409 conflict). The run-replayed
+    operational activity event is recorded exactly once, only after
+    successful replay.
     """
-    manifest = replay_run(store=_store(request), tenant_id=x_tenant_id, run_id=run_id)
+    recorded_runtime = _store(request).get_run_status(x_tenant_id, run_id).runtime_version
+    if recorded_runtime in (LEGACY_STRUCTURAL_RUNTIME_VERSION, TRAJECTORY_RUNTIME_VERSION):
+        manifest = replay_run(store=_store(request), tenant_id=x_tenant_id, run_id=run_id)
+    elif recorded_runtime == REALIZATION_TRAJECTORY_RUNTIME_VERSION:
+        manifest = replay_realization_run(
+            store=_store(request), tenant_id=x_tenant_id, run_id=run_id
+        )
+    else:
+        raise UnsupportedRuntimeVersionError(recorded_runtime, operation="run replay")
     record_run_replayed(_store(request), tenant_id=x_tenant_id, manifest=manifest)
     return manifest
 
@@ -545,6 +719,7 @@ def replay_run_route(
     tags=["runs"],
     summary="Fetch a run's verified trajectory execution artifact",
 )
+@_reject_realization_run_route(operation="trajectory execution retrieval")
 def get_run_trajectory_execution_route(
     run_id: str,
     request: Request,
@@ -562,7 +737,10 @@ def get_run_trajectory_execution_route(
     corrupted artifacts fail through the typed 409 integrity mapping.
     The response carries the contract-declared state snapshots only -
     never guards, target values, strategy policy content, hidden
-    reasoning, evidence, or recommendations.
+    reasoning, evidence, or recommendations. A recorded runtime 3.0.0
+    is rejected with the typed 409 conflict before the runtime-2
+    service is invoked; runtime-3 artifacts are served exclusively by
+    the realization-prefixed endpoints.
     """
     return get_verified_run_trajectory_execution(
         store=_store(request), tenant_id=x_tenant_id, run_id=run_id
@@ -575,6 +753,7 @@ def get_run_trajectory_execution_route(
     tags=["runs"],
     summary="Fetch a run's verified trajectory replay manifest",
 )
+@_reject_realization_run_route(operation="trajectory replay manifest retrieval")
 def get_run_trajectory_replay_manifest_route(
     run_id: str,
     request: Request,
@@ -592,7 +771,10 @@ def get_run_trajectory_replay_manifest_route(
     manifest and the typed 404 is returned; corrupted records preserve
     the existing typed 409 conflict/integrity mappings without leaking
     internal reasons, hashes, state values, guards, targets, policies,
-    or validation details.
+    or validation details. A recorded runtime 3.0.0 is rejected with
+    the typed 409 conflict before the runtime-2 service is invoked;
+    runtime-3 artifacts are served exclusively by the
+    realization-prefixed endpoints.
     """
     return get_verified_run_trajectory_replay_manifest(
         store=_store(request), tenant_id=x_tenant_id, run_id=run_id
@@ -629,8 +811,14 @@ def extract_run_metric_observations_route(
     the same run returns the typed 409 conflict and never overwrites.
     Extraction never evaluates transitions, replays, aggregates,
     calculates outcomes, produces evidence/scores/rankings, or loads a
-    domain pack, and no operational-activity event is recorded.
+    domain pack, and no operational-activity event is recorded. A
+    recorded runtime 3.0.0 is rejected with the typed 409 conflict
+    before the runtime-2 service is invoked; runtime-3 extraction is
+    served exclusively by the realization-prefixed endpoint.
     """
+    _require_not_realization_run(
+        _store(request), x_tenant_id, run_id, operation="metric observation extraction"
+    )
     return extract_run_metric_observations(
         store=_store(request), tenant_id=x_tenant_id, run_id=run_id
     )
@@ -659,8 +847,14 @@ def get_run_metric_observations_route(
     returns the typed 404 and nothing is ever created. Corrupted or
     tampered records fail through the typed 409 integrity mapping
     without leaking raw observed values, hashes, state values, guards,
-    targets, policies, internal reasons, or validation details.
+    targets, policies, internal reasons, or validation details. A
+    recorded runtime 3.0.0 is rejected with the typed 409 conflict
+    before the runtime-2 service is invoked; runtime-3 observation sets
+    are served exclusively by the realization-prefixed endpoint.
     """
+    _require_not_realization_run(
+        _store(request), x_tenant_id, run_id, operation="metric observation retrieval"
+    )
     return get_verified_run_metric_observation_set(
         store=_store(request), tenant_id=x_tenant_id, run_id=run_id
     )

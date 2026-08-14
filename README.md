@@ -2794,3 +2794,194 @@ databases, filesystems, wall clocks, global RNG, UUIDs, or
   and the Phase 23 evaluation profile/matrix are unchanged. World
   hashes change only for worlds compiled with a declared uncertainty
   model - new deterministic provenance. **Phase 25 has not started.**
+
+
+## Phase 25 status
+
+**Realization-aware trajectory runtime 3.0.0 (COMPLETE).** Phase 25 is
+**complete and gate-green, included in one local closure commit** - the
+local Phase 25 closure commit containing this documentation (subject
+`Phase 25: complete realization-aware runtime 3.0.0 closure`). The
+commit is **not pushed**: `origin/main` remains
+`f40e83de468ca14100d011454d15eb3dd561c810` and local `main` is exactly
+one commit ahead. Push is intentionally deferred until Phases 26 and 27
+are complete; the working tree and index are clean (the authoritative
+facts and final gate results are recorded in
+`KALHAS_HANDOFF_PHASE_25.md`). **Phase 26 has not begun.**
+
+This section **explicitly supersedes every earlier historical statement
+in this file that Phase 25 "has not started"** (including the Phase 24
+section above).
+
+- **Runtime dispatch.** Every runtime-3 service dispatches exclusively on
+  the recorded `RunPlan.runtime_version` / `RunStatus.runtime_version`
+  (exactly `"3.0.0"`; 1.0.0/2.0.0/unknown -> typed
+  `UnsupportedRuntimeVersionError`, 409 `conflict`). Campaign
+  preparation dispatches on the request value before any store read:
+  `1.0.0`/`2.0.0` -> `prepare_campaign`, `3.0.0` ->
+  `prepare_realization_campaign`, anything else -> 409 with zero writes
+  and zero LEGION calls. The runtime-2 artifact endpoints (trajectory
+  execution, trajectory replay manifest, metric-observation
+  POST/GET, trajectory matrix, observation matrix, statistics matrix)
+  reject recorded 3.0.0 with 409 before their services run.
+- **Realization provenance.** `prepare_realization_campaign` verifies
+  the compiled world snapshot and the stored-vs-embedded uncertainty
+  model in every direction, builds the `CampaignWorldRealizationMatrix`
+  exactly once (K seeds -> exactly K realizations, never K x S; derived
+  in memory, never stored), and plans with `plan_realization_runs` so
+  every strategy sharing a seed binds the identical
+  `world_realization_content_hash` into its runtime-3 input hash.
+  Realizations are reconstructed deterministically at
+  `run_plan.created_at` - never resampled, never randomly regenerated -
+  and remain derived artifacts; no realization is ever stored.
+- **Single-pass input integrity.** `verify_run_inputs` remains the single
+  entry point for execution, replay, observations, matrices, preflight,
+  and the verify-inputs endpoint: it loads and verifies every
+  authoritative record first, then dispatches only the input-hash
+  recomputation on the recorded version. For 3.0.0 it reconstructs the
+  realization exactly once, recomputes the runtime-3 digest
+  (`run_realization_input_hash`, payload world/strategy/seed/
+  world-realization-content-hash), and returns
+  `VerifiedRunInputs.realization`. The 1.0.0/2.0.0 branch executes the
+  identical historical statements (byte-identical golden digests).
+  `verify_run_trajectory_inputs` resolves the closed compiled-world
+  catalogs, the exact stored plan tuple, and the realization
+  provenance (`verify_realization_provenance`) as the single runtime-3
+  verification entry.
+- **Planning.** `preflight_realization_run_plan_matrix` is the read-only
+  runtime-3 counterpart of the Phase 18 preflight: exact stored
+  strategy-candidate tuple, recorded 3.0.0, stored-vs-embedded model
+  consistency, deterministic matrix rebuild, exact stored-plan tuple
+  equality, then per-run input verification - all before any LEGION
+  call, any write, or any trajectory evaluation.
+  `prepare_strategy_trajectory_plans` dispatches its preflight from the
+  recorded runtime. Strategy-specific declared trajectory plans flow
+  through the fail-closed `MockLegionAdapter(declared_transition_sequences=...)`
+  declaration seam: declarations are keyed by the exact strategy
+  candidate identifier, resolved from logical transition ids to the
+  deterministic identifiers of the request's closed catalog in the
+  exact declared order (repetitions preserved); unknown or ambiguous
+  ids raise `InvalidTrajectoryDraftError` (never a canonical fallback,
+  never a partial draft); the canonical default applies only to
+  undeclared strategies; KALHAS remains the authority for membership,
+  bounds, identifiers, and hashes.
+- **Execution.** `execute_realization_campaign` preflights the complete
+  stored run-plan matrix exactly once (a truncated, reordered, or
+  tampered matrix fails before any write), then executes every run in
+  exact stored order, each as an independent trust operation:
+  `verify_run_trajectory_inputs` exactly once, artifact probe (any
+  pre-existing artifact, even identical, is rejected - never
+  overwritten), full in-memory build, then the deterministic write
+  phase. `build_realization_run_trajectory_execution` evaluates the
+  exact per-strategy plan tuple from the realized initial state through
+  the real state-transition engine (guards as exact canonical equality,
+  targets as copy-on-write patches) and binds every attempt
+  position-by-position to the authoritative
+  `plan.transition_references` (sequence position, transition
+  identifier, logical id, content hash) - the fully-rehashed
+  alternate-transition attack is closed. `executed_at` =
+  `run_plan.created_at`, never the wall clock.
+- **Explicit observations.** `extract_realization_run_metric_observations`
+  (POST `/v1/runs/{id}/realization-metric-observations`, 201) is an
+  explicit lifecycle step: it verifies the stored execution through the
+  full runtime-3 integrity pipeline, reads each binding's raw value
+  **only** from `final_state[state_field_id]` with strict numeric-kind
+  validation (no coercion, int/float representation preserved), copies
+  the unit from the embedded scenario, and stores the immutable
+  `RealizationRunMetricObservationSet` (`observed_at` =
+  `execution.executed_at`). A second extraction is rejected even when
+  byte-identical; querying never auto-extracts; extraction records no
+  operational activity.
+- **Observation-aware replay.** `replay_realization_run` (GET
+  `/v1/runs/{id}/replay`, recorded-version dispatch) **requires prior
+  explicit extraction**: replay before extraction fails with the typed
+  404 and zero manifest writes. Replay independently regenerates the
+  execution, the observation set (from the regenerated execution), and
+  the structural event stream from immutable inputs; requires exact
+  canonical-JSON equality at every boundary; and writes exactly the
+  manifest pair - the version-agnostic `ReplayManifest` plus the
+  self-covering `RealizationRunTrajectoryReplayManifest` (expected and
+  recomputed execution and observation-set hashes). The two manifests
+  are written sequentially: an interruption can leave one manifest
+  written and the other missing; recovery is idempotent replay (the
+  missing manifest is completed with identical bytes), while a
+  corrupted stored manifest blocks replay with the typed conflict/
+  integrity error and is never overwritten or repaired. Repeated replay
+  is idempotent and byte-identical.
+- **Matrices.** Three derived, never-stored matrices are served by
+  strictly read-only verified queries (each requires a COMPLETE
+  campaign, re-verifies world snapshot + stored plan matrix + per-cell
+  execution/observation records, and returns byte-identical repeats
+  with zero writes and zero activity): the
+  `RealizationCampaignTrajectoryMatrix` (exact strategy-major/
+  seed-minor cells, seed-aligned realization id/hash tuples,
+  cell<->tuple agreement), the `RealizationCampaignMetricObservationMatrix`
+  (per-cell observation sets, preserved raw values, exact metric-id
+  collections), and the `RealizationCampaignMetricStatisticsMatrix`
+  (descriptive statistics computed only through the frozen Phase 22
+  functions; seed-aligned values preserved exactly; no ranking, score,
+  or comparison).
+- **Causal 84/103 acceptance proof.** The end-to-end acceptance fixture
+  (exactly two strategies `mock-a`/`mock-b`, exactly two fixed seeds,
+  exactly four runs, exactly two aggregate realizations) declares a
+  discrete uncertainty binding on the integer `level` field with branch
+  values X=5 / Y=9 and two guarded transitions: `t-x`
+  (guard `level == 5`, target `level -> 84`) and `t-y`
+  (guard `level == 9`, target `level -> 103`). Strategy `mock-a`
+  declares the plan `[t-x, t-y]`; strategy `mock-b` declares
+  `[t-y, t-x]` - genuinely different authoritative reference orders.
+  Seed-0 deterministically realizes branch X and seed-2 branch Y, so
+  exactly one guard succeeds per seed; the real state-transition engine
+  produces final observed values **84** for seed-0 and **103** for
+  seed-2 under **both** strategies, with attempt records proving which
+  guarded transition applied (`applied` / `guard_not_satisfied`).
+  Observation matrices are exactly `[84, 103]` in seed order per
+  strategy; the statistics per strategy are minimum 84.0, maximum
+  103.0, arithmetic mean 93.5, median 93.5, population standard
+  deviation 9.5; replay regenerates identical execution and
+  observation hashes. Every value is produced by the real lifecycle -
+  nothing is copied into expected artifacts.
+- **Contracts and schemas.** Six new public contracts are appended at
+  `PUBLIC_CONTRACTS` indexes 40-45 (46 total), in this exact order:
+  `RealizationRunTrajectoryExecution`,
+  `RealizationRunTrajectoryReplayManifest`,
+  `RealizationCampaignTrajectoryMatrix`,
+  `RealizationRunMetricObservationSet`,
+  `RealizationCampaignMetricObservationMatrix`,
+  `RealizationCampaignMetricStatisticsMatrix`. Six new schema artifacts
+  bring `schemas/v1/` to exactly 46. Indexes 0-39 and all 40 historical
+  schema artifacts are unchanged; three nested value objects
+  (`RealizedStateTrajectoryResult`, `RealizationCampaignTrajectoryRunCell`,
+  `RealizationCampaignMetricObservationCell`) stay unregistered.
+- **API surface.** Exactly **6 new paths / 7 operations**
+  (`kalhas/api/routes_realization.py`), all tenant-scoped with the
+  established 404/409 `invalid_state`/`conflict`/`integrity_error`
+  mapping and safe generic error bodies:
+  1. GET `/v1/runs/{run_id}/realization-trajectory-execution`
+  2. GET `/v1/runs/{run_id}/realization-trajectory-replay-manifest`
+  3. POST `/v1/runs/{run_id}/realization-metric-observations` (201)
+  4. GET `/v1/runs/{run_id}/realization-metric-observations`
+  5. GET `/v1/campaigns/{campaign_id}/realization-trajectory-matrix`
+  6. GET `/v1/campaigns/{campaign_id}/realization-metric-observation-matrix`
+  7. GET `/v1/campaigns/{campaign_id}/realization-metric-statistics`
+  All seven operations reject recorded runtime != 3.0.0 with 409 before
+  any downstream call; the six GETs are read-only and record no
+  operational activity; extraction records no activity.
+- **Compatibility.** Runtime 1.0.0/2.0.0 behavior is byte-identical:
+  `run_input_hash`/`plan_runs`/`run_plan_identifier`/`run_identifier`
+  have zero source-line changes, the 1.0.0/2.0.0 branches of the
+  verifiers execute the historical statements, the engine's
+  `initial_state=None` path is byte-identical, `VerifiedRunInputs`
+  gained one defaulted field, runtime-2 modules and all Phase 24
+  modules (builder, query, identity, errors, service, sampler, world
+  integrity) are unchanged, and the 40 historical schemas and OpenAPI
+  `$ref`s are untouched (the Phase 17/20/22 canary suites pass
+  unchanged).
+- **Non-goals (unchanged through Phase 25).** No live actions,
+  providers, network, filesystem, or database; no domain-pack
+  implementation execution; no outcomes, rankings, scores, evidence,
+  recommendations, or decision briefs; no wall clocks, global RNG,
+  UUIDs, or `random.seed` (timestamps derive exclusively from recorded
+  `created_at` values); no new runtime after 3.0.0. Matrices and
+  realizations remain derived, never stored. **Phase 26 and Phase 27
+  are not implemented or designed here.**

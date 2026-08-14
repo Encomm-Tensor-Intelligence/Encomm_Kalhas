@@ -2516,3 +2516,128 @@ Phase 17-22 artifact queries, the Phase 22 metric-statistics matrix,
 and the Phase 23 evaluation profile/matrix are unchanged (world
 hashes change only for worlds compiled with a declared uncertainty
 model - new deterministic provenance). **Phase 25 has not started.**
+
+## Phase 25: realization-aware trajectory runtime 3.0.0
+
+**Status: COMPLETE**, included in one local closure commit (the local
+Phase 25 closure commit containing this documentation; **not pushed** -
+`origin/main` remains at
+`f40e83de468ca14100d011454d15eb3dd561c810` and local `main` is exactly
+one commit ahead; push is intentionally deferred until Phases 26 and 27
+are complete; authoritative facts and gate results are in
+`KALHAS_HANDOFF_PHASE_25.md`). **Phase 26 has not begun.** This section
+**explicitly supersedes the historical statements above that Phase 25 /
+runtime 3.0.0 "has not started".**
+
+### Contracts
+
+Six new public contracts are appended at `PUBLIC_CONTRACTS` indexes
+40-45 (46 total), each `extra="forbid"`, frozen, self-hashing, and
+version-locked to the `Literal["3.0.0"]` runtime:
+
+- **`RealizationRunTrajectoryExecution`** (index 40) - the immutable
+  aggregate artifact of one completed runtime-3 run: run/campaign/plan
+  identity, world and strategy identities with content hashes, the
+  recorded seed, the exact `world_realization_id` /
+  `world_realization_content_hash` that supplied the realized initial
+  states, the runtime-3 `input_hash`, the exact ordered plan-set hash,
+  the ordered `RealizedStateTrajectoryResult` tuple (realized initial
+  state + hash are authoritative; attempt records reuse
+  `RunTrajectoryAttemptRecord` with exact position-by-position plan
+  binding), a self-covering `content_hash`, and `executed_at` =
+  `run_plan.created_at`. Identifier prefix
+  `realization-trajectory-execution-`, payload `{run_id,
+  runtime_version}`.
+- **`RealizationRunTrajectoryReplayManifest`** (index 41) - the
+  provenance manifest of one exact observation-aware replay, binding
+  the stored execution and observation-set identities, recording
+  expected/recomputed execution hashes and expected/recomputed
+  observation-set hashes, `replay_classification="exact"`, and a
+  **self-covering** content hash over the complete payload excluding
+  itself (tampering any field fails the recompute at every trust
+  boundary). Identifier `realization-replay-{run_id}`; `replayed_at` =
+  `run_plan.created_at`.
+- **`RealizationCampaignTrajectoryMatrix`** (index 42) - the derived
+  campaign matrix: exact strategy-major/seed-minor cells
+  (`RealizationCampaignTrajectoryRunCell`: run/plan/strategy/seed
+  identity, input hash, execution reference, plan-set hash, result
+  content hashes, per-cell realization id/hash), seed-aligned
+  `ordered_world_realization_ids` /
+  `ordered_world_realization_content_hashes` (length == seed count,
+  cell<->tuple agreement enforced), `comparison_mode="identical_conditions"`,
+  `assembled_at` = `campaign.created_at`.
+- **`RealizationRunMetricObservationSet`** (index 43) - one run's
+  explicitly extracted observation set: full provenance (world,
+  strategy, seed, realization, execution references), observations
+  reusing `RunMetricObservationValue` in canonical `metric_id` order
+  (raw values preserved exactly; no coercion), `observed_at` =
+  `execution.executed_at`. Extraction is explicit (POST), a second
+  extraction is rejected even when byte-identical, and querying never
+  auto-extracts.
+- **`RealizationCampaignMetricObservationMatrix`** (index 44) - the
+  derived observation matrix: per-cell
+  `RealizationCampaignMetricObservationCell` (execution and
+  observation-set references with content hashes, per-cell realization
+  id/hash, observations), seed-aligned realization tuples, exact
+  metric-id collection equality across cells.
+- **`RealizationCampaignMetricStatisticsMatrix`** (index 45) - the
+  derived descriptive-statistics matrix over the verified observation
+  matrix: `statistics_mode="descriptive"`, source matrix reference,
+  seed-aligned realization tuples, summaries reusing the frozen
+  `CampaignStrategyMetricStatistics` computed only through the Phase 22
+  statistics functions (minimum, maximum, arithmetic mean, median,
+  population standard deviation; ordered raw values preserved in exact
+  seed order; no ranking, score, or comparison).
+
+Three nested value objects stay unregistered:
+`RealizedStateTrajectoryResult`, `RealizationCampaignTrajectoryRunCell`,
+`RealizationCampaignMetricObservationCell`. Indexes 0-39 and all 40
+historical schema artifacts are unchanged; 6 new schema artifacts bring
+`schemas/v1/` to exactly 46. No runtime-2 contract module was mutated.
+
+### Lifecycle
+
+Preparation (`prepare_realization_campaign`, request-dispatched from
+the POST /v1/campaigns body) -> trajectory planning
+(`prepare_strategy_trajectory_plans` with the fail-closed mock
+declaration seam) -> start -> execution
+(`execute_realization_campaign`, complete-matrix preflight exactly once,
+then per-run `execute_realization_run`) -> **explicit observation
+extraction** (POST realization-metric-observations) -> verified matrix
+queries (trajectory, observation, statistics; derived, never stored,
+read-only, no activity) -> **observation-aware replay** (requires prior
+extraction; typed 404 with zero writes otherwise; regenerates
+execution, observation set, and structural events; writes the manifest
+pair; idempotent on repetition; sequential two-manifest write
+limitation recovered idempotently - a missing manifest is completed
+with identical bytes, a corrupted one blocks replay and is never
+overwritten). Every runtime gate dispatches on the recorded
+`RunPlan`/`RunStatus.runtime_version`; unsupported recorded versions
+raise the typed `UnsupportedRuntimeVersionError` (409 `conflict`); the
+runtime-2 artifact endpoints reject recorded 3.0.0 before their
+services run; empty plan tuples fail closed. All timestamps derive from
+recorded `created_at` values. No wall clock, randomness, UUID, network,
+provider, database, filesystem, or domain-pack execution exists
+anywhere in the runtime-3 modules; no outcome, ranking, score,
+evidence, recommendation, or decision-brief surface exists.
+
+### API
+
+Exactly 6 new paths / 7 operations, all tenant-scoped with the single
+`ApiErrorResponse` envelope, non-leaking public messages, and 404/409
+`invalid_state`/`conflict`/`integrity_error` mapping:
+
+1. GET `/v1/runs/{run_id}/realization-trajectory-execution`
+2. GET `/v1/runs/{run_id}/realization-trajectory-replay-manifest`
+3. POST `/v1/runs/{run_id}/realization-metric-observations` (201)
+4. GET `/v1/runs/{run_id}/realization-metric-observations`
+5. GET `/v1/campaigns/{campaign_id}/realization-trajectory-matrix`
+6. GET `/v1/campaigns/{campaign_id}/realization-metric-observation-matrix`
+7. GET `/v1/campaigns/{campaign_id}/realization-metric-statistics`
+
+The six GETs are strictly read-only and record no operational activity;
+extraction records no activity. Runtime-2 behavior is byte-identical
+(runtime-2 golden tests and the Phase 17/20/22 OpenAPI `$ref` canaries
+pass unchanged); Phase 24 modules are unchanged; realizations and
+matrices remain derived, never stored. **Phase 26 and Phase 27 are not
+implemented or designed here.**
