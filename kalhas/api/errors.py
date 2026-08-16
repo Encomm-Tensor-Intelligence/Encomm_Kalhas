@@ -15,6 +15,9 @@ from fastapi.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from kalhas.application.campaign_lifecycle import CampaignTransitionError
+from kalhas.application.campaign_outcome_errors import (
+    CampaignOutcomeDistributionMatrixIntegrityError,
+)
 from kalhas.application.domain_errors import (
     CampaignAlreadyExistsError,
     CampaignMetricObservationMatrixIntegrityError,
@@ -291,6 +294,7 @@ def register_error_handlers(app: FastAPI) -> None:
                 CampaignMetricStatisticsIntegrityError,
                 EvaluationProfileIntegrityError,
                 CampaignObjectiveEvaluationMatrixIntegrityError,
+                CampaignOutcomeDistributionMatrixIntegrityError,
                 WorldUncertaintyModelIntegrityError,
                 WorldRealizationIntegrityError,
                 CampaignWorldRealizationMatrixIntegrityError,

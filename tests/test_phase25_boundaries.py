@@ -18,9 +18,10 @@ docstrings, comments, and type names cannot false-positive. Proves:
 - runtime-2 and Phase-24 production modules carry no runtime-3
   dependency; the runtime-3 API surface is exactly 6 paths / 7
   operations;
-- exactly 46 public contracts with the exact historical 0-39 prefix and
-  the exact six-contract runtime-3 tail, and exactly 46 schema
-  artifacts;
+- exactly 47 public contracts with the exact historical 0-39 prefix,
+  the exact six-contract runtime-3 tail at indexes 40-45, and the
+  campaign outcome-distribution matrix at index 46, and exactly 47
+  schema artifacts;
 - no Phase 26/27 surface and no outcome/ranking/score/evidence/
   recommendation/live-action surface;
 - the 12 runtime-3 typed errors are all mapped in ``api/errors.py`` and
@@ -679,7 +680,7 @@ class TestRuntimeSeparation:
 
     def test_runtime3_uses_separate_contracts_and_endpoints(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
-        assert names[-6:] == _RUNTIME3_CONTRACTS
+        assert names[40:46] == _RUNTIME3_CONTRACTS
         # The runtime-3 router only serves realization paths.
         tree = _module_tree("api/routes_realization.py")
         paths = {
@@ -728,8 +729,8 @@ class TestRuntimeSeparation:
 
 
 class TestPublicCompatibility:
-    def test_public_contracts_exactly_46(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 46
+    def test_public_contracts_exactly_47(self) -> None:
+        assert len(PUBLIC_CONTRACTS) == 47
 
     def test_indexes_0_through_39_keep_historical_order(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
@@ -737,14 +738,15 @@ class TestPublicCompatibility:
 
     def test_runtime3_contracts_occupy_exact_tail_order(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
-        assert names[40:] == _RUNTIME3_CONTRACTS
+        assert names[40:46] == _RUNTIME3_CONTRACTS
+        assert names[46] == "CampaignOutcomeDistributionMatrix"
 
-    def test_exactly_46_schema_artifacts_with_matching_titles(self) -> None:
+    def test_exactly_47_schema_artifacts_with_matching_titles(self) -> None:
         import json
 
         schema_dir = KALHAS_ROOT.parent / "schemas" / "v1"
         schema_files = sorted(schema_dir.glob("*.schema.json"))
-        assert len(schema_files) == 46
+        assert len(schema_files) == 47
         titles = {json.loads(path.read_text(encoding="utf-8"))["title"] for path in schema_files}
         names = {contract.__name__ for contract in PUBLIC_CONTRACTS}
         assert titles == names

@@ -2807,7 +2807,9 @@ commit is **not pushed**: `origin/main` remains
 one commit ahead. Push is intentionally deferred until Phases 26 and 27
 are complete; the working tree and index are clean (the authoritative
 facts and final gate results are recorded in
-`KALHAS_HANDOFF_PHASE_25.md`). **Phase 26 has not begun.**
+`KALHAS_HANDOFF_PHASE_25.md`). **Phase 26 has not begun** was true at
+the Phase 25 checkpoint; it is superseded by the "Phase 26 status"
+section below.
 
 This section **explicitly supersedes every earlier historical statement
 in this file that Phase 25 "has not started"** (including the Phase 24
@@ -2983,5 +2985,280 @@ section above).
   recommendations, or decision briefs; no wall clocks, global RNG,
   UUIDs, or `random.seed` (timestamps derive exclusively from recorded
   `created_at` values); no new runtime after 3.0.0. Matrices and
-  realizations remain derived, never stored. **Phase 26 and Phase 27
-  are not implemented or designed here.**
+  realizations remain derived, never stored. The statement that
+  "Phase 26 and Phase 27 are not implemented or designed here" was true
+  at the Phase 25 checkpoint (neither phase was implemented then).
+  Phase 26 is now implementation-complete, so the statement is
+  superseded for Phase 26 by the "Phase 26 status" section below. For
+  Phase 27 only the "not implemented" portion remains true: Phase 27
+  remains unimplemented, but its authoritative design already exists in
+  the external blueprint and in `CODEX_HERMES_HANDOFF_PHASE_26_START.md`.
+
+
+## Phase 26 status
+
+**Empirical campaign outcome distributions (IMPLEMENTATION-COMPLETE,
+GATE-GREEN LOCALLY, NOT YET COMMITTED).** Phase 26 transforms verified
+runtime-3 shared-seed observations into campaign-level empirical
+strategy/objective outcome evidence. At this documentation snapshot the
+complete Phase 26 change set (19 created paths plus 21 modified
+integration paths, listed exactly in `KALHAS_HANDOFF_PHASE_26.md`) is
+present in the working tree and **uncommitted**; the Git index remains
+**empty**. A local closure commit requires a separate explicit user
+authorization and has not been made. **No GitHub push occurs until both
+Phases 26 and 27 are complete.** **Phase 27 implementation has not
+begun** (its authoritative design already exists).
+
+This section **explicitly supersedes every earlier statement in this
+file that Phase 26 "has not begun" or that "Phase 26 and Phase 27 are
+not implemented or designed here"** (including the Phase 25 status
+section above; those statements were true at the Phase 25 checkpoint
+and are now superseded for Phase 26). For Phase 27, only the "not
+implemented" portion remains true - an authoritative Phase 27 design
+already exists in the external blueprint and the incorporated Phase 26
+start handoff; Phase 27 implementation has not begun.
+
+### Purpose and claim boundary
+
+Phase 26 produces, per strategy/objective, **empirical** evidence only:
+
+- exact ordered empirical samples in authoritative shared-seed order;
+- distribution statistics (sample count, minimum, maximum, arithmetic
+  mean, median, population standard deviation);
+- empirical target-achievement probability (achieved count / sample
+  count);
+- normalized target-violation evidence (exact seed-order violation
+  distribution and worst normalized target violation);
+- adverse-tail evidence (direction-aware adverse-tail statistic in the
+  metric's original unit);
+- target-violation CVaR95 evidence (fixed alpha 0.95).
+
+It does **not** produce: rankings, winners, preferred strategies,
+recommendations, confidence intervals, forecast certainty, universal
+real-world probability, decision briefs, NEXUS/LEGION narrative, or
+true-causality / reality-prediction claims. Every statistical claim is
+explicitly **empirical**; no claim is calibrated to real-world
+probability.
+
+### Statistics
+
+- **Exact-type finite numeric validation.** Only exact `int`/`float`
+  samples are accepted; `bool` is rejected even though it subclasses
+  `int`; strings, `Decimal`, `None`, containers, NaN, and Infinity are
+  rejected; integers and floats may mix and raw types are preserved.
+- **Full-domain finite-float conversion proof.** Every sample must be
+  proven convertible to a finite float before any selection, sorting,
+  or arithmetic begins; huge positive/negative integers that cannot be
+  represented raise `OverflowError` (never coerced, clipped, repaired,
+  or partially selected). Invalid shape/type/non-finite input raises
+  `ValueError`; conversion/arithmetic overflow raises `OverflowError`.
+- **Hyndman-Fan Type 7 quantiles.** Integer numerator/remainder index
+  arithmetic (never binary `p / 100`) with deterministic `math.fsum`
+  linear interpolation; algorithm identifier
+  `hyndman-fan-type-7-v1`; only p05/p25/p75/p95 are supported.
+- **One-sample and finite-sample behavior.** A single sample returns
+  that sample for every location/quantile value with a population
+  standard deviation of exactly `0.0`; repeated-value collections emit
+  an exact `0.0` standard deviation while the deterministic mean and
+  quantiles may land within one adjacent float step of the projected
+  constant (contract-level one-ULP composability).
+- **Arithmetic mean, median, population standard deviation** reuse the
+  frozen Phase 22 primitives unchanged.
+- **p05 / p25 / p75 / p95** deterministic empirical quantiles.
+- **Fixed CVaR alpha 0.95** (`EMPIRICAL_TAIL_ALPHA == 0.95`; callers
+  cannot supply another alpha) with the fractional empirical tail-mean
+  algorithm `empirical-fractional-tail-mean-v1`: exact adverse-tail
+  mass 5/100 per sample, `tail_units = 5 * n`, full observations plus
+  the exact fractional boundary weight; no `ceil(0.05*n)`, no
+  unweighted selection, no bootstrap, no resampling.
+- **Target-violation semantics** (Phase 23 normalized semantics, exact
+  seed order): minimize `max(0, value - target) / scale`; maximize
+  `max(0, target - value) / scale`; reach
+  `max(0, abs(value - target) - tolerance) / scale`.
+- **Direction-aware adverse-tail semantics** in the metric's original
+  unit: upper-tail mean for `minimize`, lower-tail mean for
+  `maximize`, upper-tail mean of the absolute deviation from target
+  for `reach`.
+- **Optimization-only objectives** (no target): target-achievement
+  probability, normalized target violations, and target-violation CVaR
+  remain `null` (never invented); the direction-aware adverse-tail
+  statistic remains available.
+- **One-ULP golden-test discipline.** Values the mandated `math.fsum`
+  primitives can land ±1 ULP from the exact rational boundary are
+  asserted with the established `_assert_within_one_ulp` convention;
+  every exactly representable value is asserted with exact equality.
+
+Production arithmetic uses plain `int`/`float` and `math.fsum` only;
+the implementation does **not** use `Decimal` or `Fraction` in
+production.
+
+### Contracts and identity
+
+- **`EmpiricalDistributionSummary`** (nested value object, unregistered):
+  exact ordered samples in seed order, sample count, minimum, maximum,
+  arithmetic mean, median, population standard deviation, Type-7
+  p05/p25/p75/p95, and the exact quantile-algorithm literal; strict
+  frozen contract (`extra="forbid"`) validating internal consistency,
+  including the deterministic one-adjacent-float-step structural-bound
+  policy for the accepted primitives' output.
+- **`StrategyObjectiveOutcome`** (nested value object, unregistered):
+  one strategy/objective evidence artifact binding the authoritative
+  direction/target/reach-tolerance/weight/normalization-scale
+  snapshots, the exact ordered observed values and their empirical
+  summary, targeted evidence (achievement count and empirical
+  probability, normalized violation distribution, worst normalized
+  violation, target-violation CVaR at fixed alpha 0.95) or all-`null`
+  for optimization-only objectives, and the direction-aware
+  adverse-tail statistic; the normalized-violation tuple and
+  achievement count are independently recomputed in the contract and
+  must match the recorded fields exactly.
+- **`CampaignOutcomeDistributionMatrix`** - the **only** Phase 26
+  top-level public contract. It is registered at `PUBLIC_CONTRACTS`
+  index 46; **total public contracts: 47**; **total schema artifacts:
+  47** (`schemas/v1/CampaignOutcomeDistributionMatrix.schema.json` is
+  the only new artifact). The two nested value objects remain
+  unregistered and have no schema artifacts.
+- **Exact ordering and coverage.** Strategy-major / objective-minor
+  outcome tuple with contiguous sequence positions; complete Cartesian
+  strategy × objective coverage (exactly one outcome per pair); exact
+  shared-seed ordering of observed values and samples.
+- **Deterministic identity/hash/timestamp lineage.** The matrix
+  identifier is hash-derived from the canonical
+  campaign/world/runtime/evaluation-profile/source-matrix identity
+  (never from the content hash, timestamps, or the tenant); the
+  content hash is the canonical SHA-256 of the complete payload
+  excluding `content_hash`; `derived_at` equals the observation-matrix
+  `assembled_at` (never wall clock).
+- **Source binding.** The matrix carries and the builder independently
+  verifies: evaluation-profile identifier/content hash, uncertainty
+  model identifier/content hash (both-or-neither), world-realization
+  matrix identifier/content hash, and metric-observation matrix
+  identifier/content hash, plus exact ordered strategy/seed/objective/
+  metric identifiers.
+
+### Builders and verified query
+
+Five separated responsibilities:
+
+1. **Pure statistical primitives** (`kalhas/application/campaign_outcome_statistics.py`)
+   - Type-7 quantiles and fixed-alpha fractional tail means; stdlib-only
+   (`{__future__, math, typing}`), store-free, no clock/randomness.
+2. **Pure strategy/objective outcome builder**
+   (`kalhas/application/campaign_outcome_runtime.py`) - one
+   `StrategyObjectiveOutcome` from a strictly revalidated
+   `ObjectiveMetricBinding` and the exact ordered observed values.
+3. **Deterministic matrix identity** (`kalhas/application/campaign_outcome_identity.py`)
+   - matrix identifier and self-covering content hash.
+4. **Pure complete campaign matrix builder**
+   (`kalhas/application/campaign_outcome_matrix_runtime.py`) - strict
+   contract revalidation, independent identity/content-hash
+   verification, cross-source consistency, independent structural
+   verification of the observation matrix, and complete
+   strategy-major/objective-minor aggregation through the accepted
+   outcome builder; single safe typed
+   `CampaignOutcomeDistributionMatrixIntegrityError` boundary.
+5. **Independently verified read-only query service**
+   (`kalhas/application/campaign_outcome_query_service.py`) - derives
+   the matrix strictly from verified stored records.
+
+The verified query revalidates: tenant/campaign/scenario/world
+ownership and identity; exactly COMPLETE campaign state; recorded
+runtime exactly 3.0.0; the evaluation profile (stored vs world-embedded
+canonical equality plus independent identity/hash verification); the
+uncertainty model; the world-realization matrix; the metric-observation
+matrix; exact run-plan/strategy/seed ordering; objective/metric
+bindings and units; and every identity/content hash and numeric
+invariant. The matrix is derived in memory and **never stored**.
+Querying never executes, replays, extracts, repairs, creates, or writes
+an upstream artifact and records no operational activity; repeated
+queries over unchanged storage return byte-identical matrices.
+
+### API and compatibility
+
+`GET /v1/campaigns/{campaign_id}/outcome-distributions`
+(`kalhas/api/routes_campaign_outcome.py`, one unique path/operation):
+
+- required `X-Tenant-ID` header; no request body; no runtime selector
+  - the runtime is derived exclusively from the recorded `RunPlan`
+  tuple (every plan must be exactly 3.0.0; an empty plan tuple or any
+  other recorded runtime fails closed with the typed 409 `conflict`
+  before the query service is invoked);
+- direct `CampaignOutcomeDistributionMatrix` response;
+- safe typed errors: 404 for unknown/foreign campaigns and for a world
+  without an embedded evaluation profile; 409 `invalid_state` for
+  non-COMPLETE campaigns; 409 `conflict` for unsupported or empty
+  recorded runtime; 409 `integrity_error` for missing, inconsistent,
+  or corrupted upstream artifacts - with generic non-leaking bodies;
+- repeated byte-identical read behavior; no mutation methods (GET
+  only); no operational-activity recording;
+- Phase 25 routes and operations preserved unchanged; `API_VERSION`
+  (`"1"`) and `SCHEMA_VERSION` (`"1.0.0"`) unchanged; runtime remains
+  3.0.0; runtime 1.0.0/2.0.0 behavior preserved byte-identically.
+
+### 100-seed causal acceptance proof
+
+The acceptance fixture (`tests/phase26_helpers.py` +
+`tests/test_phase26_acceptance.py`) drives one real end-to-end
+runtime-3.0.0 campaign through the public services (declarations,
+compilation, preparation, planning, start, full execution, explicit
+extraction, verified query) and proves:
+
+- **100 fixed deterministic seeds** (immutable authoring-time tuple:
+  the first 81 branch-X and first 19 branch-Y seeds in ascending
+  order, `seed-000` ... `seed-148`);
+- **100 realizations, never 200**; two genuinely distinct declared
+  strategies (`mock-a` = `[t-x, t-y]`, `mock-b` = `[t-y, t-x]`);
+  **200 runtime-3 executions** and **200 explicit observation
+  extractions** (2 strategies x 100 seeds);
+- **identical realized world identity/hash for both strategies at the
+  same seed** (all 100 seeds checked against the realization matrix);
+- **branch values 5 and 9**; the **real guarded transitions causally
+  produce the observed values 84 and 103** (exactly one `applied`
+  transition per run matching the realized branch, the other
+  `guard_not_satisfied`, with opposite attempt orders proving the
+  distinct plans);
+- **exactly 81 target achievements and 19 misses**;
+  `empirical_target_achievement_probability == 0.81` exactly;
+- **minimum 84.0; maximum 103.0; arithmetic mean 87.61; median 84.0;
+  population standard deviation 7.453717193454551**;
+- **Type-7 p05/p25/p75 = 84.0 and p95 = 103.0**;
+- **worst normalized target violation 0.03; CVaR95 normalized target
+  violation 0.03; adverse-tail statistic 103.0**;
+- **representative exact replay for both realized branches** (seed-000
+  branch X and seed-002 branch Y: manifest pair with
+  `replay_classification == "exact"`, expected == recomputed execution
+  and observation-set hashes, idempotent, writes only the manifest
+  pair);
+- **repeated GET equality** (three byte-identical responses including
+  identifier, content hash, ordering, samples, and `derived_at`
+  lineage) and **unchanged store state** (complete store digest
+  unchanged, zero operational activity, no artifact creation, no
+  outcome matrix anywhere in the store);
+- **no result or outcome was injected or patched** (exactly 200
+  RunPlan records, 200 execution records, 200 observation-set records,
+  2 StrategyTrajectoryPlan records - one per strategy - and 2 strategy
+  candidates over 100 shared world realizations; every
+  observed value matches the independent causal expectation function;
+  the only test-side patch is the sanctioned
+  `EXPECTED_STRATEGY_SET_SIZE == 2` alignment inside the single
+  preparation call).
+
+The fixed seed tuple was selected **at authoring time** (probed once
+outside the repository against the final fixture world) and is
+**never searched, retried, randomized, or adapted during test
+execution**.
+
+### Non-goals and next phase
+
+Phase 26 adds no paired strategy comparison, no feasibility policy, no
+Pareto analysis, no regret/minimax selection, no ranking or campaign
+decision brief, no adaptive policy runtime, no KALHAS-PAN, no
+historical benchmark, no real LEGION/NEXUS integration, and no
+production database, queue, auth, deployment, or command-center
+expansion. It does not predict reality and claims no true causality.
+
+**Phase 27** (robust paired comparison and campaign decision brief) is
+the next authorized implementation target - its authoritative design
+already exists in the external blueprint and the Phase 26 start
+handoff. Phase 27 implementation begins **only after Phase 26 receives
+its separate user-authorized local closure commit**.

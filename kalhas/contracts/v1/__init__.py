@@ -14,6 +14,7 @@ from kalhas.contracts.v1.campaign import (
 )
 from kalhas.contracts.v1.campaign_metric_observation import CampaignMetricObservationMatrix
 from kalhas.contracts.v1.campaign_metric_statistics import CampaignMetricStatisticsMatrix
+from kalhas.contracts.v1.campaign_outcome import CampaignOutcomeDistributionMatrix
 from kalhas.contracts.v1.campaign_trajectory import (
     CampaignTrajectoryMatrix,
     CampaignTrajectoryRunCell,
@@ -144,6 +145,7 @@ PUBLIC_CONTRACTS: tuple[type[VersionedContract], ...] = (
     RealizationRunMetricObservationSet,
     RealizationCampaignMetricObservationMatrix,
     RealizationCampaignMetricStatisticsMatrix,
+    CampaignOutcomeDistributionMatrix,
 )
 __all__ = [
     "API_VERSION",
@@ -151,6 +153,7 @@ __all__ = [
     "CampaignMetricObservationMatrix",
     "CampaignMetricStatisticsMatrix",
     "CampaignObjectiveEvaluationMatrix",
+    "CampaignOutcomeDistributionMatrix",
     "CampaignSpec",
     "CampaignState",
     "CampaignStatus",

@@ -1,0 +1,476 @@
+{
+  "$defs": {
+    "EmpiricalDistributionSummary": {
+      "additionalProperties": false,
+      "description": "One immutable empirical distribution summary of exact ordered samples.\n\nSummarizes the exact ordered observed samples of one metric for one\nstrategy across the campaign's identical ordered shared seeds: the\nsamples are preserved in the exact authoritative seed order (raw\nintegers remain integers, raw floats remain floats - never\nconverted, rounded, clipped, normalized, weighted, or\nunit-converted), together with the sample count, the exact observed\nminimum and maximum, the arithmetic mean, the median, the population\nstandard deviation, and the deterministic empirical quantiles\n``p05``/``p25``/``p75``/``p95`` under the exact quantile algorithm\nidentifier ``hyndman-fan-type-7-v1``.\n\nThe contract validates internal consistency only: the count must\nequal the collection length; minimum and maximum must equal the\nexact finite-float projections of the observed extrema; every\nderived value must be finite; the mean and median must lie within\nthe observed extrema; the standard deviation must be non-negative;\nthe quantiles must be non-decreasing within the observed extrema;\nand the quantile algorithm must be the exact supported literal.\nThe floating structural bounds (mean/median within extrema and the\nquantile chain) use the deterministic one-adjacent-float-step\nrelation so that the output of the accepted pure statistical\nprimitives - which can land one ULP from the exact rational\nboundary - is always composable with this contract. A single\nsample requires every derived location and quantile value to equal\nthe projected sample exactly and a population standard deviation\nof exactly ``0.0``; a repeated multi-sample collection permits the\ndeterministic mean and quantile values to differ from the\nprojected constant by at most one adjacent float step while the\npopulation standard deviation must remain exactly ``0.0``. The\nexact Type 7 computation itself is owned by the accepted pure\napplication primitives; this contract never recomputes or\nduplicates it.\n\nThe summary is empirical evidence only: it ranks nothing, scores\nnothing, declares no winner, compares nothing against objectives or\ntargets, creates no pass/fail judgment, and produces no outcomes,\nevidence briefs, recommendations, or decision briefs.",
+      "properties": {
+        "arithmetic_mean": {
+          "title": "Arithmetic Mean",
+          "type": "number"
+        },
+        "maximum": {
+          "title": "Maximum",
+          "type": "number"
+        },
+        "median": {
+          "title": "Median",
+          "type": "number"
+        },
+        "minimum": {
+          "title": "Minimum",
+          "type": "number"
+        },
+        "ordered_samples": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Ordered Samples",
+          "type": "array"
+        },
+        "p05": {
+          "title": "P05",
+          "type": "number"
+        },
+        "p25": {
+          "title": "P25",
+          "type": "number"
+        },
+        "p75": {
+          "title": "P75",
+          "type": "number"
+        },
+        "p95": {
+          "title": "P95",
+          "type": "number"
+        },
+        "population_standard_deviation": {
+          "title": "Population Standard Deviation",
+          "type": "number"
+        },
+        "quantile_algorithm": {
+          "const": "hyndman-fan-type-7-v1",
+          "default": "hyndman-fan-type-7-v1",
+          "title": "Quantile Algorithm",
+          "type": "string"
+        },
+        "sample_count": {
+          "minimum": 1,
+          "title": "Sample Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ordered_samples",
+        "sample_count",
+        "minimum",
+        "maximum",
+        "arithmetic_mean",
+        "median",
+        "population_standard_deviation",
+        "p05",
+        "p25",
+        "p75",
+        "p95"
+      ],
+      "title": "EmpiricalDistributionSummary",
+      "type": "object"
+    },
+    "StrategyObjectiveOutcome": {
+      "additionalProperties": false,
+      "description": "One immutable empirical outcome of one strategy/objective pair.\n\nBinds one strategy/objective pair's outcome evidence: the\nstrategy/objective sequence positions and identities, the metric\nidentity and unit, the authoritative direction/target/reach-\ntolerance/weight/normalization-scale snapshots, the exact ordered\nobserved values in shared-seed order together with their\n``EmpiricalDistributionSummary``, and - when a target exists - the\ntarget-achievement count and empirical probability, the normalized\ntarget-violation distribution, the worst normalized target\nviolation, and the fixed-alpha 0.95 target-violation CVaR. For\noptimization-only objectives (no target) all five targeted evidence\nfields are ``None`` while the direction-aware ``adverse_tail_statistic``\nremains mandatory.\n\nThe normalized target violation and the target-achievement count\nare **independently recomputed here in exact seed order** from the\nfrozen snapshots with the authoritative semantics:\n\n- ``minimize``: ``max(0, value - target) / normalization_scale``\n  and ``value <= target``;\n- ``maximize``: ``max(0, target - value) / normalization_scale``\n  and ``value >= target``;\n- ``reach``: ``max(0, abs(value - target) - reach_tolerance)\n  / normalization_scale`` and ``abs(value - target)\n  <= reach_tolerance``.\n\nThe recomputed violation tuple must equal\n``normalized_target_violation_distribution.ordered_samples``\nexactly, and the recomputed count and probability must equal the\nrecorded fields exactly; overflow and non-finite derivations are\nrejected. The contract additionally validates the safe structural\nbounds of the evidence: the worst normalized target violation must\nequal the violation distribution maximum, the target-violation CVaR\nmust be finite, non-negative, and lie between the violation\ndistribution ``p95`` and the worst violation, and the adverse-tail\nstatistic must lie between the arithmetic mean and the maximum for\n``minimize``, between the minimum and the arithmetic mean for\n``maximize``, and be non-negative for ``reach``. The two floating\nbands (the CVaR band and the adverse-tail band) use the\ndeterministic one-adjacent-float-step relation so that the actual\ntail-primitive output - which can land one ULP from the exact\nrational boundary - is composable with this contract; the exact\ntail statistics themselves are owned by the accepted pure\napplication primitives, and the contract validates internal\nconsistency only.\n\nThe outcome is empirical evidence only: it ranks nothing, scores\nnothing, declares no winner, prefers no strategy, creates no\nrecommendation, and produces no decision brief.",
+      "properties": {
+        "adverse_tail_statistic": {
+          "title": "Adverse Tail Statistic",
+          "type": "number"
+        },
+        "direction": {
+          "enum": [
+            "minimize",
+            "maximize",
+            "reach"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "empirical_distribution": {
+          "$ref": "#/$defs/EmpiricalDistributionSummary"
+        },
+        "empirical_target_achievement_probability": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Empirical Target Achievement Probability"
+        },
+        "metric_id": {
+          "minLength": 1,
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "metric_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Metric Unit"
+        },
+        "normalization_scale": {
+          "exclusiveMinimum": 0.0,
+          "title": "Normalization Scale",
+          "type": "number"
+        },
+        "normalized_target_violation_distribution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EmpiricalDistributionSummary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "objective_position": {
+          "minimum": 0,
+          "title": "Objective Position",
+          "type": "integer"
+        },
+        "ordered_observed_values": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Ordered Observed Values",
+          "type": "array"
+        },
+        "reach_tolerance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reach Tolerance"
+        },
+        "sequence_position": {
+          "minimum": 0,
+          "title": "Sequence Position",
+          "type": "integer"
+        },
+        "strategy_candidate_id": {
+          "minLength": 1,
+          "title": "Strategy Candidate Id",
+          "type": "string"
+        },
+        "strategy_position": {
+          "minimum": 0,
+          "title": "Strategy Position",
+          "type": "integer"
+        },
+        "tail_algorithm": {
+          "const": "empirical-fractional-tail-mean-v1",
+          "default": "empirical-fractional-tail-mean-v1",
+          "title": "Tail Algorithm",
+          "type": "string"
+        },
+        "tail_alpha": {
+          "const": 0.95,
+          "default": 0.95,
+          "title": "Tail Alpha",
+          "type": "number"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target"
+        },
+        "target_achievement_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Achievement Count"
+        },
+        "target_violation_cvar": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Violation Cvar"
+        },
+        "weight": {
+          "minimum": 0.0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "worst_normalized_target_violation": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Worst Normalized Target Violation"
+        }
+      },
+      "required": [
+        "sequence_position",
+        "strategy_position",
+        "objective_position",
+        "strategy_candidate_id",
+        "objective_id",
+        "metric_id",
+        "direction",
+        "weight",
+        "normalization_scale",
+        "ordered_observed_values",
+        "empirical_distribution",
+        "adverse_tail_statistic"
+      ],
+      "title": "StrategyObjectiveOutcome",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The deterministic campaign-level empirical outcome-distribution matrix.\n\nThe immutable, tenant-scoped top-level artifact binding one\ncompleted runtime-3.0.0 campaign's complete per-strategy/per-\nobjective empirical outcome evidence: the campaign/scenario/world\nidentity with the scenario and world content hashes, the recorded\nruntime version (always ``\"3.0.0\"``) and comparison mode (always\n``identical_conditions``), the evaluation-profile reference, the\nuncertainty-model reference (both identity and content hash, or\nneither), the two exact source references (the world-realization\nmatrix and the runtime-3 metric-observation matrix), the exact\nordered strategy, seed, objective, and metric identifiers, and the\ncomplete strategy-major, objective-minor outcome tuple with\ncontiguous sequence positions and exact identity-vs-position\nagreement.\n\nThe contract enforces the structural shape only: both-or-neither\nuncertainty provenance; unique strategy/seed/objective/metric\nidentifiers; strictly increasing metric identifiers; exactly one\noutcome per strategy x objective pair in the exact strategy-major,\nobjective-minor order; every outcome's sequence position equal to\nits tuple position, positions in range, identities matching their\npositions, metric present in the ordered metric collection, and\nobserved-value and empirical-summary counts equal to the seed\ncount; and identical authoritative objective/binding snapshots\n(objective, metric, unit, direction, target, tolerance, weight,\nscale) across every strategy of the same objective - while the\noutcome evidence values themselves may legitimately differ across\nstrategies.\n\nDeterministic identifier derivation, content-hash recomputation,\nsource-artifact hash verification, sample-to-seed provenance,\nevaluation-profile integrity, and tenant-ownership verification\nbeyond the inherited field belong to the application layer and are\ndeliberately not performed here. The matrix is declarative data\nonly: nothing here builds, verifies, queries, stores, reads a\nclock, samples, executes, replays, ranks, scores, declares a\nwinner, prefers, or recommends a strategy, and no field type can\nexpress a callback, expression, formula, code reference, provider,\nor executable mechanism.",
+  "properties": {
+    "campaign_id": {
+      "minLength": 1,
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "comparison_mode": {
+      "const": "identical_conditions",
+      "default": "identical_conditions",
+      "title": "Comparison Mode",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "derived_at": {
+      "format": "date-time",
+      "title": "Derived At",
+      "type": "string"
+    },
+    "evaluation_profile_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Evaluation Profile Content Hash",
+      "type": "string"
+    },
+    "evaluation_profile_id": {
+      "minLength": 1,
+      "title": "Evaluation Profile Id",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "ordered_metric_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Ordered Metric Ids",
+      "type": "array"
+    },
+    "ordered_objective_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Ordered Objective Ids",
+      "type": "array"
+    },
+    "ordered_scenario_seed_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Ordered Scenario Seed Ids",
+      "type": "array"
+    },
+    "ordered_strategy_candidate_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Ordered Strategy Candidate Ids",
+      "type": "array"
+    },
+    "outcomes": {
+      "items": {
+        "$ref": "#/$defs/StrategyObjectiveOutcome"
+      },
+      "minItems": 1,
+      "title": "Outcomes",
+      "type": "array"
+    },
+    "runtime_version": {
+      "const": "3.0.0",
+      "title": "Runtime Version",
+      "type": "string"
+    },
+    "scenario_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Scenario Content Hash",
+      "type": "string"
+    },
+    "scenario_id": {
+      "minLength": 1,
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_metric_observation_matrix_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Metric Observation Matrix Content Hash",
+      "type": "string"
+    },
+    "source_metric_observation_matrix_id": {
+      "minLength": 1,
+      "title": "Source Metric Observation Matrix Id",
+      "type": "string"
+    },
+    "source_world_realization_matrix_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source World Realization Matrix Content Hash",
+      "type": "string"
+    },
+    "source_world_realization_matrix_id": {
+      "minLength": 1,
+      "title": "Source World Realization Matrix Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "uncertainty_model_content_hash": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Uncertainty Model Content Hash"
+    },
+    "uncertainty_model_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Uncertainty Model Id"
+    },
+    "world_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "World Content Hash",
+      "type": "string"
+    },
+    "world_version_id": {
+      "minLength": 1,
+      "title": "World Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "campaign_id",
+    "scenario_id",
+    "scenario_content_hash",
+    "world_version_id",
+    "world_content_hash",
+    "runtime_version",
+    "evaluation_profile_id",
+    "evaluation_profile_content_hash",
+    "source_world_realization_matrix_id",
+    "source_world_realization_matrix_content_hash",
+    "source_metric_observation_matrix_id",
+    "source_metric_observation_matrix_content_hash",
+    "ordered_strategy_candidate_ids",
+    "ordered_scenario_seed_ids",
+    "ordered_objective_ids",
+    "ordered_metric_ids",
+    "outcomes",
+    "content_hash",
+    "derived_at"
+  ],
+  "title": "CampaignOutcomeDistributionMatrix",
+  "type": "object"
+}

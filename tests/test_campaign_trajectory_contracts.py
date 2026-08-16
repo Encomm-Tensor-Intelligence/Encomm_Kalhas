@@ -92,7 +92,7 @@ def _multi_cell_payload(
 
 class TestRegistration:
     def test_public_contract_count_is_40(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 46
+        assert len(PUBLIC_CONTRACTS) == 47
 
     def test_only_the_versioned_matrix_is_registered(self) -> None:
         registered = {contract.__name__ for contract in PUBLIC_CONTRACTS}
@@ -121,17 +121,17 @@ class TestRegistration:
         assert names[matrix_index + 1] == "DomainMetricObservationBinding"
         assert names[matrix_index + 2] == "RunMetricObservationSet"
         assert names[matrix_index + 3] == "CampaignMetricObservationMatrix"
-        assert names[-11] == "ScenarioEvaluationProfile"
-        assert names[-10] == "CampaignObjectiveEvaluationMatrix"
-        assert names[-9] == "WorldUncertaintyModel"
-        assert names[-8] == "WorldRealization"
-        assert names[-7] == "CampaignWorldRealizationMatrix"
-        assert names[-6] == "RealizationRunTrajectoryExecution"
-        assert names[-5] == "RealizationRunTrajectoryReplayManifest"
-        assert names[-4] == "RealizationCampaignTrajectoryMatrix"
-        assert names[-3] == "RealizationRunMetricObservationSet"
-        assert names[-2] == "RealizationCampaignMetricObservationMatrix"
-        assert names[-1] == "RealizationCampaignMetricStatisticsMatrix"
+        assert names[35] == "ScenarioEvaluationProfile"
+        assert names[36] == "CampaignObjectiveEvaluationMatrix"
+        assert names[37] == "WorldUncertaintyModel"
+        assert names[38] == "WorldRealization"
+        assert names[39] == "CampaignWorldRealizationMatrix"
+        assert names[40] == "RealizationRunTrajectoryExecution"
+        assert names[41] == "RealizationRunTrajectoryReplayManifest"
+        assert names[42] == "RealizationCampaignTrajectoryMatrix"
+        assert names[43] == "RealizationRunMetricObservationSet"
+        assert names[44] == "RealizationCampaignMetricObservationMatrix"
+        assert names[45] == "RealizationCampaignMetricStatisticsMatrix"
 
 
 class TestRunCell:

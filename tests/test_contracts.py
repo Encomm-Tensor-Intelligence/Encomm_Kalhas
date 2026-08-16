@@ -12,6 +12,7 @@ from kalhas.contracts.v1.activity import OperationalActivityEvent
 from kalhas.contracts.v1.campaign import CampaignSpec, CampaignStatus
 from kalhas.contracts.v1.campaign_metric_observation import CampaignMetricObservationMatrix
 from kalhas.contracts.v1.campaign_metric_statistics import CampaignMetricStatisticsMatrix
+from kalhas.contracts.v1.campaign_outcome import CampaignOutcomeDistributionMatrix
 from kalhas.contracts.v1.campaign_trajectory import CampaignTrajectoryMatrix
 from kalhas.contracts.v1.domain_pack import (
     DomainCapabilityDeclaration,
@@ -1542,6 +1543,81 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         "summaries": [],
         "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
         "summarized_at": NOW,
+    },
+    CampaignOutcomeDistributionMatrix: {
+        "identifier": "campaign-outcome-distribution-matrix-0123456789abcdef",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "campaign_id": "campaign-1",
+        "scenario_id": "scenario-1",
+        "scenario_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "runtime_version": "3.0.0",
+        "comparison_mode": "identical_conditions",
+        "evaluation_profile_id": "evaluation-profile-0123456789abcdef",
+        "evaluation_profile_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "uncertainty_model_id": None,
+        "uncertainty_model_content_hash": None,
+        "source_world_realization_matrix_id": "world-realization-matrix-0123456789abcdef",
+        "source_world_realization_matrix_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "source_metric_observation_matrix_id": (
+            "realization-metric-observation-matrix-0123456789abcdef"
+        ),
+        "source_metric_observation_matrix_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "ordered_strategy_candidate_ids": ["mock-a"],
+        "ordered_scenario_seed_ids": ["seed-1"],
+        "ordered_objective_ids": ["obj-1"],
+        "ordered_metric_ids": ["m-1"],
+        "outcomes": [
+            {
+                "sequence_position": 0,
+                "strategy_position": 0,
+                "objective_position": 0,
+                "strategy_candidate_id": "mock-a",
+                "objective_id": "obj-1",
+                "metric_id": "m-1",
+                "metric_unit": "units",
+                "direction": "minimize",
+                "target": None,
+                "reach_tolerance": None,
+                "weight": 1.0,
+                "normalization_scale": 1.0,
+                "ordered_observed_values": [5.0],
+                "empirical_distribution": {
+                    "ordered_samples": [5.0],
+                    "sample_count": 1,
+                    "minimum": 5.0,
+                    "maximum": 5.0,
+                    "arithmetic_mean": 5.0,
+                    "median": 5.0,
+                    "population_standard_deviation": 0.0,
+                    "quantile_algorithm": "hyndman-fan-type-7-v1",
+                    "p05": 5.0,
+                    "p25": 5.0,
+                    "p75": 5.0,
+                    "p95": 5.0,
+                },
+                "target_achievement_count": None,
+                "empirical_target_achievement_probability": None,
+                "normalized_target_violation_distribution": None,
+                "worst_normalized_target_violation": None,
+                "tail_alpha": 0.95,
+                "tail_algorithm": "empirical-fractional-tail-mean-v1",
+                "target_violation_cvar": None,
+                "adverse_tail_statistic": 5.0,
+            }
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "derived_at": NOW,
     },
 }
 

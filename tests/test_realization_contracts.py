@@ -426,8 +426,8 @@ def statistics_payload(**overrides: object) -> dict[str, object]:
 
 
 class TestRegistration:
-    def test_public_contract_count_is_exactly_46(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 46
+    def test_public_contract_count_is_exactly_47(self) -> None:
+        assert len(PUBLIC_CONTRACTS) == 47
 
     def test_realization_contracts_at_indexes_40_through_45(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)

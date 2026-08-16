@@ -197,21 +197,21 @@ def _matrix(**overrides: object) -> CampaignMetricStatisticsMatrix:
 
 class TestRegistration:
     def test_public_contract_count_is_exactly_40(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 46
+        assert len(PUBLIC_CONTRACTS) == 47
 
     def test_matrix_is_registered_last_and_summary_is_not(self) -> None:
         names = [contract.__name__ for contract in PUBLIC_CONTRACTS]
-        assert names[-11] == "ScenarioEvaluationProfile"
-        assert names[-10] == "CampaignObjectiveEvaluationMatrix"
-        assert names[-9] == "WorldUncertaintyModel"
-        assert names[-8] == "WorldRealization"
-        assert names[-7] == "CampaignWorldRealizationMatrix"
-        assert names[-6] == "RealizationRunTrajectoryExecution"
-        assert names[-5] == "RealizationRunTrajectoryReplayManifest"
-        assert names[-4] == "RealizationCampaignTrajectoryMatrix"
-        assert names[-3] == "RealizationRunMetricObservationSet"
-        assert names[-2] == "RealizationCampaignMetricObservationMatrix"
-        assert names[-1] == "RealizationCampaignMetricStatisticsMatrix"
+        assert names[35] == "ScenarioEvaluationProfile"
+        assert names[36] == "CampaignObjectiveEvaluationMatrix"
+        assert names[37] == "WorldUncertaintyModel"
+        assert names[38] == "WorldRealization"
+        assert names[39] == "CampaignWorldRealizationMatrix"
+        assert names[40] == "RealizationRunTrajectoryExecution"
+        assert names[41] == "RealizationRunTrajectoryReplayManifest"
+        assert names[42] == "RealizationCampaignTrajectoryMatrix"
+        assert names[43] == "RealizationRunMetricObservationSet"
+        assert names[44] == "RealizationCampaignMetricObservationMatrix"
+        assert names[45] == "RealizationCampaignMetricStatisticsMatrix"
         assert "CampaignStrategyMetricStatistics" not in names
 
     def test_prior_34_contracts_unchanged_and_in_order(self) -> None:

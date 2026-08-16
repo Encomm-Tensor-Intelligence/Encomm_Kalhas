@@ -100,7 +100,7 @@ def _module_source(relative: str) -> str:
 
 class TestContractBoundary:
     def test_public_contract_count_exactly_40(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 46
+        assert len(PUBLIC_CONTRACTS) == 47
 
     def test_original_contracts_unchanged(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
@@ -159,6 +159,7 @@ class TestSchemaBoundary:
                 "RealizationRunMetricObservationSet.schema.json",
                 "RealizationCampaignMetricObservationMatrix.schema.json",
                 "RealizationCampaignMetricStatisticsMatrix.schema.json",
+                "CampaignOutcomeDistributionMatrix.schema.json",
             ]
         )
         assert schema_files == expected
