@@ -3,136 +3,212 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Encomm Colony — KALHAS operational observability</title>
-  <meta name="description" content="Encomm Colony: local, read-only mission control for the KALHAS kernel. Manual pull refresh of tenant operational activity. No streaming, no external assets.">
-  <link rel="stylesheet" href="/colony/styles.css">
+  <title>Encomm Colony — Living simulation console</title>
+  <meta name="description" content="Encomm Colony: a local synthetic living-colony demonstration beside truthful KALHAS operational observability.">
+  <link rel="stylesheet" href="/colony/styles.css?v=living-colony-1">
 </head>
 <body>
   <div class="colony-shell">
-
-    <header class="colony-header">
-      <div class="brand-block">
-        <p class="kicker">Local companion · same origin · strictly read-only</p>
-        <h1>ENCOMM COLONY</h1>
-        <p class="tagline">Mission control for the KALHAS kernel</p>
-        <div class="badges">
-          <span class="badge badge-primary">KALHAS operational observability</span>
-          <span class="badge badge-manual">manual pull refresh</span>
-        </div>
-        <p class="pull-note">The feed is pull-based: it changes only when you press the button below. It is not streaming live.</p>
+    <header class="topbar">
+      <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="brand-copy">
+        <p class="eyebrow">ENCOMM SYSTEMS</p>
+        <h1>COLONY <span>/ AURORA-7</span></h1>
       </div>
-
-      <form class="tenant-form" id="tenant-form" autocomplete="off">
-        <label for="tenant-input">Tenant identifier</label>
-        <input id="tenant-input" name="tenant" type="text" placeholder="e.g. tenant-demo" spellcheck="false" autocomplete="off">
-        <button id="load-button" type="submit">Load activity</button>
-      </form>
-
-      <div class="feed-status-line">
-        <p class="feed-status" id="feed-status" role="status" aria-live="polite">No feed loaded yet. Enter a tenant identifier and press Load activity.</p>
-        <p class="feed-meta" id="feed-meta" aria-hidden="true"></p>
+      <div class="system-pills" aria-label="System state">
+        <span class="system-pill online"><i></i>KALHAS LOCAL</span>
+        <span class="system-pill mock"><i></i>SYNTHETIC DEMO</span>
       </div>
     </header>
 
-    <div class="colony-grid">
+    <section class="truth-banner" aria-label="Demo disclosure">
+      <strong>VISUAL PROTOTYPE</strong>
+      <span>The colony, agents, metrics and results below are deterministic client-side mock data. They do not claim real KALHAS execution, NEXUS integration or active LEGION agents.</span>
+    </section>
 
-      <aside class="system-rail" aria-label="Architecture state">
-        <h2 class="rail-title">Architecture state</h2>
-
-        <section class="system-card" aria-labelledby="sys-kalhas">
-          <div class="system-head">
-            <span class="status-light light-off" id="kalhas-light" aria-hidden="true"></span>
-            <h3 id="sys-kalhas">KALHAS</h3>
+    <main class="simulation-layout">
+      <section class="colony-console" aria-labelledby="scenario-title">
+        <div class="console-heading">
+          <div>
+            <p class="section-label">ACTIVE SCENARIO · RESILIENCE DRILL 01</p>
+            <h2 id="scenario-title">Aurora-7 Supply Shock</h2>
+            <p class="scenario-copy">A 24-day synthetic stress test of power, provisions and habitat stability.</p>
           </div>
-          <p class="system-note" id="kalhas-status">Not queried yet — connects after a successful activity request.</p>
+          <div class="simulation-controls">
+            <button class="primary-action" id="demo-toggle" type="button">Start simulation</button>
+          </div>
+        </div>
+
+        <div class="run-strip">
+          <div class="run-state">
+            <span class="run-dot" id="run-dot" aria-hidden="true"></span>
+            <span id="run-status" role="status" aria-live="polite">Ready for local demo</span>
+          </div>
+          <div class="day-counter"><span>SIM DAY</span><strong id="day-value">00</strong><small>/ 24</small></div>
+          <div class="progress-track" aria-label="Scenario progress"><span id="progress-fill"></span></div>
+          <div class="clock-readout" id="clock-readout">06:00 UTC</div>
+        </div>
+
+        <div class="colony-map" id="colony-map" aria-label="Synthetic Aurora-7 colony map with six operating zones and moving demo agents">
+          <div class="map-grid" aria-hidden="true"></div>
+          <div class="terrain terrain-one" aria-hidden="true"></div>
+          <div class="terrain terrain-two" aria-hidden="true"></div>
+          <svg class="route-layer" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M160 205 C260 190 300 285 420 300 S620 215 735 250 S830 390 875 450"></path>
+            <path d="M420 300 C390 405 280 420 230 495"></path>
+            <path d="M420 300 C530 365 620 445 730 480"></path>
+            <path d="M735 250 C795 190 865 165 900 135"></path>
+          </svg>
+
+          <div class="map-caption">
+            <span class="map-live"><i></i><b id="map-state">STANDBY</b></span>
+            <span>SECTOR A7 · LOCAL SANDBOX</span>
+          </div>
+
+          <article class="colony-node command-node" data-node="command">
+            <span class="node-code">C-01</span><span class="node-icon">⌁</span>
+            <h3>Command Nexus</h3><p id="node-command">Systems ready</p>
+          </article>
+          <article class="colony-node habitat-node" data-node="habitat">
+            <span class="node-code">H-04</span><span class="node-icon">⌂</span>
+            <h3>Habitat Ring</h3><p id="node-habitat">Nominal load</p>
+          </article>
+          <article class="colony-node solar-node" data-node="solar">
+            <span class="node-code">P-12</span><span class="node-icon">☼</span>
+            <h3>Solar Field</h3><p id="node-solar">82% output</p>
+          </article>
+          <article class="colony-node farm-node" data-node="farm">
+            <span class="node-code">B-07</span><span class="node-icon">⌇</span>
+            <h3>Bio Domes</h3><p id="node-farm">41 days reserve</p>
+          </article>
+          <article class="colony-node lab-node" data-node="lab">
+            <span class="node-code">R-03</span><span class="node-icon">◇</span>
+            <h3>Research Lab</h3><p id="node-lab">Modeling shock</p>
+          </article>
+          <article class="colony-node logistics-node" data-node="logistics">
+            <span class="node-code">L-09</span><span class="node-icon">↗</span>
+            <h3>Logistics Port</h3><p id="node-logistics">4 routes ready</p>
+          </article>
+
+          <div class="agent agent-one" aria-hidden="true"><span></span></div>
+          <div class="agent agent-two" aria-hidden="true"><span></span></div>
+          <div class="agent agent-three" aria-hidden="true"><span></span></div>
+          <div class="agent agent-four" aria-hidden="true"><span></span></div>
+          <div class="agent agent-five" aria-hidden="true"><span></span></div>
+          <div class="demo-clock" id="demo-clock" aria-hidden="true"></div>
+        </div>
+
+        <div class="metric-grid" aria-label="Synthetic live metrics">
+          <article class="metric-card">
+            <div class="metric-top"><span>COLONY STABILITY</span><strong id="stability-value">78%</strong></div>
+            <div class="metric-bar"><span id="stability-bar" style="width:78%"></span></div>
+            <p id="stability-delta">Baseline readiness</p>
+          </article>
+          <article class="metric-card">
+            <div class="metric-top"><span>SUPPLY RESERVE</span><strong id="reserve-value">41 d</strong></div>
+            <div class="metric-bar reserve"><span id="reserve-bar" style="width:68%"></span></div>
+            <p id="reserve-delta">Nominal inventory</p>
+          </article>
+          <article class="metric-card">
+            <div class="metric-top"><span>SYSTEMIC RISK</span><strong id="risk-value">22%</strong></div>
+            <div class="metric-bar risk"><span id="risk-bar" style="width:22%"></span></div>
+            <p id="risk-delta">Within tolerance</p>
+          </article>
+        </div>
+      </section>
+
+      <aside class="mission-panel" aria-label="Scenario intelligence">
+        <section class="panel-section">
+          <p class="section-label">MISSION TIMELINE</p>
+          <ol class="mission-timeline" id="mission-timeline">
+            <li class="current" data-day="0"><span>00</span><div><strong>Baseline acquired</strong><p>Colony state captured</p></div></li>
+            <li data-day="4"><span>04</span><div><strong>Solar disruption</strong><p>Power output degrades</p></div></li>
+            <li data-day="9"><span>09</span><div><strong>Strategy deployed</strong><p>Loads are rebalanced</p></div></li>
+            <li data-day="15"><span>15</span><div><strong>Recovery window</strong><p>Reserve begins rebuilding</p></div></li>
+            <li data-day="24"><span>24</span><div><strong>Outcome verified</strong><p>Demo result finalized</p></div></li>
+          </ol>
         </section>
 
-        <section class="system-card system-external" aria-labelledby="sys-nexus">
-          <div class="system-head">
-            <span class="status-light light-ext" aria-hidden="true"></span>
-            <h3 id="sys-nexus">NEXUS</h3>
-          </div>
-          <p class="system-note">External boundary — not connected. No integration is present.</p>
+        <section class="panel-section signal-section">
+          <div class="section-heading-row"><p class="section-label">LIVE SIGNALS</p><span id="signal-count">0</span></div>
+          <ol class="signal-list" id="signal-list" aria-live="polite">
+            <li><time>D00</time><span>Awaiting simulation start</span></li>
+          </ol>
         </section>
 
-        <section class="system-card system-mock" aria-labelledby="sys-legion">
-          <div class="system-head">
-            <span class="status-light light-mock" aria-hidden="true"></span>
-            <h3 id="sys-legion">LEGION</h3>
-          </div>
-          <p class="system-note">Mock strategy boundary only — not connected, no agents active.</p>
+        <section class="outcome-panel" id="outcome-panel" aria-labelledby="outcome-title">
+          <p class="section-label">PROJECTED OUTCOME</p>
+          <div class="outcome-orbit" aria-hidden="true"><span></span></div>
+          <h3 id="outcome-title">Pending</h3>
+          <p id="outcome-copy">Run the synthetic scenario to reveal its deterministic result.</p>
+          <dl>
+            <div><dt>Confidence</dt><dd id="confidence-value">—</dd></div>
+            <div><dt>Incidents</dt><dd id="incident-value">—</dd></div>
+            <div><dt>Best action</dt><dd id="action-value">—</dd></div>
+          </dl>
+          <small>Mock result · presentation prototype only</small>
         </section>
       </aside>
+    </main>
 
-      <main class="mission-floor" aria-label="Mission zones">
-        <h2 class="floor-title">Mission floor</h2>
-        <p class="floor-note">Zones light up only from activity actually observed in the loaded feed. No agents are shown or implied.</p>
-
-        <div class="zone-grid">
-          <section class="zone" id="zone-scenario_studio" aria-labelledby="zone-title-scenario_studio">
-            <h3 id="zone-title-scenario_studio">Scenario Studio</h3>
-            <p class="zone-kinds">Observes: scenario_registered</p>
-            <p class="zone-latest" id="zone-scenario_studio-kind">No activity observed in the loaded feed</p>
-            <p class="zone-time" id="zone-scenario_studio-time"></p>
-            <dl class="zone-refs" id="zone-scenario_studio-refs"></dl>
-          </section>
-
-          <section class="zone" id="zone-world_forge" aria-labelledby="zone-title-world_forge">
-            <h3 id="zone-title-world_forge">World Forge</h3>
-            <p class="zone-kinds">Observes: world_compiled</p>
-            <p class="zone-latest" id="zone-world_forge-kind">No activity observed in the loaded feed</p>
-            <p class="zone-time" id="zone-world_forge-time"></p>
-            <dl class="zone-refs" id="zone-world_forge-refs"></dl>
-          </section>
-
-          <section class="zone" id="zone-domain_registry" aria-labelledby="zone-title-domain_registry">
-            <h3 id="zone-title-domain_registry">Domain Registry</h3>
-            <p class="zone-kinds">Observes: domain_pack_registered · domain_pack_bound · capability_inputs_declared · domain_state_model_declared · domain_state_transition_declared</p>
-            <p class="zone-latest" id="zone-domain_registry-kind">No activity observed in the loaded feed</p>
-            <p class="zone-time" id="zone-domain_registry-time"></p>
-            <dl class="zone-refs" id="zone-domain_registry-refs"></dl>
-          </section>
-
-          <section class="zone" id="zone-campaign_control" aria-labelledby="zone-title-campaign_control">
-            <h3 id="zone-title-campaign_control">Campaign Control</h3>
-            <p class="zone-kinds">Observes: campaign_prepared · campaign_started · campaign_executed</p>
-            <p class="zone-latest" id="zone-campaign_control-kind">No activity observed in the loaded feed</p>
-            <p class="zone-time" id="zone-campaign_control-time"></p>
-            <dl class="zone-refs" id="zone-campaign_control-refs"></dl>
-          </section>
-
-          <section class="zone" id="zone-integrity_vault" aria-labelledby="zone-title-integrity_vault">
-            <h3 id="zone-title-integrity_vault">Integrity and Replay Vault</h3>
-            <p class="zone-kinds">Observes: run_inputs_verified · run_replayed</p>
-            <p class="zone-latest" id="zone-integrity_vault-kind">No activity observed in the loaded feed</p>
-            <p class="zone-time" id="zone-integrity_vault-time"></p>
-            <dl class="zone-refs" id="zone-integrity_vault-refs"></dl>
-          </section>
+    <details class="kernel-observatory">
+      <summary>
+        <span><b>KALHAS activity observatory</b><small>Real local API data · manual pull refresh · not streaming live</small></span>
+        <span class="summary-action">Open observatory</span>
+      </summary>
+      <div class="observatory-body">
+        <form class="tenant-form" id="tenant-form" autocomplete="off">
+          <label for="tenant-input">Tenant identifier</label>
+          <input id="tenant-input" name="tenant" type="text" placeholder="e.g. tenant-demo" spellcheck="false" autocomplete="off">
+          <button id="load-button" type="submit">Load activity</button>
+        </form>
+        <div class="feed-status-line">
+          <p class="feed-status" id="feed-status" role="status" aria-live="polite">No feed loaded yet. Enter a tenant identifier and press Load activity.</p>
+          <p class="feed-meta" id="feed-meta" aria-hidden="true"></p>
         </div>
-      </main>
 
-      <aside class="event-stream" aria-label="Operational event stream">
-        <div class="stream-head">
-          <h2>Event stream</h2>
-          <p class="stream-note">Newest first; sequence numbers are the true tenant-local operational order. occurred_at is the source artifact time — not simulation or replay time.</p>
+        <div class="observatory-grid">
+          <aside class="system-rail" aria-label="Architecture state">
+            <h2>Architecture state</h2>
+            <section class="system-card"><span class="status-light light-off" id="kalhas-light" aria-hidden="true"></span><div><h3>KALHAS</h3><p id="kalhas-status">Not queried yet — connects after a successful activity request.</p></div></section>
+            <section class="system-card"><span class="status-light light-ext" aria-hidden="true"></span><div><h3>NEXUS</h3><p>External boundary — not connected. No integration is present.</p></div></section>
+            <section class="system-card"><span class="status-light light-mock" aria-hidden="true"></span><div><h3>LEGION</h3><p>Mock strategy boundary only — not connected, no agents active.</p></div></section>
+          </aside>
+
+          <section class="real-zones" aria-label="Mission zones">
+            <h2>Observed kernel zones</h2>
+            <p>Zones activate only from real operational events in the loaded feed.</p>
+            <div class="zone-grid">
+              <section class="zone" id="zone-scenario_studio"><h3>Scenario Studio</h3><p class="zone-kinds">Observes: scenario_registered</p><p class="zone-latest" id="zone-scenario_studio-kind">No activity observed in the loaded feed</p><p class="zone-time" id="zone-scenario_studio-time"></p><dl class="zone-refs" id="zone-scenario_studio-refs"></dl></section>
+              <section class="zone" id="zone-world_forge"><h3>World Forge</h3><p class="zone-kinds">Observes: world_compiled</p><p class="zone-latest" id="zone-world_forge-kind">No activity observed in the loaded feed</p><p class="zone-time" id="zone-world_forge-time"></p><dl class="zone-refs" id="zone-world_forge-refs"></dl></section>
+              <section class="zone" id="zone-domain_registry"><h3>Domain Registry</h3><p class="zone-kinds">Observes: domain_pack_registered · domain_pack_bound · capability_inputs_declared · domain_state_model_declared · domain_state_transition_declared</p><p class="zone-latest" id="zone-domain_registry-kind">No activity observed in the loaded feed</p><p class="zone-time" id="zone-domain_registry-time"></p><dl class="zone-refs" id="zone-domain_registry-refs"></dl></section>
+              <section class="zone" id="zone-campaign_control"><h3>Campaign Control</h3><p class="zone-kinds">Observes: campaign_prepared · campaign_started · campaign_executed</p><p class="zone-latest" id="zone-campaign_control-kind">No activity observed in the loaded feed</p><p class="zone-time" id="zone-campaign_control-time"></p><dl class="zone-refs" id="zone-campaign_control-refs"></dl></section>
+              <section class="zone" id="zone-integrity_vault"><h3>Integrity and Replay Vault</h3><p class="zone-kinds">Observes: run_inputs_verified · run_replayed</p><p class="zone-latest" id="zone-integrity_vault-kind">No activity observed in the loaded feed</p><p class="zone-time" id="zone-integrity_vault-time"></p><dl class="zone-refs" id="zone-integrity_vault-refs"></dl></section>
+            </div>
+          </section>
+
+          <aside class="event-stream" aria-label="Operational event stream">
+            <h2>Event stream</h2>
+            <p>Newest first; sequence numbers are the true tenant-local operational order. occurred_at is the source artifact time — not simulation or replay time.</p>
+            <ol class="event-list" id="event-list"></ol>
+            <p class="empty-state" id="empty-state" hidden>No operational activity for this tenant yet.</p>
+          </aside>
         </div>
-        <ol class="event-list" id="event-list"></ol>
-        <p class="empty-state" id="empty-state" hidden>No operational activity for this tenant yet.</p>
-      </aside>
 
-    </div>
+        <footer class="timeline-bar" aria-label="Timeline status">
+          <dl class="timeline-stats">
+            <div><dt>Oldest loaded</dt><dd id="oldest-loaded">—</dd></div>
+            <div><dt>Newest loaded</dt><dd id="newest-loaded">—</dd></div>
+            <div><dt>API latest_sequence</dt><dd id="api-latest">—</dd></div>
+            <div><dt>Older history beyond window</dt><dd id="older-history">—</dd></div>
+          </dl>
+          <p>Operational activity is observability only — it never affects simulation or replay hashes.</p>
+        </footer>
+      </div>
+    </details>
 
-    <footer class="timeline-bar" aria-label="Timeline status">
-      <dl class="timeline-stats">
-        <div class="stat"><dt>Oldest loaded</dt><dd id="oldest-loaded">—</dd></div>
-        <div class="stat"><dt>Newest loaded</dt><dd id="newest-loaded">—</dd></div>
-        <div class="stat"><dt>API latest_sequence</dt><dd id="api-latest">—</dd></div>
-        <div class="stat"><dt>Older history beyond window</dt><dd id="older-history">—</dd></div>
-      </dl>
-      <p class="hash-note">Operational activity is observability only — it never affects simulation or replay hashes.</p>
-    </footer>
-
+    <footer class="page-footer"><span>ENCOMM COLONY / LOCAL DEVELOPMENT BUILD</span><span>No external services · No real-world actions</span></footer>
   </div>
-  <script src="/colony/app.js"></script>
+  <script src="/colony/app.js?v=living-colony-1"></script>
 </body>
 </html>

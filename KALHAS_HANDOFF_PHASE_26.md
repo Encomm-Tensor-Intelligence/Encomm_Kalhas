@@ -799,3 +799,25 @@ The next Codex/Hermes session must, in order:
 - Codex: orchestrator/reviewer. Hermes: external implementer receiving
   bounded copy-paste prompts. Max two substantive prompts per Hermes
   session.
+
+---
+
+## 18. Phase 27 kickoff erratum (append-only, 2026-08-16)
+
+Appended at the start of Phase 27 implementation. All historical text
+above remains preserved unchanged as checkpoint history; where this
+erratum states a later fact, it supersedes the earlier statement.
+
+- Phase 26 was subsequently committed locally.
+- Phase 26 closure commit:
+  `886f398c288971d612fa57bd1d1e731113a69f72`.
+- `origin/main` remains:
+  `f40e83de468ca14100d011454d15eb3dd561c810`.
+- Divergence at Phase 27 start: `0 2`.
+- Phase 27's corrected design freeze is complete and accepted.
+- This slice begins Phase 27 implementation.
+- No push has occurred.
+- Push remains forbidden until Phase 27 completion, the final audit,
+  and a separate explicit user authorization.
+- Historical pre-commit statements remain preserved as checkpoint
+  history.

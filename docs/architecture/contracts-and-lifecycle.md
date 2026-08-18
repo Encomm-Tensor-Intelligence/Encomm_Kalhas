@@ -2870,3 +2870,161 @@ authorized implementation target - its authoritative design already
 exists in the external blueprint and the Phase 26 start handoff - and
 Phase 27 implementation begins only after Phase 26 receives its
 separate user-authorized local closure commit.
+
+## Phase 27: robust paired comparison and campaign decision brief
+
+**Status: IMPLEMENTATION-COMPLETE, GATE-GREEN LOCALLY, NOT YET
+COMMITTED.** Phase 27 is implemented locally on top of the committed
+Phase 26 baseline; it is **not committed** and **not pushed**
+(`origin/main` remains `f40e83de468ca14100d011454d15eb3dd561c810`, local
+`main` exactly two commits ahead), the Git index remains empty, and a
+local closure commit requires a separate explicit user authorization.
+The exact change set is recorded in `KALHAS_HANDOFF_PHASE_27.md`. This
+section supersedes the historical Phase 26-checkpoint statements above
+that Phase 27 "has not begun" / "is not implemented". Phase 28 and
+KALHAS-PAN remain **not implemented** anywhere in the repository.
+
+### Contracts
+
+Three new top-level public contracts are appended at `PUBLIC_CONTRACTS`
+indexes 47-49 (50 total; indexes 0-46 unchanged), each `extra="forbid"`,
+frozen, self-hashing, and version-locked to the `Literal["3.0.0"]`
+runtime:
+
+- **`CampaignDecisionPolicy`** (index 47) - the immutable stored policy
+  of one COMPLETE 3.0.0 campaign: campaign/scenario/world/
+  evaluation-profile identity with scenario and world content hashes;
+  `algorithm_identifier` literal
+  `feasibility-pareto-minimax-regret-v1`; `target_requirement_mode`
+  `global`/`per_objective` XOR with the global probability or the
+  per-objective `ObjectiveTargetRequirement` tuple (exactly covering
+  the profile's targeted objectives); the authoritative
+  `ObjectiveWeightSnapshot` tuple in exact profile order (never
+  sorted, never normalized); exact-int `minimum_sample_count >= 1`;
+  finite non-negative `tie_tolerance`; the hard-gate flag; `tail_alpha`
+  exactly `0.95` (fixed - callers cannot select another); deterministic
+  caller-supplied timezone-aware `declared_at`; finite-only metadata;
+  self-covering `content_hash`. Identifier prefix
+  `campaign-decision-policy-` over the canonical
+  `(tenant, campaign, scenario, world, profile, schema_version)`
+  identity.
+- **`CampaignStrategyComparison`** (index 48) - the derived comparison
+  of a COMPLETE 3.0.0 campaign: campaign/scenario/world identity and
+  hashes, `runtime_version` `"3.0.0"`, `comparison_mode`
+  `identical_conditions`, the policy reference (identifier and content
+  hash), the source outcome-matrix reference (identifier and content
+  hash), ordered strategy/seed/objective identifiers, the complete
+  `ObjectivePairedComparison` tuple (exactly `S * (S - 1) * O`
+  records, no self-pairs, both directions of every pair, contiguous
+  positions), the `DominanceRelation` tuple, and one
+  `StrategyRobustnessProfile` per strategy (feasibility, dominance
+  facts, per-objective weighted regret, per-seed total weighted
+  regrets, median/p95/maximum totals). Identifier prefix
+  `campaign-strategy-comparison-` over the canonical
+  `(campaign, world, profile, policy, source outcome matrix)`
+  identity; `derived_at` = outcome-matrix `derived_at`.
+- **`CampaignDecisionBrief`** (index 49) - the deterministic brief:
+  identity and hashes, the policy and comparison references, `status`
+  `preferred`/`inconclusive`/`insufficient_evidence`/
+  `no_feasible_strategy`, `preferred_strategy_id` present iff
+  `preferred`, the terminal `DecisionReasonRecord` with its exact code
+  shape, ordered `DecisionFactorRecord` trails (decisive then
+  blocking), the considered/tie-set strategy tuples, and the fixed
+  template `summary` (no chain-of-thought, no hidden reasoning, no
+  unexplained scalar). Identifier prefix `campaign-decision-brief-`
+  over the canonical `(campaign, world, policy, comparison)` identity;
+  `produced_at` = comparison `derived_at`.
+
+The 12 nested decision value objects
+(`ObjectiveWeightSnapshot`, `ObjectiveTargetRequirement`,
+`ObjectivePairedComparison`, `ObjectiveFeasibilityEvidence`,
+`ObjectiveRegretEvidence`, `ObjectiveProbabilityEvidence`,
+`ObjectiveDownsideEvidence`, `ObjectiveDominanceStatus`,
+`DominanceRelation`, `StrategyRobustnessProfile`, `DecisionReasonRecord`,
+`DecisionFactorRecord`) stay unregistered with no standalone schema
+artifacts. Three new schema artifacts
+(`CampaignDecisionPolicy.schema.json`,
+`CampaignStrategyComparison.schema.json`,
+`CampaignDecisionBrief.schema.json`) bring `schemas/v1/` to exactly 50;
+each matches `model_json_schema()` and all 47 historical byte hashes
+are unchanged. The legacy `DecisionBrief`/`EvidenceReference` contracts
+are untouched; evidence references are inline id/hash pairs.
+
+### Decision protocol (frozen)
+
+- Pipeline: evidence sufficiency (`K >= minimum_sample_count`) ->
+  hard-gate feasibility (inclusive `p >= threshold`; vacuous pass when
+  gates are off or all objectives are optimization-only) -> Pareto
+  among feasible strategies only -> minimax among feasible
+  non-dominated strategies -> `preferred` iff the tolerance tie set is
+  a singleton, else `inconclusive`; `insufficient_evidence` and
+  `no_feasible_strategy` are successful statuses, never guesses and
+  never manufactured winners.
+- Tolerance semantics are exact IEEE comparisons (`|d| <= tol` ties,
+  `d < -tol` wins, `d > +tol` losses; minimax tie set
+  `<= best + tol` inclusive) - no `isclose`, relative tolerance, ULP
+  relaxation, rounding, or arbitrary winner.
+- Regret is same-seed comparative (minimize
+  `(v - min_same_seed)/scale`, maximize
+  `(max_same_seed - v)/scale`, reach
+  `(|v - t| - min_same_seed_absdev)/scale`), weighted by the verified
+  binding snapshots only, `math.fsum` everywhere, per-seed totals in
+  objective order, median/p95/maximum through the accepted primitives.
+- Identity/hash/timestamp lineage is deterministic: identifiers are
+  hash-derived from canonical identity tuples (never content hashes,
+  timestamps, or tenants), content hashes are canonical SHA-256 over
+  the payload excluding `content_hash`, and every timestamp copies a
+  recorded lineage value (`declared_at` from the caller, `derived_at`
+  = outcome-matrix `derived_at`, `produced_at` = comparison
+  `derived_at`) - never wall clock.
+
+### Lifecycle and API
+
+Declaration lifecycle: COMPLETE 3.0.0 campaign -> `POST
+/v1/campaigns/{campaign_id}/decision-policy` (201, one immutable policy
+per `(tenant_id, campaign_id)`; duplicate 409 `conflict`; invalid draft
+422; non-COMPLETE 409 `invalid_state`; unknown/foreign campaign 404) ->
+policy stored -> comparison/brief queries. **Policy-first query order**
+on both GETs: campaign -> exactly COMPLETE -> verified policy (404
+before any derivation when absent) -> verified outcome query exactly
+once -> comparison builder exactly once -> (brief) brief builder
+exactly once reusing the same policy/outcome/comparison chain. The
+comparison and the brief are derived in memory and **never stored**
+(the store has no comparison or brief collection and no put method);
+the GETs never execute, replay, extract, evaluate, write, or record
+operational activity; repeated queries are byte-identical and leave the
+complete store state unchanged. The verified stored policy GET remains
+available even after the campaign state changes away from COMPLETE.
+Every operation requires `X-Tenant-ID`, reads the tenant-scoped
+recorded `RunPlan` tuple first, and requires every recorded runtime
+exactly 3.0.0 (empty or mixed/legacy tuples fail closed with the typed
+409 before any service call); no caller runtime selector exists.
+
+Error mappings (single `ApiErrorResponse` envelope, generic non-leaking
+bodies): 404 unknown/foreign campaign and missing/foreign policy; 409
+`invalid_state` non-COMPLETE; 409 `conflict` duplicate policy and
+unsupported recorded runtime; 422 invalid policy drafts; 409
+`integrity_error` corrupted/forged/validator-bypassed stored policy,
+outcome, comparison, or brief. The 12 historical schema artifacts
+around the outcome surface and every earlier path/operation are
+unchanged; runtime 1.0.0/2.0.0 behavior is untouched.
+
+### Acceptance proof and honest limitations
+
+The 100-seed causal acceptance fixture (3 genuinely distinct declared
+strategies over 100 fixed static seeds, 300 real executions and 300
+explicit extractions, real policy declaration, verified queries only)
+proves: mock-a has the best ordinary primary mean (32.46) but the worst
+maximum total weighted regret (4.0) because its reserve collapses to 5
+in every level-9 world; mock-b has primary mean 94.26 and the unique
+minimax maximum total weighted regret (2.24) - the preferred strategy;
+mock-c is dominated by mock-b; the tie control produces zero paired
+deltas, no dominance, and an `inconclusive` brief with no winner. Best
+ordinary mean is not the robust winner. Decision output is
+**evidence-based under the declared models/policies** - **not
+calibrated**, **not certainty**, and driving **no autonomous live
+action**; it does not predict reality and is not a guarantee of any
+outcome. Phase 28 and KALHAS-PAN are not implemented. The Colony UI
+demo is intentional synthetic local visualization work (clearly
+labeled deterministic client-side synthetic data, no network request),
+not decision evidence and not a real forecast.

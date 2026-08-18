@@ -1335,13 +1335,14 @@ COLONY_UI_DIR = Path(__file__).resolve().parents[1] / "colony_ui"
 
 @router.get("/colony/", include_in_schema=False, summary="Encomm Colony local observability UI")
 def colony_index() -> FileResponse:
-    """Serve the Encomm Colony local observability UI (Phase 10).
+    """Serve the Encomm Colony local visual prototype and observatory.
 
-    Colony is an optional, strictly read-only companion presentation
-    layer for KALHAS operational observability: plain static HTML/CSS/JS
-    served from the same application (no CORS, no credentials, no
-    external assets). The page itself issues only ``GET
-    /v1/operational-activity`` requests with manual pull refresh.
+    Colony is an optional, read-only plain-HTML/CSS/JS presentation layer
+    served from the same application. Its clearly labeled living-colony
+    demo is deterministic synthetic client-side data and performs no API
+    request. Its separate operational observatory issues only manual-pull
+    ``GET /v1/operational-activity`` requests (no external assets, CORS,
+    or credentials).
 
     Serving Colony never touches the store and adds no background work;
     the KALHAS API remains fully usable if Colony is never opened.

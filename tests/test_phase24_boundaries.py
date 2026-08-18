@@ -99,8 +99,8 @@ def _module_source(relative: str) -> str:
 
 
 class TestContractBoundary:
-    def test_public_contract_count_exactly_40(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 47
+    def test_public_contract_count_exactly_50(self) -> None:
+        assert len(PUBLIC_CONTRACTS) == 50
 
     def test_original_contracts_unchanged(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
@@ -144,7 +144,7 @@ class TestContractBoundary:
 
 
 class TestSchemaBoundary:
-    def test_exactly_three_new_schemas(self) -> None:
+    def test_expected_additive_schema_set(self) -> None:
         schema_dir = Path(__file__).resolve().parents[1] / "schemas" / "v1"
         schema_files = sorted(path.name for path in schema_dir.glob("*.schema.json"))
         expected = sorted(
@@ -160,6 +160,9 @@ class TestSchemaBoundary:
                 "RealizationCampaignMetricObservationMatrix.schema.json",
                 "RealizationCampaignMetricStatisticsMatrix.schema.json",
                 "CampaignOutcomeDistributionMatrix.schema.json",
+                "CampaignDecisionPolicy.schema.json",
+                "CampaignStrategyComparison.schema.json",
+                "CampaignDecisionBrief.schema.json",
             ]
         )
         assert schema_files == expected

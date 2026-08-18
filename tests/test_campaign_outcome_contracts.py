@@ -25,10 +25,11 @@ Phase 26 contract-slice tests for
   for all three directions, count/probability consistency, worst
   violation equality, CVaR bounds, and adverse-tail structural bounds;
 - the architectural boundary: both models are plain ``BaseModel``
-  value objects, never registered in ``PUBLIC_CONTRACTS`` (exactly 47
-  contracts with the exact runtime-3 tail at indexes 40-45 and the
-  campaign outcome-distribution matrix at index 46, and exactly 47
-  schema artifacts), the module imports only
+  value objects, never registered in ``PUBLIC_CONTRACTS`` (exactly 50
+  contracts with the exact runtime-3 tail at indexes 40-45, the
+  campaign outcome-distribution matrix at index 46, the decision
+  contracts at indexes 47-49, and exactly 50 schema artifacts), the
+  module imports only
   the standard library and pydantic, exposes no executable surface and
   no wall-clock/randomness calls, contains no phase-number literals,
   and carries no ranking/winner/preference/recommendation field or
@@ -2137,18 +2138,21 @@ class TestArchitectureCompatibility:
         assert issubclass(CampaignOutcomeDistributionMatrix, VersionedContract)
         assert issubclass(CampaignOutcomeDistributionMatrix, BaseModel)
 
-    def test_models_are_not_registered_and_contracts_stay_47(self) -> None:
+    def test_models_are_not_registered_and_contracts_are_50(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
-        assert len(PUBLIC_CONTRACTS) == 47
+        assert len(PUBLIC_CONTRACTS) == 50
         assert names[40:46] == _RUNTIME3_CONTRACTS
         assert names[46] == "CampaignOutcomeDistributionMatrix"
+        assert names[47] == "CampaignDecisionPolicy"
+        assert names[48] == "CampaignStrategyComparison"
+        assert names[49] == "CampaignDecisionBrief"
         assert "EmpiricalDistributionSummary" not in names
         assert "StrategyObjectiveOutcome" not in names
         assert "CampaignOutcomeDistributionMatrix" in names
 
-    def test_schema_artifacts_stay_47_with_only_matrix_registered(self) -> None:
+    def test_schema_artifacts_are_50_with_only_matrix_registered(self) -> None:
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
-        assert len(schema_files) == 47
+        assert len(schema_files) == 50
         titles = {json.loads(path.read_text(encoding="utf-8"))["title"] for path in schema_files}
         names = {contract.__name__ for contract in PUBLIC_CONTRACTS}
         assert titles == names

@@ -1612,3 +1612,129 @@ authorized implementation target - its authoritative design already
 exists in the external blueprint and the Phase 26 start handoff - and
 Phase 27 implementation begins only after Phase 26 receives its
 separate user-authorized local closure commit.
+
+## Phase 27: robust paired comparison and campaign decision brief
+
+**Status: IMPLEMENTATION-COMPLETE, GATE-GREEN LOCALLY, NOT YET
+COMMITTED.** Phase 27 is implemented locally on top of the committed
+Phase 26 baseline; it is **not committed** and **not pushed**
+(`origin/main` remains `f40e83de468ca14100d011454d15eb3dd561c810`, local
+`main` exactly two commits ahead), the Git index remains empty, and a
+local closure commit requires a separate explicit user authorization.
+The exact change set is recorded in `KALHAS_HANDOFF_PHASE_27.md`. This
+section supersedes the historical Phase 26-checkpoint statements above
+that Phase 27 "has not begun" / "is not implemented". Phase 28 and
+KALHAS-PAN remain **not implemented** anywhere in the repository.
+
+### Architecture
+
+- **Immutable per-campaign decision policy** (`CampaignDecisionPolicy`):
+  one policy per `(tenant_id, campaign_id)`, declared only for a
+  COMPLETE 3.0.0 campaign; stored in the store's single
+  `_campaign_decision_policies` collection; duplicates rejected with
+  the typed 409, never overwritten; no update/delete/replace surface;
+  every read strictly revalidates the contract and independently
+  recomputes the deterministic identifier and the self-covering
+  content hash, then returns a deep defensive copy. The policy binds
+  the campaign/scenario/world/evaluation-profile identity and hashes,
+  the frozen algorithm identifier
+  `feasibility-pareto-minimax-regret-v1`, the fixed tail alpha `0.95`
+  (callers cannot select another), global-or-per-objective hard target
+  thresholds, minimum sample count, tie tolerance, and the
+  authoritative objective-weight snapshots copied from the verified
+  evaluation profile. Declarative data only - never executable.
+- **Evidence sufficiency and feasibility** (`campaign_decision_evidence.py`):
+  the recorded seed count gates the whole decision
+  (`insufficient_evidence` is a successful result, never a guess);
+  every targeted objective's hard threshold is checked against the
+  empirical target-achievement probability; infeasible strategies are
+  excluded from dominance and minimax selection.
+- **Same-seed paired comparisons** (`campaign_decision_statistics.py`,
+  `campaign_decision_paired_comparison.py`): ordered paired deltas on
+  identical shared seeds in authoritative seed order (positive always
+  means the first strategy is worse), win/tie/loss counts and rates
+  under the exact declared tie tolerance, median/p05/p95/worst/best
+  paired deltas; exactly `S * (S - 1) * O` records - no self-pairs,
+  both directions of every pair - with exact mirror invariants
+  (reverse delta negation, swapped win/loss, preserved ties, Type-7
+  sign-flip p05/p95, worst reverse = negated forward best).
+- **Pareto dominance among feasible strategies**
+  (`campaign_decision_selection.py`): dominance relations are derived
+  from the stored paired comparisons and the evidence feasibility
+  flags only; the non-dominated set is exactly the feasible,
+  non-dominated strategies.
+- **Per-seed weighted regret and minimax robustness**: same-seed
+  comparative regret (distinct from target violation), weighted by the
+  authoritative objective weights, summed per seed in objective order,
+  summarized by median/p95/maximum; the unique minimum maximum total
+  weighted regret among feasible non-dominated strategies is the
+  robust preference; the minimax tie set is the exact inclusive
+  `<= best + tie_tolerance` set (no isclose/relative/ULP relaxation,
+  no arbitrary winner).
+- **Deterministic brief** (`campaign_decision_brief_runtime.py`): one
+  of four statuses - `preferred` exactly when the tie set is a
+  singleton, `inconclusive` when several feasible non-dominated
+  strategies remain tied (a tie never manufactures a winner),
+  `insufficient_evidence`, `no_feasible_strategy`; terminal reason
+  code plus ordered decisive/blocking factor trails; fixed summary
+  templates over recorded facts only; no chain-of-thought, hidden
+  reasoning, scripts, callbacks, or executable expressions.
+- **Policy-first query order** (`campaign_decision_query_service.py`):
+  campaign -> exactly COMPLETE status -> **verified policy (404 before
+  any derivation when absent)** -> outcome query exactly once ->
+  comparison builder exactly once -> (brief) brief builder exactly
+  once reusing the same policy/outcome/comparison chain. The
+  comparison and the brief are derived in memory and **never stored**;
+  no execution, replay, extraction, evaluation, write, or operational
+  activity; repeated queries are byte-identical.
+- **Module ownership**: no Phase 27 module imports NEXUS/LEGION,
+  adapters, domain packs, providers, network, database, filesystem,
+  wall clock, or randomness; `datetime` appears only as the type guard
+  for the caller-supplied timezone-aware `declared_at`; no Phase 28 or
+  KALHAS-PAN surface; no adaptive decision-policy runtime.
+- **Colony UI**: the animated demo is intentional synthetic local
+  visualization work - clearly labeled deterministic client-side
+  synthetic data (no network request), not decision evidence and not a
+  real forecast; the operational observatory remains read-only and
+  pull-based.
+
+### Contracts, schemas, API
+
+- `PUBLIC_CONTRACTS` index 47 `CampaignDecisionPolicy`, 48
+  `CampaignStrategyComparison`, 49 `CampaignDecisionBrief`; **50 total
+  contracts**, indexes 0-46 unchanged; the 12 nested decision value
+  objects remain unregistered.
+- **50 total schema artifacts**; the three new artifacts match
+  `model_json_schema()`; all 47 historical byte hashes unchanged.
+- `API_VERSION` `"1"` and `SCHEMA_VERSION` `"1.0.0"` unchanged; runtime
+  remains exactly 3.0.0.
+- Exactly four operations on three paths
+  (`kalhas/api/routes_campaign_decision.py`), required `X-Tenant-ID`
+  on all four, recorded-runtime gate (every plan exactly 3.0.0; empty
+  or mixed/legacy tuples fail closed with the typed 409 before any
+  service call), no runtime selector:
+  `POST`/`GET /v1/campaigns/{campaign_id}/decision-policy` (201/200),
+  `GET /v1/campaigns/{campaign_id}/strategy-comparison` (200), `GET
+  /v1/campaigns/{campaign_id}/decision-brief` (200). Safe typed
+  mappings: 404 unknown/foreign campaign and missing/foreign policy;
+  409 `invalid_state` non-COMPLETE; 409 `conflict` duplicate policy and
+  unsupported recorded runtime; 422 invalid policy drafts; 409
+  `integrity_error` policy/comparison/brief corruption - generic
+  non-leaking bodies throughout. A stored policy remains retrievable
+  after the campaign leaves COMPLETE.
+
+### 100-seed causal acceptance proof and honest limitations
+
+The acceptance fixture proves, through the real lifecycle (100 fixed
+static seeds `seed-000` ... `seed-099`, 3 distinct declared strategies,
+300 executions and 300 explicit extractions, real policy declaration,
+verified queries only): mock-a has the best ordinary primary mean
+(32.46) but the worst maximum total weighted regret (4.0); mock-b has
+primary mean 94.26 and the unique minimax maximum total weighted regret
+(2.24) - the preferred strategy; mock-c is dominated by mock-b; the
+tie control yields zero paired deltas, no dominance, and an
+`inconclusive` brief with no winner. Best ordinary mean is not the
+robust winner. The decision output is evidence-based under the declared
+models/policies - **not calibrated**, **not certainty**, and driving
+**no autonomous live action**; it does not predict reality and is not a
+guarantee of any outcome. Phase 28 and KALHAS-PAN are not implemented.

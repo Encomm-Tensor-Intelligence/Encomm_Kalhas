@@ -175,4 +175,4 @@ def test_structural_event_kinds_are_exactly_three() -> None:
 
 
 def test_public_contracts_remain_exactly_forty() -> None:
-    assert len(PUBLIC_CONTRACTS) == 47
+    assert len(PUBLIC_CONTRACTS) == 50

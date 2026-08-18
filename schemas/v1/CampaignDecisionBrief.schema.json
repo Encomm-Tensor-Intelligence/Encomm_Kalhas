@@ -1,0 +1,649 @@
+{
+  "$defs": {
+    "Assumption": {
+      "additionalProperties": false,
+      "description": "A declared assumption about the world or a strategy.",
+      "properties": {
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "identifier": {
+          "title": "Identifier",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Metadata",
+          "type": "object"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "identifier",
+        "statement",
+        "confidence"
+      ],
+      "title": "Assumption",
+      "type": "object"
+    },
+    "DecisionFactorRecord": {
+      "additionalProperties": false,
+      "description": "One immutable decisive or blocking decision-factor record.\n\nBinds one closed factor code to its typed structured values; the\nkind (decisive or blocking) is fixed by the code and enforced at\nthe brief level together with the pipeline-stage ordering. The\nper-code value shapes enforced here:\n\n- ``feasible_candidate`` / ``pareto_non_dominated``: strategy id\n  only, no values, no related ids;\n- ``target_feasibility_passed``: strategy id + objective id plus\n  two values ``[threshold, observed_probability]`` with the\n  observed probability at or above the threshold;\n- ``objective_target_failed``: strategy id + objective id plus two\n  values ``[threshold, observed_probability]`` with the observed\n  probability below the threshold;\n- ``unique_minimax_regret``: strategy id, exactly one related\n  competitor id, and three values\n  ``[winner_max_regret, nearest_max_regret, gap]`` with the gap\n  exactly equal to ``nearest_max_regret - winner_max_regret``;\n- ``dominated_strategy``: strategy id (the dominated strategy) plus\n  non-empty related dominator ids in strategy order;\n- ``minimax_regret_tie``: non-empty related tied ids plus two\n  values ``[best_max_regret, tie_tolerance]``;\n- ``no_feasible_strategy``: two exact integer values\n  ``[considered_count, feasible_count]``;\n- ``insufficient_seed_count``: two exact integer values\n  ``[declared_minimum, recorded_count]``.",
+      "properties": {
+        "code": {
+          "enum": [
+            "feasible_candidate",
+            "target_feasibility_passed",
+            "pareto_non_dominated",
+            "unique_minimax_regret",
+            "objective_target_failed",
+            "dominated_strategy",
+            "minimax_regret_tie",
+            "no_feasible_strategy",
+            "insufficient_seed_count"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "objective_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Objective Id"
+        },
+        "related_strategy_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Related Strategy Ids",
+          "type": "array"
+        },
+        "strategy_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Strategy Id"
+        },
+        "values": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "DecisionFactorRecord",
+      "type": "object"
+    },
+    "DecisionReasonRecord": {
+      "additionalProperties": false,
+      "description": "One immutable terminal decision-reason record.\n\nBinds one closed reason code to its positional structured values\nand optional related strategy identifiers. The exact code-to-status\ncompatibility is enforced at the brief level; here each code's\npositional value shape is enforced: ``unique_minimax_preference``\nand ``regret_tie_within_tolerance`` carry two finite non-negative\nvalues ``[best_max_total_weighted_regret, tie_tolerance]`` (the\nlatter additionally requires non-empty related strategy ids),\nwhile ``insufficient_seed_samples`` and ``no_feasible_strategy``\ncarry two exact non-negative integer counts\n``[declared_minimum_sample_count, recorded_seed_count]`` and\n``[considered_count, feasible_count]``. The strategy id of a\nunique minimax preference is the brief's ``preferred_strategy_id``,\nnever duplicated here.",
+      "properties": {
+        "code": {
+          "enum": [
+            "unique_minimax_preference",
+            "regret_tie_within_tolerance",
+            "insufficient_seed_samples",
+            "no_feasible_strategy"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "related_strategy_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Related Strategy Ids",
+          "type": "array"
+        },
+        "values": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "DecisionReasonRecord",
+      "type": "object"
+    },
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ObjectiveDownsideEvidence": {
+      "additionalProperties": false,
+      "description": "One immutable per-objective downside-risk evidence record.\n\nCopies the worst normalized target violation, the fixed-alpha\ntarget-violation CVaR, and the direction-aware adverse-tail\nstatistic from the verified outcome matrix; it is supporting\nevidence only and is never part of a dominance test. The worst\nviolation and the CVaR are both present or both absent (they are\nabsent for optimization-only objectives), and every present value\nis finite and non-negative.",
+      "properties": {
+        "adverse_tail_statistic": {
+          "title": "Adverse Tail Statistic",
+          "type": "number"
+        },
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "target_violation_cvar": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Violation Cvar"
+        },
+        "worst_normalized_target_violation": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Worst Normalized Target Violation"
+        }
+      },
+      "required": [
+        "objective_id",
+        "adverse_tail_statistic"
+      ],
+      "title": "ObjectiveDownsideEvidence",
+      "type": "object"
+    },
+    "ObjectiveFeasibilityEvidence": {
+      "additionalProperties": false,
+      "description": "One immutable per-objective target-feasibility evidence record.\n\nBinds one targeted objective to its declared threshold and the\nobserved empirical target-achievement probability; ``passed``\nmeans exactly the comparison ``observed_probability >= threshold``\nand nothing else. The pipeline feasibility flag is the profile's\n``feasible`` field, which this nested record cannot derive - the\npolicy hard-gate flag lives on the stored policy, outside the\nnested evidence scope; the future builder verifies ``feasible ==\n(hard gates disabled or every targeted requirement passed)``.",
+      "properties": {
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "observed_probability": {
+          "title": "Observed Probability",
+          "type": "number"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "threshold": {
+          "title": "Threshold",
+          "type": "number"
+        }
+      },
+      "required": [
+        "objective_id",
+        "threshold",
+        "observed_probability",
+        "passed"
+      ],
+      "title": "ObjectiveFeasibilityEvidence",
+      "type": "object"
+    },
+    "ObjectiveProbabilityEvidence": {
+      "additionalProperties": false,
+      "description": "One immutable per-objective target-achievement probability record.\n\nCopies the empirical target-achievement probability from the\nverified outcome matrix; it is supporting evidence only and is\nnever part of a dominance test.",
+      "properties": {
+        "empirical_target_achievement_probability": {
+          "title": "Empirical Target Achievement Probability",
+          "type": "number"
+        },
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "objective_id",
+        "empirical_target_achievement_probability"
+      ],
+      "title": "ObjectiveProbabilityEvidence",
+      "type": "object"
+    },
+    "ObjectiveRegretEvidence": {
+      "additionalProperties": false,
+      "description": "One immutable per-objective weighted-regret evidence record.\n\nBinds one objective to its finite non-negative weighted regret.",
+      "properties": {
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "weighted_regret": {
+          "title": "Weighted Regret",
+          "type": "number"
+        }
+      },
+      "required": [
+        "objective_id",
+        "weighted_regret"
+      ],
+      "title": "ObjectiveRegretEvidence",
+      "type": "object"
+    },
+    "StrategyRobustnessProfile": {
+      "additionalProperties": false,
+      "description": "One immutable robustness profile for one strategy.\n\nBinds one strategy to its pipeline feasibility flag, its ordered\nper-objective feasibility evidence, its ordered dominance\nrelations (dominated-by and dominates identifiers in authoritative\nstrategy order, cross-checked against the stored dominance\nrelations at the comparison level), its per-objective weighted\nregrets, its exact ordered per-seed total weighted regrets with\nthe maximum/median/p95 aggregates, and the copied per-objective\ntarget-achievement probability and downside-risk evidence from the\nverified outcome matrix.\n\n``feasible`` is the pipeline result. The nested evidence cannot\nderive it: the policy hard-gate flag lives on the stored policy,\noutside the profile's scope, so the contract deliberately does not\ntie ``feasible`` to the recorded ``passed`` flags (hard gates\ndisabled make the test vacuous). The future builder verifies\n``feasible == (hard gates disabled or every targeted requirement\npassed)``.\n\nThe maximum total weighted regret must equal the exact recorded\nmaximum of the ordered per-seed totals; the median and p95 must\nlie within the totals extrema under the deterministic\none-adjacent-float-step relation; every per-seed total must be\nfinite and non-negative. The comparison contract enforces the\nfull-coverage per-objective tuple order (weighted regret and\ndownside evidence cover every objective exactly once in objective\norder) and the target-only tuple rules (feasibility and\nachievement probabilities cover targeted objectives only, as\nidentical subsets in relative objective order).",
+      "properties": {
+        "dominated_by": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Dominated By",
+          "type": "array"
+        },
+        "dominates": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Dominates",
+          "type": "array"
+        },
+        "downside_evidence": {
+          "items": {
+            "$ref": "#/$defs/ObjectiveDownsideEvidence"
+          },
+          "title": "Downside Evidence",
+          "type": "array"
+        },
+        "feasible": {
+          "title": "Feasible",
+          "type": "boolean"
+        },
+        "maximum_total_weighted_regret": {
+          "title": "Maximum Total Weighted Regret",
+          "type": "number"
+        },
+        "median_total_weighted_regret": {
+          "title": "Median Total Weighted Regret",
+          "type": "number"
+        },
+        "p95_total_weighted_regret": {
+          "title": "P95 Total Weighted Regret",
+          "type": "number"
+        },
+        "per_objective_weighted_regret": {
+          "items": {
+            "$ref": "#/$defs/ObjectiveRegretEvidence"
+          },
+          "title": "Per Objective Weighted Regret",
+          "type": "array"
+        },
+        "per_seed_total_weighted_regrets": {
+          "items": {
+            "type": "number"
+          },
+          "minItems": 1,
+          "title": "Per Seed Total Weighted Regrets",
+          "type": "array"
+        },
+        "strategy_candidate_id": {
+          "minLength": 1,
+          "title": "Strategy Candidate Id",
+          "type": "string"
+        },
+        "strategy_position": {
+          "minimum": 0,
+          "title": "Strategy Position",
+          "type": "integer"
+        },
+        "target_achievement_probabilities": {
+          "items": {
+            "$ref": "#/$defs/ObjectiveProbabilityEvidence"
+          },
+          "title": "Target Achievement Probabilities",
+          "type": "array"
+        },
+        "target_feasibility": {
+          "items": {
+            "$ref": "#/$defs/ObjectiveFeasibilityEvidence"
+          },
+          "title": "Target Feasibility",
+          "type": "array"
+        }
+      },
+      "required": [
+        "strategy_position",
+        "strategy_candidate_id",
+        "feasible",
+        "per_seed_total_weighted_regrets",
+        "median_total_weighted_regret",
+        "p95_total_weighted_regret",
+        "maximum_total_weighted_regret"
+      ],
+      "title": "StrategyRobustnessProfile",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The immutable derived auditable campaign decision brief.\n\nBinds one campaign's decision outcome: the campaign/scenario/world\nidentity, the recorded runtime/comparison-mode/algorithm literals,\nthe referenced decision policy and strategy comparison (identity +\ncontent hash), exactly one of the four accepted statuses\n(``preferred``, ``inconclusive``, ``insufficient_evidence``,\n``no_feasible_strategy``), an optional preferred strategy id\npresent only for ``preferred`` and only when it is one of the\nconsidered strategies, the authoritative considered-strategy order,\na deterministic factual summary, exactly one terminal reason whose\ncode matches the status, ordered decisive and blocking factors\nfrom the closed catalogue, the copied robustness profiles, the\ncopied declared assumptions, and complete evidence references\n(evaluation profile, optional uncertainty model both-or-neither,\nsource world-realization matrix, source metric-observation matrix,\nsource outcome matrix).\n\nThe contract enforces the exact decision rules: preferred-id\npresence and membership; terminal-reason code-to-status\ncompatibility; decisive/blocking factor kind fixed by code with\nthe exact pipeline-stage ordering; both-or-neither uncertainty\nprovenance; unique assumptions; exactly one robustness profile per\nconsidered strategy in strategy order; and the status-to-\nfeasibility consistency rules (``no_feasible_strategy`` requires\nevery profile infeasible; ``preferred`` requires the preferred\nprofile feasible). The brief contains no chain-of-thought, hidden\nreasoning, fabricated prose, or unexplained scalar score; the\nsummary is assembled from deterministic factual templates by the\napplication builder.",
+  "properties": {
+    "algorithm_identifier": {
+      "const": "feasibility-pareto-minimax-regret-v1",
+      "default": "feasibility-pareto-minimax-regret-v1",
+      "title": "Algorithm Identifier",
+      "type": "string"
+    },
+    "assumptions": {
+      "items": {
+        "$ref": "#/$defs/Assumption"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "blocking_factors": {
+      "items": {
+        "$ref": "#/$defs/DecisionFactorRecord"
+      },
+      "title": "Blocking Factors",
+      "type": "array"
+    },
+    "campaign_id": {
+      "minLength": 1,
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "comparison_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Comparison Content Hash",
+      "type": "string"
+    },
+    "comparison_id": {
+      "minLength": 1,
+      "title": "Comparison Id",
+      "type": "string"
+    },
+    "comparison_mode": {
+      "const": "identical_conditions",
+      "default": "identical_conditions",
+      "title": "Comparison Mode",
+      "type": "string"
+    },
+    "considered_strategy_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Considered Strategy Ids",
+      "type": "array"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "decisive_factors": {
+      "items": {
+        "$ref": "#/$defs/DecisionFactorRecord"
+      },
+      "title": "Decisive Factors",
+      "type": "array"
+    },
+    "evaluation_profile_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Evaluation Profile Content Hash",
+      "type": "string"
+    },
+    "evaluation_profile_id": {
+      "minLength": 1,
+      "title": "Evaluation Profile Id",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "policy_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Policy Content Hash",
+      "type": "string"
+    },
+    "policy_id": {
+      "minLength": 1,
+      "title": "Policy Id",
+      "type": "string"
+    },
+    "preferred_strategy_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Preferred Strategy Id"
+    },
+    "produced_at": {
+      "format": "date-time",
+      "title": "Produced At",
+      "type": "string"
+    },
+    "robustness_profiles": {
+      "items": {
+        "$ref": "#/$defs/StrategyRobustnessProfile"
+      },
+      "minItems": 1,
+      "title": "Robustness Profiles",
+      "type": "array"
+    },
+    "runtime_version": {
+      "const": "3.0.0",
+      "title": "Runtime Version",
+      "type": "string"
+    },
+    "scenario_id": {
+      "minLength": 1,
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_metric_observation_matrix_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Metric Observation Matrix Content Hash",
+      "type": "string"
+    },
+    "source_metric_observation_matrix_id": {
+      "minLength": 1,
+      "title": "Source Metric Observation Matrix Id",
+      "type": "string"
+    },
+    "source_outcome_matrix_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Outcome Matrix Content Hash",
+      "type": "string"
+    },
+    "source_outcome_matrix_id": {
+      "minLength": 1,
+      "title": "Source Outcome Matrix Id",
+      "type": "string"
+    },
+    "source_world_realization_matrix_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source World Realization Matrix Content Hash",
+      "type": "string"
+    },
+    "source_world_realization_matrix_id": {
+      "minLength": 1,
+      "title": "Source World Realization Matrix Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "preferred",
+        "inconclusive",
+        "insufficient_evidence",
+        "no_feasible_strategy"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "summary": {
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "terminal_reason": {
+      "$ref": "#/$defs/DecisionReasonRecord"
+    },
+    "uncertainty_model_content_hash": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Uncertainty Model Content Hash"
+    },
+    "uncertainty_model_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Uncertainty Model Id"
+    },
+    "world_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "World Content Hash",
+      "type": "string"
+    },
+    "world_version_id": {
+      "minLength": 1,
+      "title": "World Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "campaign_id",
+    "scenario_id",
+    "world_version_id",
+    "world_content_hash",
+    "runtime_version",
+    "policy_id",
+    "policy_content_hash",
+    "comparison_id",
+    "comparison_content_hash",
+    "status",
+    "considered_strategy_ids",
+    "summary",
+    "terminal_reason",
+    "robustness_profiles",
+    "evaluation_profile_id",
+    "evaluation_profile_content_hash",
+    "source_world_realization_matrix_id",
+    "source_world_realization_matrix_content_hash",
+    "source_metric_observation_matrix_id",
+    "source_metric_observation_matrix_content_hash",
+    "source_outcome_matrix_id",
+    "source_outcome_matrix_content_hash",
+    "content_hash",
+    "produced_at"
+  ],
+  "title": "CampaignDecisionBrief",
+  "type": "object"
+}

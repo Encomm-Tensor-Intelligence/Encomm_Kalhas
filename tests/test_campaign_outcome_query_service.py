@@ -183,15 +183,15 @@ _PRESERVED_FILES = (
     ),
     (
         "tests/test_campaign_outcome_contracts.py",
-        "6315c5f118ca697042014c62dec8abf796d4f8246b224adb0b301354fe015169",
+        "c7583cf84ffdb14b6b6b93140f0ae4f75bf0bf4fa0c7d9d1ab5ccccb0fffae6d",
     ),
     (
         "tests/test_campaign_outcome_identity.py",
-        "41db11e7c6e6864b289379e1493b87aa36034682044466aaf4faa541ca795539",
+        "bf457a4ee42d995f59fcc96efacacef5dedcaf421fe65f886ee97f4224a3e9e9",
     ),
     (
         "tests/test_campaign_outcome_matrix_runtime.py",
-        "53d6f0b73f40ee84543624bdc064a52c215ff8ebb71f6b8209343b424bfed0c6",
+        "cd04a73f14bc463b3f4beef61a4d26a90d17225898a2aea9e2978fce7f5a75ea",
     ),
     (
         "tests/test_campaign_outcome_runtime.py",
@@ -1171,14 +1171,17 @@ class TestModuleBoundaries:
         )
         assert not pattern.search(MODULE_PATH.read_text(encoding="utf-8"))
 
-    def test_public_contracts_and_schemas_stay_47(self) -> None:
+    def test_public_contracts_and_schemas_are_50(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
-        assert len(PUBLIC_CONTRACTS) == 47
+        assert len(PUBLIC_CONTRACTS) == 50
         assert names[46] == "CampaignOutcomeDistributionMatrix"
+        assert names[47] == "CampaignDecisionPolicy"
+        assert names[48] == "CampaignStrategyComparison"
+        assert names[49] == "CampaignDecisionBrief"
         assert "EmpiricalDistributionSummary" not in names
         assert "StrategyObjectiveOutcome" not in names
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
-        assert len(schema_files) == 47
+        assert len(schema_files) == 50
         file_names = {path.name for path in schema_files}
         assert "CampaignOutcomeDistributionMatrix.schema.json" in file_names
 

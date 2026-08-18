@@ -210,7 +210,7 @@ def _matrix(**overrides: object) -> CampaignMetricObservationMatrix:
 
 class TestRegistration:
     def test_public_contract_count_is_exactly_40(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 47
+        assert len(PUBLIC_CONTRACTS) == 50
 
     def test_matrix_is_registered_last_and_cell_is_not(self) -> None:
         names = [contract.__name__ for contract in PUBLIC_CONTRACTS]

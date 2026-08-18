@@ -141,7 +141,7 @@ def _non_lexical_objective_matrix() -> CampaignObjectiveEvaluationMatrix:
 
 class TestRegistration:
     def test_public_contract_count_is_exactly_40(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 47
+        assert len(PUBLIC_CONTRACTS) == 50
 
     def test_first_37_contracts_unchanged_and_in_exact_order(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)

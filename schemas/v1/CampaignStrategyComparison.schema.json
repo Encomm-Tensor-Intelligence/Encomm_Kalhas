@@ -1,0 +1,620 @@
+{
+  "$defs": {
+    "DominanceRelation": {
+      "additionalProperties": false,
+      "description": "One immutable dominance relation for one ordered strategy pair.\n\nBinds one ordered strategy pair to its dominance flag and its\nper-objective statuses. The first strategy dominates the second\nexactly when no per-objective status is ``worse`` and at least one\nstatus is ``better`` (no-worse everywhere, strictly better in at\nleast one required measure). The reverse pair carries its own\nstored relation; silent reconstruction is forbidden.",
+      "properties": {
+        "dominates": {
+          "title": "Dominates",
+          "type": "boolean"
+        },
+        "first_strategy_candidate_id": {
+          "minLength": 1,
+          "title": "First Strategy Candidate Id",
+          "type": "string"
+        },
+        "first_strategy_position": {
+          "minimum": 0,
+          "title": "First Strategy Position",
+          "type": "integer"
+        },
+        "per_objective_status": {
+          "items": {
+            "$ref": "#/$defs/ObjectiveDominanceStatus"
+          },
+          "minItems": 1,
+          "title": "Per Objective Status",
+          "type": "array"
+        },
+        "second_strategy_candidate_id": {
+          "minLength": 1,
+          "title": "Second Strategy Candidate Id",
+          "type": "string"
+        },
+        "second_strategy_position": {
+          "minimum": 0,
+          "title": "Second Strategy Position",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "first_strategy_position",
+        "second_strategy_position",
+        "first_strategy_candidate_id",
+        "second_strategy_candidate_id",
+        "dominates",
+        "per_objective_status"
+      ],
+      "title": "DominanceRelation",
+      "type": "object"
+    },
+    "ObjectiveDominanceStatus": {
+      "additionalProperties": false,
+      "description": "One immutable per-objective dominance status for one ordered strategy pair.\n\nReads the win/tie/loss counts and the median paired delta from the\nstored forward paired comparison of the same ordered pair and\nobjective. The status is derived from the recorded counts with the\nexact algorithm semantics: ``worse`` requires at least one loss\n(the first strategy is not no-worse), ``better`` requires no\nlosses and at least one win (no-worse and strictly better), and\n``tied`` requires no wins and no losses (every paired delta within\nthe tolerance).",
+      "properties": {
+        "loss_count": {
+          "minimum": 0,
+          "title": "Loss Count",
+          "type": "integer"
+        },
+        "median_paired_delta": {
+          "title": "Median Paired Delta",
+          "type": "number"
+        },
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "better",
+            "tied",
+            "worse"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "tie_count": {
+          "minimum": 0,
+          "title": "Tie Count",
+          "type": "integer"
+        },
+        "win_count": {
+          "minimum": 0,
+          "title": "Win Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "objective_id",
+        "status",
+        "win_count",
+        "tie_count",
+        "loss_count",
+        "median_paired_delta"
+      ],
+      "title": "ObjectiveDominanceStatus",
+      "type": "object"
+    },
+    "ObjectiveDownsideEvidence": {
+      "additionalProperties": false,
+      "description": "One immutable per-objective downside-risk evidence record.\n\nCopies the worst normalized target violation, the fixed-alpha\ntarget-violation CVaR, and the direction-aware adverse-tail\nstatistic from the verified outcome matrix; it is supporting\nevidence only and is never part of a dominance test. The worst\nviolation and the CVaR are both present or both absent (they are\nabsent for optimization-only objectives), and every present value\nis finite and non-negative.",
+      "properties": {
+        "adverse_tail_statistic": {
+          "title": "Adverse Tail Statistic",
+          "type": "number"
+        },
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "target_violation_cvar": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Violation Cvar"
+        },
+        "worst_normalized_target_violation": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Worst Normalized Target Violation"
+        }
+      },
+      "required": [
+        "objective_id",
+        "adverse_tail_statistic"
+      ],
+      "title": "ObjectiveDownsideEvidence",
+      "type": "object"
+    },
+    "ObjectiveFeasibilityEvidence": {
+      "additionalProperties": false,
+      "description": "One immutable per-objective target-feasibility evidence record.\n\nBinds one targeted objective to its declared threshold and the\nobserved empirical target-achievement probability; ``passed``\nmeans exactly the comparison ``observed_probability >= threshold``\nand nothing else. The pipeline feasibility flag is the profile's\n``feasible`` field, which this nested record cannot derive - the\npolicy hard-gate flag lives on the stored policy, outside the\nnested evidence scope; the future builder verifies ``feasible ==\n(hard gates disabled or every targeted requirement passed)``.",
+      "properties": {
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "observed_probability": {
+          "title": "Observed Probability",
+          "type": "number"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "threshold": {
+          "title": "Threshold",
+          "type": "number"
+        }
+      },
+      "required": [
+        "objective_id",
+        "threshold",
+        "observed_probability",
+        "passed"
+      ],
+      "title": "ObjectiveFeasibilityEvidence",
+      "type": "object"
+    },
+    "ObjectivePairedComparison": {
+      "additionalProperties": false,
+      "description": "One immutable ordered-pair/objective paired comparison.\n\nBinds one ordered strategy pair and one objective to the exact\nordered paired deltas in authoritative shared-seed order, the\ndecomposed win/tie/loss counts and rates under the declared tie\ntolerance, and the median/p05/p95/worst/best paired deltas.\nPositive deltas always mean the first strategy is worse after\ndirection normalization; negative means better; values within the\ndeclared tolerance are ties.\n\nThe contract independently recomputes the win/tie/loss counts from\nthe recorded deltas and the recorded tolerance with the exact\nboundary semantics (``d < -tol`` win, ``|d| <= tol`` tie,\n``d > +tol`` loss), requires the rates to equal ``count / K``\nexactly, the worst/best deltas to equal the recorded maxima/\nminima exactly, and the median/p05/p95 to lie within the extrema\nunder the deterministic one-adjacent-float-step relation. The\nreverse-pair mirrors (exact IEEE delta negation, count mirrors,\nquantile/extrema mirrors) are enforced at the comparison level,\nwhere both directions are present.",
+      "properties": {
+        "best_paired_delta": {
+          "title": "Best Paired Delta",
+          "type": "number"
+        },
+        "first_strategy_candidate_id": {
+          "minLength": 1,
+          "title": "First Strategy Candidate Id",
+          "type": "string"
+        },
+        "first_strategy_position": {
+          "minimum": 0,
+          "title": "First Strategy Position",
+          "type": "integer"
+        },
+        "loss_count": {
+          "minimum": 0,
+          "title": "Loss Count",
+          "type": "integer"
+        },
+        "loss_rate": {
+          "title": "Loss Rate",
+          "type": "number"
+        },
+        "median_paired_delta": {
+          "title": "Median Paired Delta",
+          "type": "number"
+        },
+        "metric_id": {
+          "minLength": 1,
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "objective_position": {
+          "minimum": 0,
+          "title": "Objective Position",
+          "type": "integer"
+        },
+        "ordered_paired_deltas": {
+          "items": {
+            "type": "number"
+          },
+          "minItems": 1,
+          "title": "Ordered Paired Deltas",
+          "type": "array"
+        },
+        "p05_paired_delta": {
+          "title": "P05 Paired Delta",
+          "type": "number"
+        },
+        "p95_paired_delta": {
+          "title": "P95 Paired Delta",
+          "type": "number"
+        },
+        "second_strategy_candidate_id": {
+          "minLength": 1,
+          "title": "Second Strategy Candidate Id",
+          "type": "string"
+        },
+        "second_strategy_position": {
+          "minimum": 0,
+          "title": "Second Strategy Position",
+          "type": "integer"
+        },
+        "sequence_position": {
+          "minimum": 0,
+          "title": "Sequence Position",
+          "type": "integer"
+        },
+        "tie_count": {
+          "minimum": 0,
+          "title": "Tie Count",
+          "type": "integer"
+        },
+        "tie_rate": {
+          "title": "Tie Rate",
+          "type": "number"
+        },
+        "tie_tolerance": {
+          "title": "Tie Tolerance",
+          "type": "number"
+        },
+        "win_count": {
+          "minimum": 0,
+          "title": "Win Count",
+          "type": "integer"
+        },
+        "win_rate": {
+          "title": "Win Rate",
+          "type": "number"
+        },
+        "worst_paired_delta": {
+          "title": "Worst Paired Delta",
+          "type": "number"
+        }
+      },
+      "required": [
+        "sequence_position",
+        "first_strategy_position",
+        "second_strategy_position",
+        "first_strategy_candidate_id",
+        "second_strategy_candidate_id",
+        "objective_position",
+        "objective_id",
+        "metric_id",
+        "tie_tolerance",
+        "ordered_paired_deltas",
+        "win_count",
+        "tie_count",
+        "loss_count",
+        "win_rate",
+        "tie_rate",
+        "loss_rate",
+        "median_paired_delta",
+        "p05_paired_delta",
+        "p95_paired_delta",
+        "worst_paired_delta",
+        "best_paired_delta"
+      ],
+      "title": "ObjectivePairedComparison",
+      "type": "object"
+    },
+    "ObjectiveProbabilityEvidence": {
+      "additionalProperties": false,
+      "description": "One immutable per-objective target-achievement probability record.\n\nCopies the empirical target-achievement probability from the\nverified outcome matrix; it is supporting evidence only and is\nnever part of a dominance test.",
+      "properties": {
+        "empirical_target_achievement_probability": {
+          "title": "Empirical Target Achievement Probability",
+          "type": "number"
+        },
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "objective_id",
+        "empirical_target_achievement_probability"
+      ],
+      "title": "ObjectiveProbabilityEvidence",
+      "type": "object"
+    },
+    "ObjectiveRegretEvidence": {
+      "additionalProperties": false,
+      "description": "One immutable per-objective weighted-regret evidence record.\n\nBinds one objective to its finite non-negative weighted regret.",
+      "properties": {
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "weighted_regret": {
+          "title": "Weighted Regret",
+          "type": "number"
+        }
+      },
+      "required": [
+        "objective_id",
+        "weighted_regret"
+      ],
+      "title": "ObjectiveRegretEvidence",
+      "type": "object"
+    },
+    "StrategyRobustnessProfile": {
+      "additionalProperties": false,
+      "description": "One immutable robustness profile for one strategy.\n\nBinds one strategy to its pipeline feasibility flag, its ordered\nper-objective feasibility evidence, its ordered dominance\nrelations (dominated-by and dominates identifiers in authoritative\nstrategy order, cross-checked against the stored dominance\nrelations at the comparison level), its per-objective weighted\nregrets, its exact ordered per-seed total weighted regrets with\nthe maximum/median/p95 aggregates, and the copied per-objective\ntarget-achievement probability and downside-risk evidence from the\nverified outcome matrix.\n\n``feasible`` is the pipeline result. The nested evidence cannot\nderive it: the policy hard-gate flag lives on the stored policy,\noutside the profile's scope, so the contract deliberately does not\ntie ``feasible`` to the recorded ``passed`` flags (hard gates\ndisabled make the test vacuous). The future builder verifies\n``feasible == (hard gates disabled or every targeted requirement\npassed)``.\n\nThe maximum total weighted regret must equal the exact recorded\nmaximum of the ordered per-seed totals; the median and p95 must\nlie within the totals extrema under the deterministic\none-adjacent-float-step relation; every per-seed total must be\nfinite and non-negative. The comparison contract enforces the\nfull-coverage per-objective tuple order (weighted regret and\ndownside evidence cover every objective exactly once in objective\norder) and the target-only tuple rules (feasibility and\nachievement probabilities cover targeted objectives only, as\nidentical subsets in relative objective order).",
+      "properties": {
+        "dominated_by": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Dominated By",
+          "type": "array"
+        },
+        "dominates": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Dominates",
+          "type": "array"
+        },
+        "downside_evidence": {
+          "items": {
+            "$ref": "#/$defs/ObjectiveDownsideEvidence"
+          },
+          "title": "Downside Evidence",
+          "type": "array"
+        },
+        "feasible": {
+          "title": "Feasible",
+          "type": "boolean"
+        },
+        "maximum_total_weighted_regret": {
+          "title": "Maximum Total Weighted Regret",
+          "type": "number"
+        },
+        "median_total_weighted_regret": {
+          "title": "Median Total Weighted Regret",
+          "type": "number"
+        },
+        "p95_total_weighted_regret": {
+          "title": "P95 Total Weighted Regret",
+          "type": "number"
+        },
+        "per_objective_weighted_regret": {
+          "items": {
+            "$ref": "#/$defs/ObjectiveRegretEvidence"
+          },
+          "title": "Per Objective Weighted Regret",
+          "type": "array"
+        },
+        "per_seed_total_weighted_regrets": {
+          "items": {
+            "type": "number"
+          },
+          "minItems": 1,
+          "title": "Per Seed Total Weighted Regrets",
+          "type": "array"
+        },
+        "strategy_candidate_id": {
+          "minLength": 1,
+          "title": "Strategy Candidate Id",
+          "type": "string"
+        },
+        "strategy_position": {
+          "minimum": 0,
+          "title": "Strategy Position",
+          "type": "integer"
+        },
+        "target_achievement_probabilities": {
+          "items": {
+            "$ref": "#/$defs/ObjectiveProbabilityEvidence"
+          },
+          "title": "Target Achievement Probabilities",
+          "type": "array"
+        },
+        "target_feasibility": {
+          "items": {
+            "$ref": "#/$defs/ObjectiveFeasibilityEvidence"
+          },
+          "title": "Target Feasibility",
+          "type": "array"
+        }
+      },
+      "required": [
+        "strategy_position",
+        "strategy_candidate_id",
+        "feasible",
+        "per_seed_total_weighted_regrets",
+        "median_total_weighted_regret",
+        "p95_total_weighted_regret",
+        "maximum_total_weighted_regret"
+      ],
+      "title": "StrategyRobustnessProfile",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The immutable derived campaign-level strategy comparison.\n\nBinds one completed campaign's complete ordered-pair comparison\nmatrix: the campaign/scenario/world identity with content hashes,\nthe recorded runtime version and comparison mode literals, the\naccepted algorithm identifier, the referenced decision policy\n(identity + content hash) whose tie tolerance and minimum sample\ncount are snapshotted here, the source outcome-matrix reference,\nthe ordered strategy/seed/objective identifiers, the complete\n``S * (S - 1) * O`` paired-comparison tuple, the complete\n``S * (S - 1)`` dominance-relation tuple, and exactly one\nrobustness profile per strategy in strategy order.\n\nThe contract enforces the complete structural shape: no self-pairs;\nboth directions of every pair and every objective; the exact\ndeterministic pair-major/objective-minor ordering formula\n``position = (a * (S - 1) + (b if b < a else b - 1)) * O + o``\nwith contiguous positions and identity-vs-position agreement;\nevery paired comparison aligned to the recorded seed count and the\nrecorded tie tolerance; the exact reverse-pair invariants (deltas\nare exact IEEE negations, win/loss/tie counts mirror, median/p05/\np95 and worst/best mirror exactly); dominance relations with\nper-objective statuses read from the stored forward paired\ncomparisons whose reverse statuses are derived independently from\neach direction's own mirrored counts (no unconditional worse/\nbetter mirror - crossing seed-level performance is representable)\nwith mutual overall dominance forbidden; and robustness profiles\nwhose full-coverage per-objective tuples (weighted regret and\ndownside evidence) follow the exact objective order and whose\ntarget-only tuples (feasibility and achievement probabilities)\ncarry the same targeted objective ids in the same relative order\n(both may be empty when no objective has a target; the future\nbuilder verifies exact targeted coverage from the policy/profile).\nSource-authority verification (the policy record, the outcome-matrix\nrecord, and their recorded hashes) belongs to the application\nbuilders.",
+  "properties": {
+    "algorithm_identifier": {
+      "const": "feasibility-pareto-minimax-regret-v1",
+      "default": "feasibility-pareto-minimax-regret-v1",
+      "title": "Algorithm Identifier",
+      "type": "string"
+    },
+    "campaign_id": {
+      "minLength": 1,
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "comparison_mode": {
+      "const": "identical_conditions",
+      "default": "identical_conditions",
+      "title": "Comparison Mode",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "derived_at": {
+      "format": "date-time",
+      "title": "Derived At",
+      "type": "string"
+    },
+    "dominance_relations": {
+      "items": {
+        "$ref": "#/$defs/DominanceRelation"
+      },
+      "minItems": 1,
+      "title": "Dominance Relations",
+      "type": "array"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "minimum_sample_count": {
+      "minimum": 1,
+      "title": "Minimum Sample Count",
+      "type": "integer"
+    },
+    "ordered_objective_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Ordered Objective Ids",
+      "type": "array"
+    },
+    "ordered_scenario_seed_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Ordered Scenario Seed Ids",
+      "type": "array"
+    },
+    "ordered_strategy_candidate_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Ordered Strategy Candidate Ids",
+      "type": "array"
+    },
+    "paired_comparisons": {
+      "items": {
+        "$ref": "#/$defs/ObjectivePairedComparison"
+      },
+      "minItems": 1,
+      "title": "Paired Comparisons",
+      "type": "array"
+    },
+    "policy_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Policy Content Hash",
+      "type": "string"
+    },
+    "policy_id": {
+      "minLength": 1,
+      "title": "Policy Id",
+      "type": "string"
+    },
+    "robustness_profiles": {
+      "items": {
+        "$ref": "#/$defs/StrategyRobustnessProfile"
+      },
+      "minItems": 1,
+      "title": "Robustness Profiles",
+      "type": "array"
+    },
+    "runtime_version": {
+      "const": "3.0.0",
+      "title": "Runtime Version",
+      "type": "string"
+    },
+    "scenario_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Scenario Content Hash",
+      "type": "string"
+    },
+    "scenario_id": {
+      "minLength": 1,
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_outcome_matrix_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Outcome Matrix Content Hash",
+      "type": "string"
+    },
+    "source_outcome_matrix_id": {
+      "minLength": 1,
+      "title": "Source Outcome Matrix Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "tie_tolerance": {
+      "title": "Tie Tolerance",
+      "type": "number"
+    },
+    "world_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "World Content Hash",
+      "type": "string"
+    },
+    "world_version_id": {
+      "minLength": 1,
+      "title": "World Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "campaign_id",
+    "scenario_id",
+    "scenario_content_hash",
+    "world_version_id",
+    "world_content_hash",
+    "runtime_version",
+    "policy_id",
+    "policy_content_hash",
+    "tie_tolerance",
+    "minimum_sample_count",
+    "source_outcome_matrix_id",
+    "source_outcome_matrix_content_hash",
+    "ordered_strategy_candidate_ids",
+    "ordered_scenario_seed_ids",
+    "ordered_objective_ids",
+    "paired_comparisons",
+    "dominance_relations",
+    "robustness_profiles",
+    "content_hash",
+    "derived_at"
+  ],
+  "title": "CampaignStrategyComparison",
+  "type": "object"
+}

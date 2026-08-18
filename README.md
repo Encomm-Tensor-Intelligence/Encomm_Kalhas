@@ -847,24 +847,31 @@ $empty.latest_sequence   # -1
 ### Role and boundaries
 
 **Encomm Colony** is an optional, local-only, dependency-free companion
-presentation layer for KALHAS operational observability: a dark "mission
-control" UI served by the same FastAPI application at `GET /colony/`
+presentation layer with two deliberately separated surfaces: a synthetic
+living-colony visual prototype and truthful KALHAS operational observability.
+It is served by the same FastAPI application at `GET /colony/`
 (plain static `index.html` / `styles.css` / `app.js` under
 `kalhas/colony_ui/`; no React, Node, npm, build pipeline, CDN assets,
 external fonts, images, canvas/WebGL, WebSockets/SSE, analytics, or
 external services).
 
-Colony is strictly read-only and truthful:
+Colony remains read-only and truthful:
 
-- it issues **only** `GET /v1/operational-activity` (same origin, no
+- the visible Aurora-7 scenario is explicitly labeled **SYNTHETIC DEMO**
+  and **VISUAL PROTOTYPE**. Its colony, moving agent markers, metrics,
+  signals, and final result are deterministic client-side mock presentation
+  data. They are not KALHAS execution, active LEGION agents, NEXUS output,
+  calibrated predictions, evidence, or recommendations, and the demo makes no
+  network request;
+- the collapsible real activity observatory issues **only**
+  `GET /v1/operational-activity` (same origin, no
   CORS, no credentials); it never calls any mutation endpoint and never
   alters worlds, campaigns, runs, replay, integrity, manifests,
   bindings, declarations, or activity state;
 - it renders only actual typed `OperationalActivityEvent` data with
-  `textContent` (never `innerHTML`): no fake agent activity, no fake
-  terminal output, no invented running simulations, and no generated
-  outcomes, evidence, recommendations, metrics, probabilities, or hidden
-  reasoning; raw capability `input_values`, policy rules, and
+  `textContent` (never `innerHTML`) inside the real observatory. Synthetic
+  demo data never enters or masquerades as that feed; raw capability
+  `input_values`, policy rules, and
   personal/company data are never representable in the feed and are
   defensively filtered by the UI as well;
 - **NEXUS** is shown as an external boundary (not connected) and
@@ -876,9 +883,12 @@ Colony is strictly read-only and truthful:
 
 ### Opening Colony
 
-Start the API and open <http://127.0.0.1:8000/colony/>. On first load the
-UI does **not** request anything: enter a tenant identifier and press
-**Load activity**. The initial request is
+Start the API and open <http://127.0.0.1:8000/colony/>. The synthetic
+scenario is ready but paused; **Start simulation** advances its fixed
+24-day local timeline, animates the presentation-only agent markers, and
+produces the same deterministic mock result on every run. It performs no API
+operation. For real operational data, expand **KALHAS activity observatory**,
+enter a tenant identifier, and press **Load activity**. The initial request is
 `after_sequence=-1&limit=100`; **Refresh** fetches only events newer than
 the latest loaded sequence (cursor-based, `limit=100`). There is no
 automatic polling (`setInterval`), long polling, WebSocket, SSE, or
@@ -887,14 +897,18 @@ Only the latest 100 rendered events are kept in memory.
 
 ### Layout
 
-- header: title, "KALHAS operational observability" and "manual pull
-  refresh" badges, tenant identifier input, Load activity / Refresh
-  action, current feed status, and last received sequence;
-- left system rail: KALHAS (connected only after a successful activity
+- header and disclosure: local KALHAS status plus prominent synthetic-demo
+  labeling and an exact statement of what is mocked;
+- living-colony console: a dominant CSS colony map, six operating zones,
+  presentation-only moving agent markers, a 24-day mission timeline, three
+  changing mock metrics, live synthetic signals, and a deterministic result;
+- collapsible operational observatory: tenant input, Load activity / Refresh,
+  current feed status, and last received sequence;
+- observatory system rail: KALHAS (connected only after a successful activity
   request), NEXUS (external boundary, not connected), LEGION (mock
-  strategy boundary only) - no agent avatars, no claim that any agent is
-  working;
-- central mission floor: five CSS-only zones (Scenario Studio, World
+  strategy boundary only). Animated markers in the separate synthetic demo
+  are never presented as real LEGION agents;
+- observed kernel zones: five CSS-only zones (Scenario Studio, World
   Forge, Domain Registry, Campaign Control, Integrity and Replay Vault)
   mapped to the activity kinds; each shows the latest observed event
   kind, source time, and structural references, and glows only when its
@@ -923,9 +937,10 @@ never touch the store, and add no background work to API requests.
 
 - no streaming and no live updates: manual pull refresh only;
 - no real NEXUS or LEGION integration (external/mock-only labels);
-- no real agent visualization (no avatars, no fake working agents);
-- no outcomes, evidence, recommendations, metrics, probabilities, or
-  hidden reasoning (the feed never carries them);
+- animated agents, scenario metrics, signals, and the projected outcome are
+  synthetic visual-prototype data only, not kernel facts;
+- no real outcomes, evidence, recommendations, probabilities, or hidden
+  reasoning are carried by the operational feed;
 - the kernel is fully usable without Colony, and Colony changes no
   simulation, replay, integrity, or world hash.
 
@@ -3262,3 +3277,148 @@ the next authorized implementation target - its authoritative design
 already exists in the external blueprint and the Phase 26 start
 handoff. Phase 27 implementation begins **only after Phase 26 receives
 its separate user-authorized local closure commit**.
+
+
+## Phase 27 status
+
+**Robust paired comparison and campaign decision brief
+(IMPLEMENTATION-COMPLETE, GATE-GREEN LOCALLY, NOT YET COMMITTED).**
+Phase 27 is implemented locally on top of the committed Phase 26
+baseline: it is **not committed**, **not pushed**, and the Git index
+remains **empty**; a local closure commit requires a separate explicit
+user authorization. `origin/main` remains
+`f40e83de468ca14100d011454d15eb3dd561c810` with local `main` exactly
+two commits ahead. The complete Phase 27 change set (production,
+tests, schemas, documentation, and the Colony UI demo) is listed
+exactly in `KALHAS_HANDOFF_PHASE_27.md`.
+
+This section **explicitly supersedes every earlier statement in this
+file that Phase 27 "has not begun" / "is not implemented"** (including
+the Phase 26 status section above and the Phase 26 handoff checkpoint
+statements; those statements were true at the Phase 26 checkpoint and
+are now superseded for Phase 27). Phase 28 and KALHAS-PAN remain
+**not implemented** - no such surface exists anywhere in the
+repository.
+
+### Purpose and claim boundary
+
+Phase 27 transforms the verified empirical campaign outcome evidence of
+a COMPLETE runtime-3.0.0 campaign into a deterministic, auditable
+campaign decision surface under one immutable declared policy:
+
+- **Immutable per-campaign decision policy.** One `CampaignDecisionPolicy`
+  per `(tenant_id, campaign_id)`, declared before any comparison or
+  brief is derived; no update/delete/replace surface; deterministic
+  identifier/hash/timestamp lineage; algorithm identifier
+  `feasibility-pareto-minimax-regret-v1`; fixed tail alpha `0.95`
+  (callers cannot select another); global-or-per-objective hard target
+  thresholds, minimum sample count, and tie tolerance; authoritative
+  objective-weight snapshots copied from the verified evaluation
+  profile (never caller-supplied).
+- **Evidence sufficiency and target feasibility.** The declared
+  minimum sample count gates the whole decision
+  (`insufficient_evidence` is a valid successful result - never a
+  guess), and each targeted objective's hard threshold is checked
+  against the empirical target-achievement probability; infeasible
+  strategies are excluded from dominance and selection.
+- **Same-seed paired comparisons.** Every unordered strategy pair and
+  objective is compared on identical shared seeds in authoritative
+  seed order; positive paired delta always means the first strategy is
+  worse; win/tie/loss counts and rates under the exact declared tie
+  tolerance, plus median/p05/p95/worst paired deltas; both directions
+  of every non-self pair are stored with exact mirror invariants.
+- **Pareto dominance among feasible strategies.** A strategy is
+  non-dominated when no feasible strategy is no-worse everywhere and
+  strictly better in at least one required measure; dominance never
+  double-counts feasibility or regret.
+- **Per-seed weighted regret and minimax robustness.** Same-seed regret
+  is comparative (distinct from target violation), weighted by the
+  authoritative objective weights, summed per seed, and summarized by
+  median/p95/maximum; the robust preference minimizes the maximum
+  total weighted regret among feasible non-dominated strategies.
+- **Deterministic preferred/inconclusive brief.** The brief is a fixed
+  template over recorded facts: status `preferred` exactly when the
+  tolerance tie set is a singleton, `inconclusive` when several
+  feasible non-dominated strategies remain tied (a tie never
+  manufactures a winner), plus `insufficient_evidence` and
+  `no_feasible_strategy`; terminal reason codes and ordered
+  decisive/blocking factor trails; no chain-of-thought, hidden
+  reasoning, arbitrary scripts, callbacks, or executable expressions.
+
+The decision output is **evidence-based under the declared models and
+policies** - it is **not calibrated**, **not certainty**, **not a
+real-world prediction**, and it drives **no autonomous live action**.
+The comparison and the brief are derived in memory and **never stored**.
+
+### Contracts, schemas, API
+
+- `PUBLIC_CONTRACTS` now holds exactly **50** contracts; indexes 0-46
+  are unchanged and the exact tail is 47 `CampaignDecisionPolicy`,
+  48 `CampaignStrategyComparison`, 49 `CampaignDecisionBrief`. The 12
+  nested decision value objects remain unregistered.
+- `schemas/v1/` holds exactly **50** artifacts; the three new decision
+  artifacts match `model_json_schema()` and all 47 historical byte
+  hashes are unchanged.
+- `API_VERSION` (`"1"`) and `SCHEMA_VERSION` (`"1.0.0"`) are unchanged;
+  the runtime remains exactly 3.0.0.
+- Exactly four new operations on three paths, all tenant-scoped with
+  the single `ApiErrorResponse` envelope:
+  1. `POST /v1/campaigns/{campaign_id}/decision-policy` (201; duplicate
+     409 `conflict`; invalid draft 422; non-COMPLETE 409
+     `invalid_state`; unknown/foreign campaign 404)
+  2. `GET /v1/campaigns/{campaign_id}/decision-policy` (200; missing/
+     foreign policy 404; corrupted stored policy 409 `integrity_error`;
+     remains retrievable after the campaign leaves COMPLETE)
+  3. `GET /v1/campaigns/{campaign_id}/strategy-comparison` (200;
+     policy-first query order; comparison derived, never stored)
+  4. `GET /v1/campaigns/{campaign_id}/decision-brief` (200; reuses the
+     same verified outcome/comparison chain exactly once; brief
+     derived, never stored)
+  Every operation reads the recorded `RunPlan` tuple first and
+  requires every recorded runtime exactly 3.0.0 (empty or mixed/legacy
+  tuples fail closed with the typed 409 before any service call); the
+  GETs never execute, replay, extract, evaluate, write, or record
+  operational activity.
+
+### 100-seed causal acceptance result
+
+The acceptance fixture (`tests/phase27_helpers.py` +
+`tests/test_phase27_acceptance.py`) drives one real end-to-end
+runtime-3.0.0 campaign over exactly 100 fixed shared seeds
+(`seed-000` ... `seed-099`, statically present, never searched) with
+three genuinely distinct declared strategies and 300 real executions
+and extractions. Under the declared 0.40/0.40 hard gates, minimum
+sample count 100, and tie tolerance 0.05:
+
+- **mock-a** has the best ordinary primary mean (32.46) but the worst
+  maximum total weighted regret (4.0) - its reserve collapses to 5 in
+  every level-9 world;
+- **mock-b** has a slightly worse primary mean (94.26) and the unique
+  minimax-robust maximum total weighted regret (2.24) - it is the
+  preferred strategy;
+- **mock-c** is dominated by mock-b;
+- the tie control (Phase 26 two-strategy fixture) produces exactly
+  zero paired deltas, no dominance, and an **inconclusive** brief with
+  no winner.
+
+Best ordinary mean is therefore **not** the robust winner - exactly
+the demonstration Phase 27 must make.
+
+### Colony UI demo
+
+The Colony UI changes in this change set are **intentional synthetic
+local visualization work**: the animated living-colony demo renders
+clearly labeled, deterministic client-side synthetic data (no network
+request) and is **not decision evidence and not a real forecast**. The
+separate operational observatory remains strictly read-only and
+pull-based. Nothing in the demo is produced by, or claims to be, the
+KALHAS decision surface.
+
+### Non-goals
+
+Phase 27 adds no adaptive decision-policy runtime, no Phase 28
+implementation, no KALHAS-PAN, no live providers/network/database, no
+autonomous live action, and no claim of real-world prediction.
+The preferred strategy is a deterministic summary of recorded
+evidence under the declared policy - not a calibrated real-world
+forecast, not certainty, and not a guarantee of any outcome.

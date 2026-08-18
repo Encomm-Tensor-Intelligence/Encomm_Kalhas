@@ -23,15 +23,20 @@ negative assertions. Proves:
   POST/PUT/PATCH/DELETE Phase 26 endpoint, runtime is selected from
   recorded run plans (never caller input), the required X-Tenant-ID
   header, ``CampaignOutcomeDistributionMatrix`` at public-contract
-  index 46 with the exact unchanged 46-contract prefix, exactly 47
-  public schema artifacts, nested Phase 26 value objects unregistered,
+  index 46 with the exact unchanged 46-contract prefix and the
+  decision contracts at indexes 47-49, exactly 50 public schema
+  artifacts, nested Phase 26 value objects unregistered,
   and the Phase 25 paths/operations unchanged;
 - statistical/decision boundary: no ranking, winner, preferred
   strategy, recommendation, decision brief, LLM narrative, confidence
   interval, forecast-certainty, or real-world-probability field or
   executable surface; no arbitrary scripts, expressions, callbacks,
   provider references, executable templates, or adaptive policy
-  switching; no Phase 27 comparison or decision artifact anywhere;
+  switching; the established Phase 26 production modules remain free
+  of decision-contract imports and decision artifacts (the former
+  global Phase 27 absence assertion is superseded by the scoped
+  Phase 26 module scan; complete decision-surface restrictions belong
+  to the future dedicated Phase 27 boundary suite);
 - versioning and compatibility: API/SCHEMA version constants
   unchanged, runtime exactly 3.0.0 with no older-runtime
   reinterpretation, and no Phase 26 dependency in any runtime-2 or
@@ -245,8 +250,12 @@ _FORBIDDEN_WRITE_CALLS = {
     "start",
 }
 
-#: Phase 27 comparison/decision artifact names - none may exist anywhere
-#: in the kernel yet.
+#: Phase 27 comparison/decision artifact names - scanned inside the
+#: established Phase 26 production modules only (``_PHASE26_MODULES``),
+#: which must remain free of the decision surface. The scan is scoped
+#: and durable: it never basename-allowlists files and never requires
+#: a particular Phase 27 module count, so future Phase 27 modules do
+#: not invalidate it.
 _PHASE27_ARTIFACT_NAMES = (
     "CampaignDecisionPolicy",
     "ObjectivePairedComparison",
@@ -557,19 +566,22 @@ class TestPublicApiSurface:
 
     def test_public_contract_index_46_and_historical_prefix_unchanged(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
-        assert len(PUBLIC_CONTRACTS) == 47
+        assert len(PUBLIC_CONTRACTS) == 50
         assert names[:46] == _PRE_PHASE26_CONTRACTS
         assert names[46] == "CampaignOutcomeDistributionMatrix"
+        assert names[47] == "CampaignDecisionPolicy"
+        assert names[48] == "CampaignStrategyComparison"
+        assert names[49] == "CampaignDecisionBrief"
 
     def test_nested_value_objects_are_not_independently_registered(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
         assert "EmpiricalDistributionSummary" not in names
         assert "StrategyObjectiveOutcome" not in names
 
-    def test_exactly_47_schema_artifacts_with_matching_titles(self) -> None:
+    def test_exactly_50_schema_artifacts_with_matching_titles(self) -> None:
         schema_dir = KALHAS_ROOT.parent / "schemas" / "v1"
         schema_files = sorted(schema_dir.glob("*.schema.json"))
-        assert len(schema_files) == 47
+        assert len(schema_files) == 50
         titles = {json.loads(path.read_text(encoding="utf-8"))["title"] for path in schema_files}
         names = {contract.__name__ for contract in PUBLIC_CONTRACTS}
         assert titles == names
@@ -646,22 +658,32 @@ class TestStatisticalDecisionBoundary:
                 f"adaptive surface in {relative}"
             )
 
-    def test_no_phase27_comparison_or_decision_artifact_anywhere(self) -> None:
+    def test_phase26_modules_remain_free_of_decision_surface(self) -> None:
+        # Durable historical boundary: the established Phase 26
+        # production modules themselves must remain free of
+        # decision-contract imports and decision artifacts. The scan is
+        # scoped to the fixed ``_PHASE26_MODULES`` collection only - it
+        # does not globally forbid new Phase 27 modules elsewhere in
+        # the kernel, does not basename-allowlist files, and does not
+        # require any particular Phase 27 module count. Complete
+        # decision-surface restrictions belong to the future dedicated
+        # Phase 27 boundary suite.
         pattern = re.compile(
             r"\b(" + "|".join(_PHASE27_ARTIFACT_NAMES) + r")\b|campaign_decision|"
             r"feasibility-pareto-minimax-regret-v1"
         )
-        offenders: list[str] = []
-        for path in (
-            sorted((KALHAS_ROOT / "api").glob("*.py"))
-            + sorted((KALHAS_ROOT / "application").glob("*.py"))
-            + sorted((KALHAS_ROOT / "contracts").rglob("*.py"))
-        ):
-            if pattern.search(path.read_text(encoding="utf-8")):
-                offenders.append(path.name)
-        assert offenders == [], f"Phase 27 artifact surface found: {offenders}"
-        assert not (KALHAS_ROOT / "contracts" / "v1" / "campaign_decision.py").exists()
-        assert not (KALHAS_ROOT / "application" / "campaign_decision.py").exists()
+        for relative in _PHASE26_MODULES:
+            source = (KALHAS_ROOT / relative).read_text(encoding="utf-8")
+            assert not pattern.search(source), (
+                f"decision artifact surface in the Phase 26 module {relative}"
+            )
+            tree = _module_tree(relative)
+            module_paths = _imported_module_paths(tree)
+            assert not any(
+                path.startswith("kalhas.contracts.v1.campaign_decision")
+                or path.startswith("kalhas.application.campaign_decision")
+                for path in module_paths
+            ), f"decision import in the Phase 26 module {relative}: {sorted(module_paths)}"
 
 
 class TestVersioningAndCompatibility:

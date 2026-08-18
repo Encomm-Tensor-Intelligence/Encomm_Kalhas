@@ -10,6 +10,11 @@ import pytest
 from kalhas.contracts.v1 import PUBLIC_CONTRACTS
 from kalhas.contracts.v1.activity import OperationalActivityEvent
 from kalhas.contracts.v1.campaign import CampaignSpec, CampaignStatus
+from kalhas.contracts.v1.campaign_decision import (
+    CampaignDecisionBrief,
+    CampaignDecisionPolicy,
+    CampaignStrategyComparison,
+)
 from kalhas.contracts.v1.campaign_metric_observation import CampaignMetricObservationMatrix
 from kalhas.contracts.v1.campaign_metric_statistics import CampaignMetricStatisticsMatrix
 from kalhas.contracts.v1.campaign_outcome import CampaignOutcomeDistributionMatrix
@@ -1618,6 +1623,640 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         ],
         "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
         "derived_at": NOW,
+    },
+    CampaignDecisionPolicy: {
+        "algorithm_identifier": "feasibility-pareto-minimax-regret-v1",
+        "all_targeted_objectives_are_hard_gates": True,
+        "campaign_id": "campaign-1",
+        "content_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "declared_at": "2026-08-16T12:00:00Z",
+        "evaluation_profile_content_hash": (
+            "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ),
+        "evaluation_profile_id": "profile-1",
+        "identifier": "policy-1",
+        "metadata": {
+            "source": "authoritative",
+        },
+        "minimum_sample_count": 3,
+        "minimum_target_achievement_probability": None,
+        "objective_target_requirements": [
+            {
+                "minimum_target_achievement_probability": 0.4,
+                "objective_id": "obj-1",
+            },
+            {
+                "minimum_target_achievement_probability": 0.4,
+                "objective_id": "obj-2",
+            },
+        ],
+        "objective_weight_snapshots": [
+            {
+                "objective_id": "obj-1",
+                "weight": 1.0,
+            },
+            {
+                "objective_id": "obj-2",
+                "weight": 0.5,
+            },
+        ],
+        "scenario_content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "scenario_id": "scenario-1",
+        "schema_version": "1.0.0",
+        "tail_alpha": 0.95,
+        "target_requirement_mode": "per_objective",
+        "tenant_id": "tenant-1",
+        "tie_tolerance": 0.05,
+        "world_content_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "world_version_id": "world-1",
+    },
+    CampaignStrategyComparison: {
+        "algorithm_identifier": "feasibility-pareto-minimax-regret-v1",
+        "campaign_id": "campaign-1",
+        "comparison_mode": "identical_conditions",
+        "content_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "derived_at": "2026-08-16T12:00:00Z",
+        "dominance_relations": [
+            {
+                "dominates": True,
+                "first_strategy_candidate_id": "sc-a",
+                "first_strategy_position": 0,
+                "per_objective_status": [
+                    {
+                        "loss_count": 0,
+                        "median_paired_delta": -0.5,
+                        "objective_id": "obj-1",
+                        "status": "better",
+                        "tie_count": 0,
+                        "win_count": 3,
+                    },
+                    {
+                        "loss_count": 0,
+                        "median_paired_delta": 0.0,
+                        "objective_id": "obj-2",
+                        "status": "tied",
+                        "tie_count": 3,
+                        "win_count": 0,
+                    },
+                ],
+                "second_strategy_candidate_id": "sc-b",
+                "second_strategy_position": 1,
+            },
+            {
+                "dominates": False,
+                "first_strategy_candidate_id": "sc-b",
+                "first_strategy_position": 1,
+                "per_objective_status": [
+                    {
+                        "loss_count": 3,
+                        "median_paired_delta": 0.5,
+                        "objective_id": "obj-1",
+                        "status": "worse",
+                        "tie_count": 0,
+                        "win_count": 0,
+                    },
+                    {
+                        "loss_count": 0,
+                        "median_paired_delta": 0.0,
+                        "objective_id": "obj-2",
+                        "status": "tied",
+                        "tie_count": 3,
+                        "win_count": 0,
+                    },
+                ],
+                "second_strategy_candidate_id": "sc-a",
+                "second_strategy_position": 0,
+            },
+        ],
+        "identifier": "comparison-1",
+        "minimum_sample_count": 3,
+        "ordered_objective_ids": [
+            "obj-1",
+            "obj-2",
+        ],
+        "ordered_scenario_seed_ids": [
+            "seed-0",
+            "seed-1",
+            "seed-2",
+        ],
+        "ordered_strategy_candidate_ids": [
+            "sc-a",
+            "sc-b",
+        ],
+        "paired_comparisons": [
+            {
+                "best_paired_delta": -1.0,
+                "first_strategy_candidate_id": "sc-a",
+                "first_strategy_position": 0,
+                "loss_count": 0,
+                "loss_rate": 0.0,
+                "median_paired_delta": -0.5,
+                "metric_id": "m-1",
+                "objective_id": "obj-1",
+                "objective_position": 0,
+                "ordered_paired_deltas": [
+                    -1.0,
+                    -0.5,
+                    -0.1,
+                ],
+                "p05_paired_delta": -0.9500000000000001,
+                "p95_paired_delta": -0.14,
+                "second_strategy_candidate_id": "sc-b",
+                "second_strategy_position": 1,
+                "sequence_position": 0,
+                "tie_count": 0,
+                "tie_rate": 0.0,
+                "tie_tolerance": 0.05,
+                "win_count": 3,
+                "win_rate": 1.0,
+                "worst_paired_delta": -0.1,
+            },
+            {
+                "best_paired_delta": 0.0,
+                "first_strategy_candidate_id": "sc-a",
+                "first_strategy_position": 0,
+                "loss_count": 0,
+                "loss_rate": 0.0,
+                "median_paired_delta": 0.0,
+                "metric_id": "m-2",
+                "objective_id": "obj-2",
+                "objective_position": 1,
+                "ordered_paired_deltas": [
+                    0.0,
+                    0.0,
+                    0.0,
+                ],
+                "p05_paired_delta": 0.0,
+                "p95_paired_delta": 0.0,
+                "second_strategy_candidate_id": "sc-b",
+                "second_strategy_position": 1,
+                "sequence_position": 1,
+                "tie_count": 3,
+                "tie_rate": 1.0,
+                "tie_tolerance": 0.05,
+                "win_count": 0,
+                "win_rate": 0.0,
+                "worst_paired_delta": 0.0,
+            },
+            {
+                "best_paired_delta": 0.1,
+                "first_strategy_candidate_id": "sc-b",
+                "first_strategy_position": 1,
+                "loss_count": 3,
+                "loss_rate": 1.0,
+                "median_paired_delta": 0.5,
+                "metric_id": "m-1",
+                "objective_id": "obj-1",
+                "objective_position": 0,
+                "ordered_paired_deltas": [
+                    1.0,
+                    0.5,
+                    0.1,
+                ],
+                "p05_paired_delta": 0.14,
+                "p95_paired_delta": 0.9500000000000001,
+                "second_strategy_candidate_id": "sc-a",
+                "second_strategy_position": 0,
+                "sequence_position": 2,
+                "tie_count": 0,
+                "tie_rate": 0.0,
+                "tie_tolerance": 0.05,
+                "win_count": 0,
+                "win_rate": 0.0,
+                "worst_paired_delta": 1.0,
+            },
+            {
+                "best_paired_delta": 0.0,
+                "first_strategy_candidate_id": "sc-b",
+                "first_strategy_position": 1,
+                "loss_count": 0,
+                "loss_rate": 0.0,
+                "median_paired_delta": 0.0,
+                "metric_id": "m-2",
+                "objective_id": "obj-2",
+                "objective_position": 1,
+                "ordered_paired_deltas": [
+                    0.0,
+                    0.0,
+                    0.0,
+                ],
+                "p05_paired_delta": 0.0,
+                "p95_paired_delta": 0.0,
+                "second_strategy_candidate_id": "sc-a",
+                "second_strategy_position": 0,
+                "sequence_position": 3,
+                "tie_count": 3,
+                "tie_rate": 1.0,
+                "tie_tolerance": 0.05,
+                "win_count": 0,
+                "win_rate": 0.0,
+                "worst_paired_delta": 0.0,
+            },
+        ],
+        "policy_content_hash": "abababababababababababababababababababababababababababababababab",
+        "policy_id": "policy-1",
+        "robustness_profiles": [
+            {
+                "dominated_by": [],
+                "dominates": [
+                    "sc-b",
+                ],
+                "downside_evidence": [
+                    {
+                        "adverse_tail_statistic": 100.0,
+                        "objective_id": "obj-1",
+                        "target_violation_cvar": 0.1,
+                        "worst_normalized_target_violation": 0.1,
+                    },
+                    {
+                        "adverse_tail_statistic": 0.0,
+                        "objective_id": "obj-2",
+                        "target_violation_cvar": 0.2,
+                        "worst_normalized_target_violation": 0.2,
+                    },
+                ],
+                "feasible": True,
+                "maximum_total_weighted_regret": 1.0,
+                "median_total_weighted_regret": 0.5,
+                "p95_total_weighted_regret": 0.9500000000000001,
+                "per_objective_weighted_regret": [
+                    {
+                        "objective_id": "obj-1",
+                        "weighted_regret": 0.25,
+                    },
+                    {
+                        "objective_id": "obj-2",
+                        "weighted_regret": 0.5,
+                    },
+                ],
+                "per_seed_total_weighted_regrets": [
+                    0.0,
+                    0.5,
+                    1.0,
+                ],
+                "strategy_candidate_id": "sc-a",
+                "strategy_position": 0,
+                "target_achievement_probabilities": [
+                    {
+                        "empirical_target_achievement_probability": 0.6,
+                        "objective_id": "obj-1",
+                    },
+                    {
+                        "empirical_target_achievement_probability": 0.5,
+                        "objective_id": "obj-2",
+                    },
+                ],
+                "target_feasibility": [
+                    {
+                        "objective_id": "obj-1",
+                        "observed_probability": 0.6,
+                        "passed": True,
+                        "threshold": 0.4,
+                    },
+                    {
+                        "objective_id": "obj-2",
+                        "observed_probability": 0.5,
+                        "passed": True,
+                        "threshold": 0.4,
+                    },
+                ],
+            },
+            {
+                "dominated_by": [
+                    "sc-a",
+                ],
+                "dominates": [],
+                "downside_evidence": [
+                    {
+                        "adverse_tail_statistic": 100.0,
+                        "objective_id": "obj-1",
+                        "target_violation_cvar": 0.1,
+                        "worst_normalized_target_violation": 0.1,
+                    },
+                    {
+                        "adverse_tail_statistic": 0.0,
+                        "objective_id": "obj-2",
+                        "target_violation_cvar": 0.2,
+                        "worst_normalized_target_violation": 0.2,
+                    },
+                ],
+                "feasible": True,
+                "maximum_total_weighted_regret": 1.5,
+                "median_total_weighted_regret": 1.0,
+                "p95_total_weighted_regret": 1.4500000000000002,
+                "per_objective_weighted_regret": [
+                    {
+                        "objective_id": "obj-1",
+                        "weighted_regret": 0.25,
+                    },
+                    {
+                        "objective_id": "obj-2",
+                        "weighted_regret": 0.5,
+                    },
+                ],
+                "per_seed_total_weighted_regrets": [
+                    1.5,
+                    1.0,
+                    0.5,
+                ],
+                "strategy_candidate_id": "sc-b",
+                "strategy_position": 1,
+                "target_achievement_probabilities": [
+                    {
+                        "empirical_target_achievement_probability": 0.6,
+                        "objective_id": "obj-1",
+                    },
+                    {
+                        "empirical_target_achievement_probability": 0.5,
+                        "objective_id": "obj-2",
+                    },
+                ],
+                "target_feasibility": [
+                    {
+                        "objective_id": "obj-1",
+                        "observed_probability": 0.6,
+                        "passed": True,
+                        "threshold": 0.4,
+                    },
+                    {
+                        "objective_id": "obj-2",
+                        "observed_probability": 0.5,
+                        "passed": True,
+                        "threshold": 0.4,
+                    },
+                ],
+            },
+        ],
+        "runtime_version": "3.0.0",
+        "scenario_content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "scenario_id": "scenario-1",
+        "schema_version": "1.0.0",
+        "source_outcome_matrix_content_hash": (
+            "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        ),
+        "source_outcome_matrix_id": "matrix-1",
+        "tenant_id": "tenant-1",
+        "tie_tolerance": 0.05,
+        "world_content_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "world_version_id": "world-1",
+    },
+    CampaignDecisionBrief: {
+        "algorithm_identifier": "feasibility-pareto-minimax-regret-v1",
+        "assumptions": [
+            {
+                "confidence": 1.0,
+                "identifier": "assumption-1",
+                "statement": "Declared fixture assumption.",
+            },
+        ],
+        "blocking_factors": [
+            {
+                "code": "dominated_strategy",
+                "related_strategy_ids": [
+                    "sc-a",
+                ],
+                "strategy_id": "sc-b",
+            },
+        ],
+        "campaign_id": "campaign-1",
+        "comparison_content_hash": (
+            "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+        ),
+        "comparison_id": "comparison-1",
+        "comparison_mode": "identical_conditions",
+        "considered_strategy_ids": [
+            "sc-a",
+            "sc-b",
+        ],
+        "content_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "decisive_factors": [
+            {
+                "code": "feasible_candidate",
+                "strategy_id": "sc-a",
+            },
+            {
+                "code": "feasible_candidate",
+                "strategy_id": "sc-b",
+            },
+            {
+                "code": "target_feasibility_passed",
+                "objective_id": "obj-1",
+                "strategy_id": "sc-a",
+                "values": [
+                    0.4,
+                    0.6,
+                ],
+            },
+            {
+                "code": "target_feasibility_passed",
+                "objective_id": "obj-2",
+                "strategy_id": "sc-a",
+                "values": [
+                    0.4,
+                    0.5,
+                ],
+            },
+            {
+                "code": "target_feasibility_passed",
+                "objective_id": "obj-1",
+                "strategy_id": "sc-b",
+                "values": [
+                    0.4,
+                    0.6,
+                ],
+            },
+            {
+                "code": "target_feasibility_passed",
+                "objective_id": "obj-2",
+                "strategy_id": "sc-b",
+                "values": [
+                    0.4,
+                    0.5,
+                ],
+            },
+            {
+                "code": "pareto_non_dominated",
+                "strategy_id": "sc-a",
+            },
+            {
+                "code": "unique_minimax_regret",
+                "related_strategy_ids": [
+                    "sc-b",
+                ],
+                "strategy_id": "sc-a",
+                "values": [
+                    1.0,
+                    1.5,
+                    0.5,
+                ],
+            },
+        ],
+        "evaluation_profile_content_hash": (
+            "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ),
+        "evaluation_profile_id": "profile-1",
+        "identifier": "brief-1",
+        "policy_content_hash": "abababababababababababababababababababababababababababababababab",
+        "policy_id": "policy-1",
+        "preferred_strategy_id": "sc-a",
+        "produced_at": "2026-08-16T12:00:00Z",
+        "robustness_profiles": [
+            {
+                "dominated_by": [],
+                "dominates": [],
+                "downside_evidence": [
+                    {
+                        "adverse_tail_statistic": 100.0,
+                        "objective_id": "obj-1",
+                        "target_violation_cvar": 0.1,
+                        "worst_normalized_target_violation": 0.1,
+                    },
+                    {
+                        "adverse_tail_statistic": 0.0,
+                        "objective_id": "obj-2",
+                        "target_violation_cvar": 0.2,
+                        "worst_normalized_target_violation": 0.2,
+                    },
+                ],
+                "feasible": True,
+                "maximum_total_weighted_regret": 1.0,
+                "median_total_weighted_regret": 0.5,
+                "p95_total_weighted_regret": 0.9500000000000001,
+                "per_objective_weighted_regret": [
+                    {
+                        "objective_id": "obj-1",
+                        "weighted_regret": 0.25,
+                    },
+                    {
+                        "objective_id": "obj-2",
+                        "weighted_regret": 0.5,
+                    },
+                ],
+                "per_seed_total_weighted_regrets": [
+                    0.0,
+                    0.5,
+                    1.0,
+                ],
+                "strategy_candidate_id": "sc-a",
+                "strategy_position": 0,
+                "target_achievement_probabilities": [
+                    {
+                        "empirical_target_achievement_probability": 0.6,
+                        "objective_id": "obj-1",
+                    },
+                    {
+                        "empirical_target_achievement_probability": 0.5,
+                        "objective_id": "obj-2",
+                    },
+                ],
+                "target_feasibility": [
+                    {
+                        "objective_id": "obj-1",
+                        "observed_probability": 0.6,
+                        "passed": True,
+                        "threshold": 0.4,
+                    },
+                    {
+                        "objective_id": "obj-2",
+                        "observed_probability": 0.5,
+                        "passed": True,
+                        "threshold": 0.4,
+                    },
+                ],
+            },
+            {
+                "dominated_by": [],
+                "dominates": [],
+                "downside_evidence": [
+                    {
+                        "adverse_tail_statistic": 100.0,
+                        "objective_id": "obj-1",
+                        "target_violation_cvar": 0.1,
+                        "worst_normalized_target_violation": 0.1,
+                    },
+                    {
+                        "adverse_tail_statistic": 0.0,
+                        "objective_id": "obj-2",
+                        "target_violation_cvar": 0.2,
+                        "worst_normalized_target_violation": 0.2,
+                    },
+                ],
+                "feasible": True,
+                "maximum_total_weighted_regret": 1.5,
+                "median_total_weighted_regret": 1.0,
+                "p95_total_weighted_regret": 1.4500000000000002,
+                "per_objective_weighted_regret": [
+                    {
+                        "objective_id": "obj-1",
+                        "weighted_regret": 0.25,
+                    },
+                    {
+                        "objective_id": "obj-2",
+                        "weighted_regret": 0.5,
+                    },
+                ],
+                "per_seed_total_weighted_regrets": [
+                    1.5,
+                    1.0,
+                    0.5,
+                ],
+                "strategy_candidate_id": "sc-b",
+                "strategy_position": 1,
+                "target_achievement_probabilities": [
+                    {
+                        "empirical_target_achievement_probability": 0.6,
+                        "objective_id": "obj-1",
+                    },
+                    {
+                        "empirical_target_achievement_probability": 0.5,
+                        "objective_id": "obj-2",
+                    },
+                ],
+                "target_feasibility": [
+                    {
+                        "objective_id": "obj-1",
+                        "observed_probability": 0.6,
+                        "passed": True,
+                        "threshold": 0.4,
+                    },
+                    {
+                        "objective_id": "obj-2",
+                        "observed_probability": 0.5,
+                        "passed": True,
+                        "threshold": 0.4,
+                    },
+                ],
+            },
+        ],
+        "runtime_version": "3.0.0",
+        "scenario_id": "scenario-1",
+        "schema_version": "1.0.0",
+        "source_metric_observation_matrix_content_hash": (
+            "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        ),
+        "source_metric_observation_matrix_id": "observation-matrix-1",
+        "source_outcome_matrix_content_hash": (
+            "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        ),
+        "source_outcome_matrix_id": "matrix-1",
+        "source_world_realization_matrix_content_hash": (
+            "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+        ),
+        "source_world_realization_matrix_id": "realization-matrix-1",
+        "status": "preferred",
+        "summary": "Strategy sc-a is preferred under policy policy-1.",
+        "tenant_id": "tenant-1",
+        "terminal_reason": {
+            "code": "unique_minimax_preference",
+            "values": [
+                1.0,
+                0.05,
+            ],
+        },
+        "uncertainty_model_content_hash": None,
+        "uncertainty_model_id": None,
+        "world_content_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "world_version_id": "world-1",
     },
 }
 

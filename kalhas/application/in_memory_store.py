@@ -24,6 +24,15 @@ from typing import cast
 
 from pydantic import ValidationError
 
+from kalhas.application.campaign_decision_errors import (
+    CampaignDecisionPolicyAlreadyExistsError,
+    CampaignDecisionPolicyIntegrityError,
+    CampaignDecisionPolicyNotFoundError,
+)
+from kalhas.application.campaign_decision_identity import (
+    campaign_decision_policy_content_hash,
+    campaign_decision_policy_identifier,
+)
 from kalhas.application.domain_errors import (
     CampaignAlreadyExistsError,
     CampaignNotFoundError,
@@ -84,6 +93,7 @@ from kalhas.application.world_uncertainty_identity import (
 )
 from kalhas.contracts.v1.activity import OperationalActivityEvent, OperationalActivityKind
 from kalhas.contracts.v1.campaign import CampaignSpec, CampaignStatus
+from kalhas.contracts.v1.campaign_decision import CampaignDecisionPolicy
 from kalhas.contracts.v1.domain_pack import (
     DomainCapabilityDeclaration,
     DomainPackBinding,
@@ -557,6 +567,118 @@ def revalidate_stored_world_uncertainty_model(
         ) from None
 
 
+def verify_campaign_decision_policy_identity(
+    policy: object,
+    *,
+    tenant_id: str,
+    campaign_id: str,
+) -> None:
+    """Verify a policy's ownership, identifier, and content hash independently.
+
+    Verifies the policy is a strict ``CampaignDecisionPolicy`` carrying
+    the requested ownership, that its identifier matches the
+    independent derivation from the canonical tenant/campaign/scenario/
+    world/profile/schema identity payload, and that its content hash
+    matches the recomputed canonical digest. Deterministic-identity
+    mismatches are checked before hash checks. The record is never
+    repaired, normalized, or silently accepted; any mismatch raises the
+    safe typed integrity error with a generic public message.
+    """
+    if not isinstance(policy, CampaignDecisionPolicy):
+        raise CampaignDecisionPolicyIntegrityError(
+            tenant_id,
+            campaign_id,
+            reason="stored campaign decision policy violates its contract",
+        )
+    if policy.tenant_id != tenant_id or policy.campaign_id != campaign_id:
+        raise CampaignDecisionPolicyIntegrityError(
+            tenant_id,
+            campaign_id,
+            reason="stored campaign decision policy ownership mismatch",
+        )
+    if policy.identifier != campaign_decision_policy_identifier(
+        tenant_id=policy.tenant_id,
+        campaign_id=policy.campaign_id,
+        scenario_id=policy.scenario_id,
+        world_version_id=policy.world_version_id,
+        evaluation_profile_id=policy.evaluation_profile_id,
+        schema_version=policy.schema_version,
+    ):
+        raise CampaignDecisionPolicyIntegrityError(
+            tenant_id,
+            campaign_id,
+            reason="stored campaign decision policy identifier mismatch",
+        )
+    if policy.content_hash != campaign_decision_policy_content_hash(policy):
+        raise CampaignDecisionPolicyIntegrityError(
+            tenant_id,
+            campaign_id,
+            reason="stored campaign decision policy content hash mismatch",
+        )
+
+
+def revalidate_stored_campaign_decision_policy(
+    policy: object,
+    tenant_id: str,
+    campaign_id: str,
+) -> None:
+    """Strictly revalidate one stored campaign decision policy.
+
+    ``model_copy``/``model_construct`` and private-store injection can
+    produce a ``CampaignDecisionPolicy`` instance whose contract
+    validators never ran - for example a wrong-typed nested
+    ``ObjectiveWeightSnapshot`` or ``ObjectiveTargetRequirement``, an
+    invalid hash pattern, a non-``0.95`` tail alpha, or non-finite
+    metadata. Revalidating the record's Python-mode serialized data
+    with ``strict=True`` re-runs every field rule, including the nested
+    contracts and the policy-level rules, so a validator-bypassed
+    stored record is rejected before any field of it is trusted. The
+    metadata non-finite rule is enforced explicitly as well (pydantic
+    strict float validation still accepts NaN/Infinity by default), and
+    the deterministic identity (ownership, identifier, content hash) is
+    independently re-verified over the revalidated record. The
+    temporary revalidated object is discarded; the actual stored
+    snapshot is what callers continue to verify. Any failure raises
+    :class:`CampaignDecisionPolicyIntegrityError` with a safe generic
+    public message - validation details, raw hashes, identities,
+    thresholds, and metadata values are never exposed - and storage is
+    never repaired, normalized, replaced, or rewritten.
+    """
+    if not isinstance(policy, CampaignDecisionPolicy):
+        raise CampaignDecisionPolicyIntegrityError(
+            tenant_id,
+            campaign_id,
+            reason="stored campaign decision policy violates its contract",
+        )
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+            )
+            serialized = policy.model_dump(mode="python")
+        revalidated = CampaignDecisionPolicy.model_validate(serialized, strict=True)
+        if _contains_non_finite(revalidated.metadata):
+            raise CampaignDecisionPolicyIntegrityError(
+                tenant_id,
+                campaign_id,
+                reason="stored campaign decision policy violates its contract",
+            )
+        verify_campaign_decision_policy_identity(
+            revalidated, tenant_id=tenant_id, campaign_id=campaign_id
+        )
+    except (
+        ValidationError,
+        TypeError,
+        AttributeError,
+        CampaignDecisionPolicyIntegrityError,
+    ):
+        raise CampaignDecisionPolicyIntegrityError(
+            tenant_id,
+            campaign_id,
+            reason="stored campaign decision policy violates its contract",
+        ) from None
+
+
 class InMemoryScenarioStore:
     """Process-local store for scenarios, worlds, campaigns, and run plans."""
 
@@ -586,6 +708,7 @@ class InMemoryScenarioStore:
         ] = {}
         self._evaluation_profiles: dict[tuple[str, str], ScenarioEvaluationProfile] = {}
         self._world_uncertainty_models: dict[tuple[str, str], WorldUncertaintyModel] = {}
+        self._campaign_decision_policies: dict[tuple[str, str], CampaignDecisionPolicy] = {}
         self._operational_activity: dict[tuple[str, str], OperationalActivityEvent] = {}
         self._activity_sequences: dict[str, int] = {}
         self._strategy_trajectory_plans: dict[
@@ -1577,6 +1700,58 @@ class InMemoryScenarioStore:
         except KeyError as exc:
             raise WorldUncertaintyModelNotFoundError(tenant_id, scenario_id) from exc
         revalidate_stored_world_uncertainty_model(stored, tenant_id, scenario_id)
+        return _deep_copy_contract(stored)
+
+    def put_campaign_decision_policy(
+        self,
+        tenant_id: str,
+        campaign_id: str,
+        policy: CampaignDecisionPolicy,
+    ) -> None:
+        """Store an immutable campaign decision policy; rejects duplicates.
+
+        Policies are immutable and at most one policy may exist per
+        ``(tenant_id, campaign_id)``: a second declaration raises
+        CampaignDecisionPolicyAlreadyExistsError and never overwrites
+        the original. There is no update, delete, replace, or repair
+        surface. The supplied policy must carry exactly the key's
+        ownership and must strictly revalidate against its complete
+        contract with its deterministic identity (ownership,
+        identifier, content hash) independently re-verified - a
+        validator-bypassed, malformed, forged, or corrupted policy is
+        rejected with a safe typed integrity error and nothing is
+        written. The write stores a deep defensive copy; no activity
+        event or sequence is mutated.
+        """
+        key = (tenant_id, campaign_id)
+        if key in self._campaign_decision_policies:
+            raise CampaignDecisionPolicyAlreadyExistsError(tenant_id, campaign_id)
+        revalidate_stored_campaign_decision_policy(policy, tenant_id, campaign_id)
+        self._campaign_decision_policies[key] = _deep_copy_contract(policy)
+
+    def get_campaign_decision_policy(
+        self,
+        tenant_id: str,
+        campaign_id: str,
+    ) -> CampaignDecisionPolicy:
+        """Fetch a campaign decision policy; raises CampaignDecisionPolicyNotFoundError.
+
+        The stored record is strictly revalidated against its complete
+        contract **and** its deterministic identity (ownership,
+        identifier, content hash) on every read, before any copy
+        crosses the store boundary: a validator-bypassed, malformed,
+        forged, or corrupted stored record raises
+        CampaignDecisionPolicyIntegrityError and is never returned.
+        After successful revalidation a fresh deep defensive copy is
+        returned. Unknown and foreign policies are indistinguishable:
+        both raise the same typed error, so no tenant can learn about
+        another tenant's policies.
+        """
+        try:
+            stored = self._campaign_decision_policies[(tenant_id, campaign_id)]
+        except KeyError as exc:
+            raise CampaignDecisionPolicyNotFoundError(tenant_id, campaign_id) from exc
+        revalidate_stored_campaign_decision_policy(stored, tenant_id, campaign_id)
         return _deep_copy_contract(stored)
 
     def append_operational_activity(

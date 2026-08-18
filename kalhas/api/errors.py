@@ -14,6 +14,14 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from kalhas.application.campaign_decision_errors import (
+    CampaignDecisionBriefIntegrityError,
+    CampaignDecisionComparisonIntegrityError,
+    CampaignDecisionPolicyAlreadyExistsError,
+    CampaignDecisionPolicyIntegrityError,
+    CampaignDecisionPolicyNotFoundError,
+    CampaignDecisionPolicyValidationError,
+)
 from kalhas.application.campaign_lifecycle import CampaignTransitionError
 from kalhas.application.campaign_outcome_errors import (
     CampaignOutcomeDistributionMatrixIntegrityError,
@@ -207,6 +215,7 @@ def register_error_handlers(app: FastAPI) -> None:
                 DomainStateTransitionNotFoundError,
                 EvaluationProfileNotFoundError,
                 WorldUncertaintyModelNotFoundError,
+                CampaignDecisionPolicyNotFoundError,
                 RealizationRunTrajectoryExecutionNotFoundError,
                 RealizationRunTrajectoryReplayManifestNotFoundError,
                 RealizationRunMetricObservationNotFoundError,
@@ -233,6 +242,7 @@ def register_error_handlers(app: FastAPI) -> None:
                 EvaluationProfileDeclarationAfterCompilationError,
                 WorldUncertaintyModelAlreadyExistsError,
                 WorldUncertaintyModelDeclarationAfterCompilationError,
+                CampaignDecisionPolicyAlreadyExistsError,
                 WorldRealizationSamplingError,
                 RealizationRunTrajectoryExecutionAlreadyExistsError,
                 RealizationRunTrajectoryReplayManifestConflictError,
@@ -261,6 +271,7 @@ def register_error_handlers(app: FastAPI) -> None:
                 EvaluationProfileInvalidScaleError,
                 EvaluationProfileValidationError,
                 WorldUncertaintyModelValidationError,
+                CampaignDecisionPolicyValidationError,
                 InvalidTrajectoryDraftError,
             ),
         ):
@@ -297,6 +308,9 @@ def register_error_handlers(app: FastAPI) -> None:
                 CampaignOutcomeDistributionMatrixIntegrityError,
                 WorldUncertaintyModelIntegrityError,
                 WorldRealizationIntegrityError,
+                CampaignDecisionBriefIntegrityError,
+                CampaignDecisionComparisonIntegrityError,
+                CampaignDecisionPolicyIntegrityError,
                 CampaignWorldRealizationMatrixIntegrityError,
                 RealizationRunTrajectoryExecutionIntegrityError,
                 RealizationRunMetricObservationIntegrityError,

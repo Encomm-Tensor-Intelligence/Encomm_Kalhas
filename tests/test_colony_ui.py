@@ -1,8 +1,8 @@
-"""Tests for the Phase 10 Encomm Colony local observability UI.
+"""Tests for the Encomm Colony visual prototype and observability UI.
 
-Colony is an optional, strictly read-only companion presentation layer:
-the KALHAS API must remain fully usable without it, and opening or
-reading the UI must never alter any KALHAS state or hash.
+The synthetic living-colony demo is client-side presentation data and
+the operational observatory is strictly read-only. The KALHAS API must
+remain usable without either, and opening the UI never alters state.
 """
 
 from __future__ import annotations
@@ -42,6 +42,21 @@ class TestColonyServedLocally:
         assert 'id="tenant-input"' in html
         assert 'id="load-button"' in html
         assert 'id="feed-status"' in html
+
+    def test_colony_page_exposes_the_synthetic_demo_console(self, client: TestClient) -> None:
+        html = client.get("/colony/").text
+        assert "Aurora-7 Supply Shock" in html
+        assert 'id="demo-toggle"' in html
+        assert 'id="colony-map"' in html
+        assert 'id="mission-timeline"' in html
+        assert 'id="outcome-panel"' in html
+
+    def test_demo_is_explicitly_disclosed_as_mock_presentation(self, client: TestClient) -> None:
+        html = client.get("/colony/").text
+        assert "SYNTHETIC DEMO" in html
+        assert "deterministic client-side mock data" in html
+        assert "do not claim real KALHAS execution" in html
+        assert "Mock result · presentation prototype only" in html
 
     def test_colony_page_needs_no_tenant_header(self, client: TestClient) -> None:
         assert client.get("/colony/").status_code == 200
@@ -100,6 +115,13 @@ class TestColonyTruthfulLabels:
 
 
 class TestColonyJavaScriptSafety:
+    def test_demo_has_no_api_call_and_uses_a_bounded_deterministic_horizon(self) -> None:
+        js = _read_asset("app.js")
+        assert "FINAL_DAY = 24" in js
+        assert "valuesForDay" in js
+        assert "animationiteration" in js
+        assert js.count("fetch(") == 1
+
     def test_js_makes_get_only_requests_to_the_activity_endpoint(self) -> None:
         js = _read_asset("app.js")
         # The only API path literal in the whole script.

@@ -1,0 +1,227 @@
+{
+  "$defs": {
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ObjectiveTargetRequirement": {
+      "additionalProperties": false,
+      "description": "One immutable per-objective target-achievement requirement.\n\nBinds one targeted objective identifier to its minimum empirical\ntarget-achievement probability threshold, inclusive on both\nboundaries of ``[0.0, 1.0]``.",
+      "properties": {
+        "minimum_target_achievement_probability": {
+          "title": "Minimum Target Achievement Probability",
+          "type": "number"
+        },
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "objective_id",
+        "minimum_target_achievement_probability"
+      ],
+      "title": "ObjectiveTargetRequirement",
+      "type": "object"
+    },
+    "ObjectiveWeightSnapshot": {
+      "additionalProperties": false,
+      "description": "One immutable authoritative objective-weight snapshot.\n\nBinds one authoritative objective identifier to its declared\nweight. Weights are exact finite non-negative built-in numerics;\nthey are never normalized or renormalized anywhere, and an\nall-zero weight collection remains representable. The complete\nordered snapshot (one entry per authoritative objective, unique,\nin the exact supplied authoritative order - the order is\npreserved, never sorted) is a policy-level rule; completeness and\nsource verification against the authoritative scenario/\nevaluation-profile record belong to the future policy service.",
+      "properties": {
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "weight": {
+          "title": "Weight",
+          "type": "number"
+        }
+      },
+      "required": [
+        "objective_id",
+        "weight"
+      ],
+      "title": "ObjectiveWeightSnapshot",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The immutable stored campaign decision policy.\n\nBinds one campaign's declarative decision policy: the campaign,\nscenario, world-version, and evaluation-profile identity with the\nscenario and world content hashes; the accepted algorithm\nidentifier; the exact global-or-per-objective target-requirement\nmode (``global`` requires the global probability and forbids\nper-objective requirements; ``per_objective`` requires at least\none requirement and forbids the global probability); the fixed\ntail alpha exactly ``0.95`` (callers cannot select another alpha);\nthe exact-int minimum sample count (``>= 1``, booleans and\nintegral floats rejected before coercion); the finite non-negative\ntie tolerance; the hard-gate flag; the authoritative objective-\nweight snapshot (one immutable ``ObjectiveWeightSnapshot`` per\nauthoritative objective, unique, preserved in the exact supplied\nauthoritative order - never sorted, never normalized); the\ndeterministic caller-supplied declaration\ntimestamp; and finite-only metadata.\n\nThe scenario identity is part of the policy: the future policy\ndeclaration cannot invent or override scenario identity, evaluation\nidentity, tail alpha, or weights - the future policy service copies\nand verifies those values from the authoritative scenario/\nevaluation-profile snapshot. The policy is declarative data only\nand never alters simulation or evidence artifacts.",
+  "properties": {
+    "algorithm_identifier": {
+      "const": "feasibility-pareto-minimax-regret-v1",
+      "default": "feasibility-pareto-minimax-regret-v1",
+      "title": "Algorithm Identifier",
+      "type": "string"
+    },
+    "all_targeted_objectives_are_hard_gates": {
+      "title": "All Targeted Objectives Are Hard Gates",
+      "type": "boolean"
+    },
+    "campaign_id": {
+      "minLength": 1,
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "declared_at": {
+      "format": "date-time",
+      "title": "Declared At",
+      "type": "string"
+    },
+    "evaluation_profile_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Evaluation Profile Content Hash",
+      "type": "string"
+    },
+    "evaluation_profile_id": {
+      "minLength": 1,
+      "title": "Evaluation Profile Id",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "minimum_sample_count": {
+      "minimum": 1,
+      "title": "Minimum Sample Count",
+      "type": "integer"
+    },
+    "minimum_target_achievement_probability": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Minimum Target Achievement Probability"
+    },
+    "objective_target_requirements": {
+      "items": {
+        "$ref": "#/$defs/ObjectiveTargetRequirement"
+      },
+      "title": "Objective Target Requirements",
+      "type": "array"
+    },
+    "objective_weight_snapshots": {
+      "items": {
+        "$ref": "#/$defs/ObjectiveWeightSnapshot"
+      },
+      "minItems": 1,
+      "title": "Objective Weight Snapshots",
+      "type": "array"
+    },
+    "scenario_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Scenario Content Hash",
+      "type": "string"
+    },
+    "scenario_id": {
+      "minLength": 1,
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tail_alpha": {
+      "const": 0.95,
+      "default": 0.95,
+      "title": "Tail Alpha",
+      "type": "number"
+    },
+    "target_requirement_mode": {
+      "enum": [
+        "global",
+        "per_objective"
+      ],
+      "title": "Target Requirement Mode",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "tie_tolerance": {
+      "title": "Tie Tolerance",
+      "type": "number"
+    },
+    "world_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "World Content Hash",
+      "type": "string"
+    },
+    "world_version_id": {
+      "minLength": 1,
+      "title": "World Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "campaign_id",
+    "scenario_id",
+    "scenario_content_hash",
+    "world_version_id",
+    "world_content_hash",
+    "evaluation_profile_id",
+    "evaluation_profile_content_hash",
+    "target_requirement_mode",
+    "objective_weight_snapshots",
+    "minimum_sample_count",
+    "tie_tolerance",
+    "all_targeted_objectives_are_hard_gates",
+    "content_hash",
+    "declared_at"
+  ],
+  "title": "CampaignDecisionPolicy",
+  "type": "object"
+}

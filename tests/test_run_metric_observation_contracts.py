@@ -332,7 +332,7 @@ class TestSerialization:
 
 class TestRegistration:
     def test_public_contract_count_is_exactly_40(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 47
+        assert len(PUBLIC_CONTRACTS) == 50
 
     def test_set_is_registered_before_the_phase21_matrix(self) -> None:
         assert RunMetricObservationSet in PUBLIC_CONTRACTS
