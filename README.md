@@ -3004,34 +3004,35 @@ section above).
   "Phase 26 and Phase 27 are not implemented or designed here" was true
   at the Phase 25 checkpoint (neither phase was implemented then).
   Phase 26 is now implementation-complete, so the statement is
-  superseded for Phase 26 by the "Phase 26 status" section below. For
-  Phase 27 only the "not implemented" portion remains true: Phase 27
-  remains unimplemented, but its authoritative design already exists in
-  the external blueprint and in `CODEX_HERMES_HANDOFF_PHASE_26_START.md`.
+  superseded for Phase 26 by the "Phase 26 status" section below. The
+  "not implemented" portion likewise held for Phase 27 at the Phase 26
+  checkpoint; it is superseded by the "Phase 27 status" section below,
+  which records Phase 27 as committed and published (its authoritative
+  design already existed in the external blueprint and in
+  `CODEX_HERMES_HANDOFF_PHASE_26_START.md`).
 
 
 ## Phase 26 status
 
 **Empirical campaign outcome distributions (IMPLEMENTATION-COMPLETE,
-GATE-GREEN LOCALLY, NOT YET COMMITTED).** Phase 26 transforms verified
+GATE-VERIFIED, COMMITTED AND PUBLISHED).** Phase 26 transforms
 runtime-3 shared-seed observations into campaign-level empirical
-strategy/objective outcome evidence. At this documentation snapshot the
-complete Phase 26 change set (19 created paths plus 21 modified
-integration paths, listed exactly in `KALHAS_HANDOFF_PHASE_26.md`) is
-present in the working tree and **uncommitted**; the Git index remains
-**empty**. A local closure commit requires a separate explicit user
-authorization and has not been made. **No GitHub push occurs until both
-Phases 26 and 27 are complete.** **Phase 27 implementation has not
-begun** (its authoritative design already exists).
+strategy/objective outcome evidence. It is implementation-complete,
+gate-verified, committed, and published at commit
+`886f398c288971d612fa57bd1d1e731113a69f72`. The complete Phase 26 change
+set (19 created paths plus 21 modified integration paths, listed
+exactly in `KALHAS_HANDOFF_PHASE_26.md`) is fully recorded at that
+published closure commit; the phase handoff remains a historical
+pre-commit checkpoint snapshot and is not rewritten.
 
 This section **explicitly supersedes every earlier statement in this
 file that Phase 26 "has not begun" or that "Phase 26 and Phase 27 are
 not implemented or designed here"** (including the Phase 25 status
 section above; those statements were true at the Phase 25 checkpoint
-and are now superseded for Phase 26). For Phase 27, only the "not
-implemented" portion remains true - an authoritative Phase 27 design
-already exists in the external blueprint and the incorporated Phase 26
-start handoff; Phase 27 implementation has not begun.
+and are now superseded for Phase 26). The earlier statements that
+Phase 27 "has not begun" / "is not implemented" are superseded by the
+"Phase 27 status" section below, which records Phase 27 as committed
+and published.
 
 ### Purpose and claim boundary
 
@@ -3272,25 +3273,26 @@ historical benchmark, no real LEGION/NEXUS integration, and no
 production database, queue, auth, deployment, or command-center
 expansion. It does not predict reality and claims no true causality.
 
-**Phase 27** (robust paired comparison and campaign decision brief) is
-the next authorized implementation target - its authoritative design
-already exists in the external blueprint and the Phase 26 start
-handoff. Phase 27 implementation begins **only after Phase 26 receives
-its separate user-authorized local closure commit**.
+**Phase 27** (robust paired comparison and campaign decision brief) has
+since been implemented, gate-verified, committed, and published at the
+Phase 27 closure commit
+`a905d2af6b155a0f2568037e2b0f410b20be8d91` (recorded in the "Phase 27
+status" section below). Phase 28 and KALHAS-PAN remain **not
+implemented** anywhere in the repository.
 
 
 ## Phase 27 status
 
 **Robust paired comparison and campaign decision brief
-(IMPLEMENTATION-COMPLETE, GATE-GREEN LOCALLY, NOT YET COMMITTED).**
-Phase 27 is implemented locally on top of the committed Phase 26
-baseline: it is **not committed**, **not pushed**, and the Git index
-remains **empty**; a local closure commit requires a separate explicit
-user authorization. `origin/main` remains
-`f40e83de468ca14100d011454d15eb3dd561c810` with local `main` exactly
-two commits ahead. The complete Phase 27 change set (production,
-tests, schemas, documentation, and the Colony UI demo) is listed
-exactly in `KALHAS_HANDOFF_PHASE_27.md`.
+(IMPLEMENTATION-COMPLETE, GATE-VERIFIED, COMMITTED AND PUBLISHED).**
+Phase 27 is committed and published at commit
+`a905d2af6b155a0f2568037e2b0f410b20be8d91` (the Phase 27 closure commit
+on `main`). At this Gate 27.1 frozen baseline `local main` and
+`origin/main` are both at that commit with divergence `0 0` and an
+empty Git index. The complete Phase 27 change set (production, tests,
+schemas, documentation, and the Colony UI demo) is listed exactly in
+`KALHAS_HANDOFF_PHASE_27.md`, which remains a historical pre-publication
+checkpoint snapshot and is not rewritten.
 
 This section **explicitly supersedes every earlier statement in this
 file that Phase 27 "has not begun" / "is not implemented"** (including

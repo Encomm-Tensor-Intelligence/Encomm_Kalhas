@@ -10,7 +10,6 @@ import re
 from pathlib import Path
 from typing import get_type_hints
 
-import pytest
 from kalhas.adapters import LegionAdapter, NexusAdapter
 from kalhas.contracts.v1.domain_pack import DomainPackManifest
 from kalhas.domain_packs import DomainPack
@@ -114,27 +113,33 @@ def test_campaign_service_depends_on_protocol_not_concrete_mock() -> None:
 
 
 def test_agents_md_contains_corrected_architecture_guidance() -> None:
-    """AGENTS.md must state the corrected internal-module guidance.
-
-    Skipped while the protected file still carries the outdated statement:
-    the write guard requires an interactive approval that is pending. The
-    assertions become active the moment the file is updated.
-    """
+    """AGENTS.md deterministically asserts the authoritative architecture guidance."""
     repo_root = Path(__file__).resolve().parents[1]
     text = (repo_root / "AGENTS.md").read_text(encoding="utf-8")
-    if "No other components exist" in text:
-        pytest.skip(
-            "AGENTS.md still carries the outdated statement; the approved update is "
-            "pending interactive write approval"
-        )
-    assert "canonical product boundaries" in text
-    assert "NEXUS** owns dialogue, organizational context, memory, and presentation" in text
-    assert "LEGION** owns strategy and agent exploration" in text
-    assert "deterministic campaigns, evidence, replay, and simulation state" in text
-    assert "Governed internal KALHAS modules" in text
-    assert "must not take over NEXUS or LEGION responsibilities" in text
-    assert "domain-neutral and must not import NEXUS or LEGION internals" in text
-    assert "No other components exist" not in text
+    normalized = re.sub(r"\s+", " ", text)
+
+    assert (
+        "NEXUS** owns natural-language dialogue, organizational context, memory, and "
+        "presentation" in normalized
+    )
+    assert "LEGION** owns strategy and agent exploration" in normalized
+    assert (
+        "KALHAS** owns versioned world models, uncertainty, deterministic simulation" in normalized
+    )
+    assert "campaigns, evidence, replay" in normalized
+    assert "No other components exist" in normalized
+    assert "Do not introduce new components or integration surfaces" in normalized
+    assert "the three named roles are the only allowed ones" in normalized
+    assert "Ordinary internal KALHAS modules are implementation details within KALHAS" in normalized
+    assert "not additional components or integration surfaces" in normalized
+    assert "must remain within KALHAS responsibilities" in normalized
+    assert "must not take over NEXUS or LEGION responsibilities" in normalized
+    assert "Domain-neutral kernel" in normalized
+    assert "contains no domain-specific logic" in normalized
+    assert "domain packs" in normalized
+    assert "KALHAS core never imports NEXUS or LEGION modules" in normalized
+    assert "NexusAdapter" in normalized
+    assert "LegionAdapter" in normalized
 
 
 def test_domain_pack_protocol_is_declarative_identity_only() -> None:

@@ -50,11 +50,15 @@ or negative assertions. Proves:
   preferred and the inconclusive control proofs are present, and the
   hard-coded golden identifiers/hashes are constants - never recomputed
   through identity functions inside assertions;
-- documentation truthfulness: the active documentation states Phase 27
-  is implemented and locally gate-verified, uncommitted, not pushed,
-  evidence-based (not calibrated, not certainty, no autonomous live
-  action), without KALHAS-PAN or future-phase implementation, with the
-  Colony visualization explicitly synthetic/local, and contains no
+- documentation truthfulness: the active documentation states Phase 26
+  and Phase 27 as post-publication (each implemented, gate-verified,
+  committed, and published at its published closure commit), the current
+  Phase 27 status as synchronized at the published baseline (not the
+  obsolete pre-publication uncommitted/unpushed state), Phase 28 and
+  KALHAS-PAN absent, evidence-based (not calibrated, not certainty, no
+  autonomous live action), the Colony visualization explicitly
+  synthetic/local, and no historical checkpoint wording that could
+  accidentally satisfy a current-status assertion, and contains no
   overclaim phrases;
 - scope inventory: every expected Phase 27 production/test/schema/API
   path exists.
@@ -263,6 +267,12 @@ _OVERCLAIM_PHRASES = (
     "autonomous action",
     "production-ready",
 )
+
+
+#: Published Phase 26 closure commit the active documentation must expose.
+_PHASE26_PUBLISHED_COMMIT = "886f398c288971d612fa57bd1d1e731113a69f72"
+#: Published Phase 27 closure commit at the frozen synchronized baseline.
+_PHASE27_PUBLISHED_COMMIT = "a905d2af6b155a0f2568037e2b0f410b20be8d91"
 
 
 def _module_tree(relative: str) -> ast.Module:
@@ -1138,8 +1148,32 @@ def _doc_text(relative: str) -> str:
     return re.sub(r"\s+", " ", (REPO_ROOT / relative).read_text(encoding="utf-8")).lower()
 
 
+def _phase_section_text(relative: str, phase: str) -> str:
+    """One normalized lowercase text of the current ``## Phase <phase>``
+    status section only.
+
+    The section begins at the ``## Phase <phase>`` heading and ends at the
+    next top-level (``## ``) heading, so a current-status assertion is
+    bound to the current Phase 26/27 status section rather than being
+    satisfiable by historical checkpoint wording elsewhere in a large
+    document. The located heading is asserted to exist.
+    """
+    lines = (REPO_ROOT / relative).read_text(encoding="utf-8").splitlines()
+    start = -1
+    for i, line in enumerate(lines):
+        if line.startswith(f"## Phase {phase}"):
+            start = i
+            break
+    assert start != -1, f"missing Phase {phase} status heading in {relative}"
+    end = start + 1
+    while end < len(lines) and not lines[end].startswith("## "):
+        end += 1
+    section = "\n".join(lines[start:end])
+    return re.sub(r"\s+", " ", section).lower()
+
+
 class TestDocumentationTruthfulness:
-    """Section G: active documentation states the honest Phase 27 status."""
+    """Section G: active documentation states the current Phase 26/27 status truthfully."""
 
     def test_active_docs_state_phase27_implemented_and_gate_verified(self) -> None:
         for relative in _ACTIVE_DOCS:
@@ -1148,11 +1182,25 @@ class TestDocumentationTruthfulness:
             assert "implementation-complete" in text, relative
             assert "gate" in text, relative
 
-    def test_active_docs_state_uncommitted_and_not_pushed(self) -> None:
+    def test_active_docs_current_phase26_section_identifies_published_commit(self) -> None:
         for relative in _ACTIVE_DOCS:
-            text = _doc_text(relative)
-            assert "not committed" in text or "uncommitted" in text, relative
-            assert "not pushed" in text or "no push" in text, relative
+            section = _phase_section_text(relative, "26")
+            assert _PHASE26_PUBLISHED_COMMIT in section, relative
+            assert "published" in section, relative
+
+    def test_active_docs_current_phase27_section_identifies_published_commit(self) -> None:
+        for relative in _ACTIVE_DOCS:
+            section = _phase_section_text(relative, "27")
+            assert _PHASE27_PUBLISHED_COMMIT in section, relative
+            assert "published" in section, relative
+            # The current Phase 27 status is committed/published and must
+            # not regress to the obsolete pre-publication state.
+            assert "committed" in section, relative
+            assert "not committed" not in section, relative
+            assert "uncommitted" not in section, relative
+            assert "not pushed" not in section, relative
+            assert "local main exactly two commits ahead" not in section, relative
+            assert "f40e83de468ca14100d011454d15eb3dd561c810" not in section, relative
 
     def test_active_docs_state_evidence_based_not_calibrated_not_certainty(self) -> None:
         for relative in _ACTIVE_DOCS:

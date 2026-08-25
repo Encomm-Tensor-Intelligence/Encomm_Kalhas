@@ -10,6 +10,10 @@ Durable rules for anyone (human or agent) working in this repository.
   campaigns, evidence, replay, and the future living-simulation experience.
 - No other components exist. Do not introduce new components or integration
   surfaces; the three named roles are the only allowed ones.
+- Ordinary internal KALHAS modules are implementation details within KALHAS,
+  not additional components or integration surfaces. They must remain within
+  KALHAS responsibilities and must not take over NEXUS or LEGION
+  responsibilities.
 
 ## Hard rules
 
