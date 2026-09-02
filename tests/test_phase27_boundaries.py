@@ -14,12 +14,13 @@ or negative assertions. Proves:
   provider/network/database/filesystem/live-action surface, no adaptive
   decision-policy runtime, no Phase 28 implementation, and no wall clock
   or randomness in decision derivation;
-- contract boundary: API/SCHEMA versions unchanged, exactly 50 public
-  contracts with unchanged indexes 0-46 and the exact tail
+- contract boundary: API/SCHEMA versions unchanged, the accepted Phase
+  27 50-contract prefix with unchanged indexes 0-46 and the exact tail
   47 ``CampaignDecisionPolicy`` / 48 ``CampaignStrategyComparison`` /
-  49 ``CampaignDecisionBrief``, exactly 50 schema artifacts with all 47
-  historical byte hashes unchanged, the three decision artifacts equal
-  to ``model_json_schema()``, and the nested decision value objects
+  49 ``CampaignDecisionBrief`` (later additive contracts allowed), schema
+  artifact count following ``PUBLIC_CONTRACTS`` with all 47 historical
+  byte hashes unchanged, the three decision artifacts equal to
+  ``model_json_schema()``, and the nested decision value objects
   unregistered with no standalone schema files;
 - runtime/API boundary: exactly the four operations on the three
   decision paths (POST/GET decision-policy, GET strategy-comparison,
@@ -494,9 +495,9 @@ class TestContractBoundary:
         assert API_VERSION == "1"
         assert SCHEMA_VERSION == "1.0.0"
 
-    def test_exactly_50_public_contracts_with_unchanged_prefix_and_exact_tail(self) -> None:
+    def test_immutable_50_contract_prefix_with_phase27_tail_unchanged(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
-        assert len(PUBLIC_CONTRACTS) == 50
+        assert len(PUBLIC_CONTRACTS) >= 50
         assert len(_HISTORICAL_47_NAMES) == 47
         assert names[:47] == _HISTORICAL_47_NAMES
         assert names[46] == "CampaignOutcomeDistributionMatrix"
@@ -514,9 +515,9 @@ class TestContractBoundary:
         assert "CampaignStrategyComparison" in names
         assert "CampaignDecisionBrief" in names
 
-    def test_exactly_50_schema_artifacts_matching_contract_titles(self) -> None:
+    def test_schema_artifact_count_and_titles_match_public_contracts(self) -> None:
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
-        assert len(schema_files) == 50
+        assert len(schema_files) == len(PUBLIC_CONTRACTS)
         titles = {json.loads(path.read_text(encoding="utf-8"))["title"] for path in schema_files}
         names = {contract.__name__ for contract in PUBLIC_CONTRACTS}
         assert titles == names

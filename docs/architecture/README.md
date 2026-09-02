@@ -1737,3 +1737,56 @@ robust winner. The decision output is evidence-based under the declared
 models/policies - **not calibrated**, **not certainty**, and driving
 **no autonomous live action**; it does not predict reality and is not a
 guarantee of any outcome. Phase 28 and KALHAS-PAN are not implemented.
+
+## Phase 28 status (2026-09-02 closure overlay)
+
+**Adaptive deterministic runtime `4.0.0` (IMPLEMENTED LOCALLY,
+GATE-VERIFIED LOCALLY, UNPUBLISHED - closure candidate, not an accepted
+checkpoint).** This section supersedes the sentence above it and every other
+statement in this document that Phase 28 "is not implemented" (true at their
+checkpoints, preserved as dated history). The local tree implements runtime
+`4.0.0` additively - causal mid-run observation events, a closed bounded
+policy AST, immutable bound adaptive policies, decision/switch evidence,
+adaptive execution and exact replay, and adaptive-versus-static comparison
+evidence under identical shared coordinates - through slices `H28-S01` through
+`H28-S13` on top of the published Gate 27.1 baseline
+`777a4472ef0d1edc6d30ce61a05851302b981027`. Nothing is staged, committed, or
+pushed.
+
+Layer placement (no new component, no new integration surface; runtime 4 is
+ordinary governed KALHAS machinery):
+
+- Contracts: five new top-level v1 contracts
+  (`RuntimeObservationDeclaration`, `ExternalObservationInputBundle`,
+  `AdaptivePolicy`, `AdaptiveRunTrajectoryExecution`,
+  `AdaptiveRunTrajectoryReplayManifest`); the existing 50-contract prefix and
+  all historical schema bytes are unchanged; 55 registered contracts and 55
+  synchronized schema artifacts total.
+- Application: observation declaration/external-input services, closed
+  condition evaluator, policy binding, adaptive planner/execution/replay,
+  verified read-only query projections, and static-versus-adaptive comparison
+  evidence under `kalhas/application/`.
+- API: three additive read-only paths
+  (`/v1/runs/{run_id}/adaptive/{observations,decisions,switches}`) with the
+  established tenant-scoped typed error envelope; existing paths unchanged.
+- Decisions D28-01 through D28-04 are frozen in ADR 004. Runtimes
+  1.0.0/2.0.0/3.0.0 keep their exact historical meaning.
+
+Acceptance and gates: the unpatched production acceptance
+(`tests/test_phase28_exact_five_adaptive_acceptance.py`, 24 focused tests)
+proves the real exact-five campaign plus one bound adaptive policy arm with
+causal switching, paired evidence, exact replay, and adversarial rejection -
+no cardinality patching, no production mutation. The H28-S12 session ran the
+complete repository suite once, normally: 6,850 tests, 0 failures, 0 errors,
+0 skipped, 810.94 seconds, with Ruff, format check, mypy, schema
+synchronization, and diff hygiene green. H28-S13 adds the final documentation
+and a bounded, fixture-specific performance characterization recorded outside
+the repository, gated at its own session close.
+
+Claim boundary: deterministic replay and repository acceptance are not
+scientific validity, calibration, production readiness, certification, or a
+guarantee of any outcome. The system performs no autonomous live action.
+KALHAS-PAN (Phase 29) and the executable real domain mechanism remain **not
+implemented**; Phase 29 is not started and not authorized. Phase 28 remains a
+fully gated local closure candidate pending the independent Codex final
+fingerprint/gate audit, which owns any checkpoint disposition.

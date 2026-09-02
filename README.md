@@ -3424,3 +3424,59 @@ autonomous live action, and no claim of real-world prediction.
 The preferred strategy is a deterministic summary of recorded
 evidence under the declared policy - not a calibrated real-world
 forecast, not certainty, and not a guarantee of any outcome.
+
+## Phase 28 status (2026-09-02 closure overlay)
+
+**Adaptive deterministic runtime `4.0.0` (IMPLEMENTATION-COMPLETE LOCALLY,
+GATE-VERIFIED LOCALLY, UNPUBLISHED - Phase 28 is a closure candidate, not an
+accepted checkpoint).** This section supersedes every statement above that
+Phase 28 "is not implemented" (those statements were true at the Phase 26 and
+Phase 27 checkpoints and are preserved as dated history). Phase 28 was
+delivered locally through slices `H28-S01` through `H28-S13` on top of the
+published Gate 27.1 baseline `777a4472ef0d1edc6d30ce61a05851302b981027`
+(`HEAD == origin/main`, divergence `0 0`); nothing is staged, committed, or
+pushed, and no publication has been authorized.
+
+What the local Phase 28 tree adds, all inside the existing
+NEXUS-LEGION-KALHAS architecture and the frozen v1 contract prefix:
+
+- Additive runtime `4.0.0`: causal mid-run observation events, a closed
+  bounded policy AST (no expressions, callbacks, imports, or LLM calls),
+  immutable bound adaptive policies, policy decision/switch evidence with
+  dwell/cooldown/budget semantics, adaptive execution and exact replay, and
+  adaptive-versus-static comparison evidence under identical shared
+  coordinates (worlds, seeds, noise). Runtimes 1.0.0/2.0.0/3.0.0 keep their
+  exact historical meaning; no recorded campaign is reinterpreted.
+- Five new top-level v1 contracts (`RuntimeObservationDeclaration`,
+  `ExternalObservationInputBundle`, `AdaptivePolicy`,
+  `AdaptiveRunTrajectoryExecution`, `AdaptiveRunTrajectoryReplayManifest`),
+  55 registered contracts total, 55 synchronized schema artifacts, and three
+  new read-only adaptive API paths
+  (`/v1/runs/{run_id}/adaptive/{observations,decisions,switches}`).
+- Decisions D28-01 through D28-04 are frozen in ADR 004.
+- The unpatched production acceptance
+  (`tests/test_phase28_exact_five_adaptive_acceptance.py`, 24 focused tests)
+  drives the real exact-five campaign (five ordered static candidates x four
+  shared seeds) plus one bound adaptive policy arm through the real services:
+  causal switching, paired comparison evidence, exact replay, and adversarial
+  rejection boundaries - with no cardinality patching and no production
+  mutation.
+
+Gate evidence: the H28-S12 session ran the complete repository suite once,
+normally: 6,850 tests, 0 failures, 0 errors, 0 skipped, in 810.94 seconds,
+with Ruff, format check, mypy, schema synchronization, and diff hygiene
+green. H28-S13 (this documentation and a bounded, fixture-specific
+performance characterization recorded outside the repository) runs its own
+gates at session close; those results live in the external session resume.
+
+Claim boundary: deterministic replay and repository acceptance are not
+scientific validity, calibration, production readiness, certification, or a
+guarantee of any outcome. The exact-five-plus-adaptive campaign is a
+deterministic closure proof over a synthetic, domain-neutral fixture world.
+The system is evidence-based under declared models and recorded assumptions -
+not calibrated, not certainty, and it performs no autonomous live action.
+KALHAS-PAN (Phase 29) and the executable real domain mechanism remain **not
+implemented**; Phase 29 is not started and not authorized. Phase 28 remains a
+fully gated local closure candidate pending the independent Codex final
+fingerprint/gate audit; checkpoint authority (`CP28-B`) belongs to that
+audit, not to this document.

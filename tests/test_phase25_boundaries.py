@@ -18,10 +18,11 @@ docstrings, comments, and type names cannot false-positive. Proves:
 - runtime-2 and Phase-24 production modules carry no runtime-3
   dependency; the runtime-3 API surface is exactly 6 paths / 7
   operations;
-- exactly 50 public contracts with the exact historical 0-39 prefix,
-  the exact six-contract runtime-3 tail at indexes 40-45, the
+- the accepted Phase 27 50-contract prefix: the exact historical 0-39
+  prefix, the exact six-contract runtime-3 tail at indexes 40-45, the
   campaign outcome-distribution matrix at index 46, the decision
-  contracts at indexes 47-49, and exactly 50 schema artifacts;
+  contracts at indexes 47-49; later additive contracts are allowed and
+  schema artifact count follows ``PUBLIC_CONTRACTS``;
 - no Phase 26/27 surface and no outcome/ranking/score/evidence/
   recommendation/live-action surface;
 - the 12 runtime-3 typed errors are all mapped in ``api/errors.py`` and
@@ -729,8 +730,8 @@ class TestRuntimeSeparation:
 
 
 class TestPublicCompatibility:
-    def test_public_contracts_exactly_50(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 50
+    def test_public_contracts_preserve_accepted_50_prefix(self) -> None:
+        assert len(PUBLIC_CONTRACTS) >= 50
 
     def test_indexes_0_through_39_keep_historical_order(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
@@ -744,12 +745,12 @@ class TestPublicCompatibility:
         assert names[48] == "CampaignStrategyComparison"
         assert names[49] == "CampaignDecisionBrief"
 
-    def test_exactly_50_schema_artifacts_with_matching_titles(self) -> None:
+    def test_schema_artifacts_follow_the_public_registry_with_matching_titles(self) -> None:
         import json
 
         schema_dir = KALHAS_ROOT.parent / "schemas" / "v1"
         schema_files = sorted(schema_dir.glob("*.schema.json"))
-        assert len(schema_files) == 50
+        assert len(schema_files) == len(PUBLIC_CONTRACTS)
         titles = {json.loads(path.read_text(encoding="utf-8"))["title"] for path in schema_files}
         names = {contract.__name__ for contract in PUBLIC_CONTRACTS}
         assert titles == names

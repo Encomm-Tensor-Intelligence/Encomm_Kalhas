@@ -1,12 +1,14 @@
 # KALHAS Strategic Handoff — Current State and Phases 28–35
 
-Status: planning and continuity document
+Status: planning, continuity, and execution-overlay document
 
-Evidence date: 2026-08-19
+Evidence date: 2026-09-01 (original overlay); 2026-09-02 (H28-S13 final
+closure-candidate overlay — see the second overlay section below)
 
-KALHAS baseline: `a905d2af6b155a0f2568037e2b0f410b20be8d91`
+KALHAS published baseline: `777a4472ef0d1edc6d30ce61a05851302b981027`
 
-LEGION baseline: `1db60222c05e8d293ec587259287ae46fab9b8d0`
+LEGION baseline retained from the prior audit (not re-audited by the 2026-09-01
+overlay): `1db60222c05e8d293ec587259287ae46fab9b8d0`
 
 This document is the recommended source of truth for the next KALHAS work.
 It consolidates the available Codex project history, the local KALHAS
@@ -17,11 +19,15 @@ It is a roadmap, not authorization to implement, stage, commit, push, deploy,
 connect a provider, or perform a live action. Every implementation slice still
 requires explicit user direction and must obey `AGENTS.md`.
 
-## Gate 27.1 execution status — LOCAL AND UNPUBLISHED
+## Gate 27.1 historical execution record — recorded before publication
 
 Recorded 2026-08-25 by Hermes session `H27.1-S05` (final handoff/documentation
 slice). This record is the authoritative execution-status overlay for Section
 9 and the Section 22.15 Gate 27.1 map wherever older prose reads as pre-execution.
+The bullets below intentionally preserve the pre-publication state observed on
+that date. Gate 27.1 was subsequently published as commit
+`777a4472ef0d1edc6d30ce61a05851302b981027`; the current Phase 28 state is
+recorded in the 2026-09-01 overlay immediately after this historical record.
 
 - Published `main` remains `a905d2af6b155a0f2568037e2b0f410b20be8d91`;
   `HEAD == origin/main`, divergence `0 0`. Every Gate 27.1 change listed here
@@ -79,6 +85,190 @@ slice). This record is the authoritative execution-status overlay for Section
 - Git staging, commit, and push have not occurred and remain subject to
   separate explicit user authorization.
 
+## Phase 28 execution and external-model review overlay — LOCAL AND UNPUBLISHED
+
+Recorded 2026-09-01 by Codex after inspecting the live repository, profiling
+the current fixtures, and reviewing the official Covasim, Starsim, and
+GLEAM/GLEAMviz sources. This overlay supersedes only stale present-tense status
+claims; it does not rewrite the historical Gate 27.1 evidence above and does
+not authorize implementation, Git operations, provider access, or live action.
+
+- Published `HEAD == origin/main == 777a4472ef0d1edc6d30ce61a05851302b981027`
+  (`Gate 27.1: truthful baseline closure`).
+- The live worktree contains the unpublished Phase 28 implementation through a
+  **partial `H28-S09`** adaptive-versus-static comparison slice. `H28-S10`
+  through `H28-S13` are not yet present as completed slices. The tree remains
+  active and dirty; this overlay deliberately does not freeze a path inventory
+  or claim checkpoint acceptance.
+- An early diagnostic Phase-28-focused execution selected exactly 1,276 of
+  6,760 collected tests and passed all 1,276 in 54.8 seconds. An early full-
+  suite attempt then exceeded a 303-second tool limit; that timeout was neither
+  a failure nor checkpoint evidence.
+- After the Model Pack roadmap update and before the mechanical recording of
+  this result, Codex ran the complete current repository suite normally on the
+  dirty Phase 28 tree: exactly **6,760 passed**, 0 failed, 0 skipped, and 14
+  warnings in 817.71 seconds. Ruff check passed; Ruff format check passed for
+  353 files; mypy found no issues in 335 source files; `git diff --check` passed.
+  This supersedes the earlier two-error/timeout diagnostic status.
+- The green repository gate does **not** accept Phase 28: S10–S13 remain open,
+  S09's reduced-cardinality fixture is not the required production-path proof,
+  no grouped final Phase 28 fingerprint/checkpoint disposition exists, and no
+  Git publication was authorized.
+- The published Gate 27.1 unpatched exact-five proof remains real: a focused
+  rerun passed all 35 tests without production/cardinality mutation.
+- The current S09 comparison fixture intentionally patches campaign preparation
+  to two static candidates for a bounded development proof. That fixture is
+  useful but cannot serve as the final production-path Phase 28 acceptance.
+  `H28-S12` must close this distinction with the unmodified exact-five
+  production invariant plus an adaptive arm under shared coordinates.
+- Current profiling does not reproduce the earlier reported 46-of-56-second
+  fixture cost. The exact-five campaign took 1.65 seconds under profiling, with
+  0.84 seconds cumulative in the defensive-copy path; the current adaptive
+  comparison fixture took 0.67 seconds, with 0.33 seconds in that path. The
+  defensive-copy boundary is therefore a real proportional hotspot, not a
+  demonstrated blocker at current scale. It must be measured and optimized
+  without weakening snapshot isolation.
+- Covasim, Starsim, and GLEAM/GLEAMviz are external scientific/engineering
+  references only. They add no fourth component or integration surface, and no
+  external simulator, server, dataset, callback, or executable dependency is
+  accepted into the KALHAS kernel by this review.
+
+## Phase 28 closure-candidate overlay — 2026-09-02 (H28-S13; LOCAL AND UNPUBLISHED)
+
+Recorded 2026-09-02 by the final corrected Hermes continuation of the partial
+`H28-S13-DOCS-PERF-CLOSURE` session. This overlay preserves the 2026-09-01
+overlay above as explicitly historical evidence of the pre-S10 state and
+supersedes only its stale present-tense status claims (partial `H28-S09`,
+S10–S13 open). It does not rewrite any dated historical observation elsewhere
+in this document, does not authorize implementation, Git operations, provider
+access, or live action, and does not assign `CHECKPOINT_ACCEPTED`.
+
+### Slice completion truth (2026-09-02)
+
+- `H28-S01` through `H28-S12` are **complete locally and unpublished**: the
+  Phase 28 adaptive runtime `4.0.0` contracts, schemas, services, replay,
+  read-only API projections, registry compatibility, and the exact-five
+  adaptive acceptance all exist only in the dirty local worktree on top of
+  published `777a4472ef0d1edc6d30ce61a05851302b981027`.
+- `H28-S13` performance characterization and documentation edits are complete
+  only after this continuation's gates finish. The gates are executed after
+  this overlay text was written; if any gate fails, this session reports the
+  exact evidence and creates no closure resume, and this overlay must then be
+  read as a candidate record, not a completed-slice record.
+- `H28-S12` exact-five-plus-adaptive acceptance is green: 24 focused tests in
+  `tests/test_phase28_exact_five_adaptive_acceptance.py`; the `H28-S12` full
+  suite run was **6,850 tests, 0 failures, 0 errors, 0 skipped, 810.94
+  seconds** (JUnit artifact `C:/Users/xampos/AppData/Local/Temp/h28s12_full.xml`,
+  1,039,417 bytes, well-formed).
+- Phase 28 is a **fully gated local closure candidate only after this
+  continuation succeeds**. The authoritative full-suite run for the grouped
+  final Phase 28 fingerprint still belongs to the independent Codex audit.
+- `CP28-B` remains pending the independent Codex final fingerprint/gate audit.
+  This Hermes session does not assign `CHECKPOINT_ACCEPTED`; checkpoint
+  authority belongs exclusively to that audit.
+- Phase 29 is **NOT STARTED and NOT AUTHORIZED**. The next action after this
+  continuation is the independent Codex final Phase 28 audit, then STOP
+  awaiting explicit Phase 29 instructions.
+- No commit, push, deploy, provider, or live action occurred in any H28
+  session, including this continuation. Nothing is staged; `HEAD ==
+  origin/main`; divergence `0 0`.
+- The benchmark measurements below are hardware/runtime/fixture-shape-specific
+  observations. They are not correctness claims, not scientific-validity
+  claims, not regression thresholds, not benchmark gates, and not
+  production-readiness claims.
+
+### Recorded benchmark facts (raw artifact pin)
+
+Raw artifact:
+`C:/Users/xampos/AppData/Local/Temp/h28s13/h28s13_measurements.json`,
+SHA-256 `5ba8234a347ab8f3bc01b225427c41d5c96c5369629708010765676dce575a4d`,
+14,317 bytes, generated 2026-09-02T04:53:42Z by session
+`H28-S13-DOCS-PERF-CLOSURE` (script: `h28s13_bench.py` in the same
+directory). Environment identity is recorded inside the artifact: CPython
+3.12.13, Windows 10 (build 19045), AMD64, 32 logical cores, uv 0.12.7.
+Both fixtures: one full unprofiled warm-up run before measurement, three
+measured repetitions, wall-time statistics over those repetitions.
+
+- Fixture `exact_five_static_gate27_1` (source
+  `tests/phase27_1_helpers.py`, `complete_exact_five_store`): 5 strategies,
+  4 seeds, 20 static runs, 0 adaptive runs. Wall times (s):
+  15.431 / 15.460 / 15.347 (min 15.347, median 15.431, mean 15.413,
+  max 15.460). `_deep_copy_contract` (`in_memory_store.py`): 11,633 calls,
+  7.724 s cumulative. Peak tracemalloc per repetition:
+  1,865,826 / 1,866,002 / 1,813,344 bytes.
+- Fixture `exact_five_plus_adaptive_h28_s12` (source
+  `tests/test_phase28_exact_five_adaptive_acceptance.py`): 5 strategies,
+  4 seeds, 20 static runs plus 4 adaptive runs with 2 decision steps each
+  (final decision step 1). Wall times (s): 15.655 / 15.733 / 15.709
+  (min 15.655, median 15.709, mean 15.699, max 15.733).
+  `_deep_copy_contract`: 8,407 calls, 8.094 s cumulative. Peak tracemalloc
+  per repetition: 1,663,744 / 1,884,211 / 1,899,541 bytes.
+- Proportional-hotspot reading (unchanged from the 2026-09-01 profiling):
+  the defensive-copy boundary is a real proportional hotspot at this scale,
+  not a demonstrated blocker. No defensive copying, validation,
+  immutability, replay, or tenant-isolation behavior was weakened or
+  optimized; any later optimization requires a named measured threshold and
+  byte-equivalent authority/replay behavior, per the §10 closure addendum.
+
+### Documentation surfaces updated by H28-S13 (2026-09-02)
+
+Six documentation surfaces carry the Phase 28 closure truth; ADR-004
+(`docs/decisions/ADR-004-deterministic-adaptive-runtime-4.md`, git blob
+`32518c01baa8443da73650b106cbd674b86b7ae8`, 12,997 bytes, 269 lines) is
+intentionally byte-frozen and untouched — its implementation-status note is
+carried by these dated overlays instead:
+
+1. `README.md`
+2. `docs/architecture/README.md`
+3. `docs/architecture/contracts-and-lifecycle.md`
+4. `CODEX_HERMES_HANDOFF_CURRENT_STATE.md`
+5. `KALHAS_STRATEGIC_HANDOFF_PHASES_28_35.md` (this file; the 2026-09-02
+   overlay you are reading plus the §25 status correction)
+6. the external session resumes under the kalhas-project profile
+   (`h28-s12-resume.md`, then `h28-s13-resume.md` after this continuation's
+   gates pass)
+
+Resulting local tree cardinality: exactly **106 dirty paths = 38 modified
+tracked files + 68 untracked files** (the S12 baseline of 102 = 34 + 68 plus
+the four newly modified tracked documentation files
+`README.md`, `docs/architecture/README.md`,
+`docs/architecture/contracts-and-lifecycle.md`, and
+`CODEX_HERMES_HANDOFF_CURRENT_STATE.md`, which were clean at `777a447`).
+
+## Phase 28 publication overlay — 2026-09-02 (PUBLISHED; supersedes only present-tense status claims)
+
+Recorded by the user-authorized publication session on the same day as the
+H28-S13 overlay above, which is preserved in full as the closure-candidate
+record of its time. This overlay supersedes only stale present-tense status
+claims ("local and unpublished", "closure candidate", "`CP28-B` pending",
+"next action: independent Codex final Phase 28 audit"); no dated historical
+observation is rewritten anywhere in this document.
+
+- The independent Codex final Phase 28 fingerprint/gate audit verified the
+  closure-candidate tree and recorded `CP28-B` as `CHECKPOINT_ACCEPTED` on
+  **2026-09-02**. Phase 28 (adaptive deterministic runtime `4.0.0`,
+  `H28-S01` through `H28-S13`) is **complete**.
+- Under explicit user authorization, the publication session re-verified the
+  full baseline live (branch `main`; `HEAD == origin/main ==
+  777a4472ef0d1edc6d30ce61a05851302b981027`; divergence `0 0`; staged 0;
+  dirty exactly 106 = 38 modified + 68 untracked, byte-exact against the
+  H28-S13 resume inventory; ledger 90/90 at SHA-256 `a7937bf7...ee152`;
+  schemas 55/56), re-ran the focused Phase 28 and documentation/boundary
+  gates plus Ruff check, Ruff format check, strict mypy, and the
+  schema-export check, and stages exactly the audited 106-path inventory
+  with the minimal final status corrections as the Phase 28 closure commit.
+  The repository-presentation work follows as a separate documentation
+  commit; both commits are then pushed to `main` under the same explicit
+  authorization. The exact commit hashes are recorded in the publication
+  session report; this overlay intentionally does not duplicate them.
+- After the Phase 28 commit, the same session adds an original repository
+  presentation (banner, condensed README with the phase history preserved
+  under `docs/`, community and CI files) as a separate documentation commit,
+  also under explicit user authorization.
+- **Phase 29 is NOT STARTED and NOT AUTHORIZED.** It requires new explicit
+  user authorization; the read-only Phase 29 entry audit (§13) must precede
+  any implementation session.
+
 ## 1. Executive verdict
 
 KALHAS is not an early prototype anymore. Through Phase 27 it is a strong,
@@ -93,11 +283,12 @@ The honest maturity assessment is:
 | Deterministic world and simulation kernel | Mature prototype |
 | Evidence integrity and replay | Mature prototype |
 | Campaign decision semantics | Implemented and heavily tested |
-| Adaptive policies | Not implemented; Phase 28 |
+| Adaptive policies | Phase 28 active locally through partial H28-S09; unpublished and not closed |
 | Executable real domain mechanism | Not implemented; Phase 29 |
+| Government-grade Model Pack portfolio | Release/assurance architecture and phased portfolio defined here; no pack is government-certified or approved for live use |
 | Historical calibration and external validity | Not demonstrated; Phase 30 |
-| Real LEGION interoperability | Pre-contract |
-| Auditable NEXUS implementation | Not available in the supplied evidence |
+| Real LEGION interoperability | Pre-contract; Phase 31 conformance not demonstrated |
+| Auditable NEXUS implementation | Repository supplied separately; Phase 31 conformance not demonstrated |
 | Durable/concurrent operation | Not implemented |
 | Production deployment and live providers | Deliberately out of scope |
 | Real-world predictive validity | Unproven and must not be implied |
@@ -106,13 +297,14 @@ The central conclusion is therefore two-sided:
 
 1. The KALHAS foundation is substantially stronger than a normal MVP and is
    ready for the next scientific layer.
-2. The three-system product is not integrated yet. KALHAS has placeholder
-   seams, LEGION currently speaks a different artifact language, and no NEXUS
-   codebase was available for verification.
+2. The three-system product is not integrated yet. Repository existence does
+   not equal a versioned NEXUS–LEGION–KALHAS conformance proof; that remains a
+   Phase 31 gate.
 
-The correct next move is a short Phase 27.1 truth-and-integration closure,
-followed by the already-planned Phase 28 adaptive runtime. We should not
-silently renumber or discard the accepted Phase 28–32 roadmap.
+The correct next move is to finish and independently close Phase 28, including
+the production-cardinality adaptive proof and full quality gates, then enter
+the already-planned Phase 29 mechanism seam. We should not silently renumber or
+discard the accepted Phase 28–35 roadmap.
 
 **Architecture-readiness verdict:** this is complete as a gated execution
 architecture for Phases 28–35: ownership, dependency order, version surfaces,
@@ -120,7 +312,7 @@ artifact authority, deterministic/replay/fairness rules, scientific and product
 acceptance, blocking decisions, and bounded Hermes execution are all allocated.
 It is deliberately not a frozen class-by-class implementation specification.
 Rows marked ADR/external decision are explicit entry gates, not permission for
-an implementer to guess. The missing audited NEXUS repository, real second-
+an implementer to guess. Audited three-repository conformance, real second-
 platform execution, dataset/license evidence, and scientific approvals remain
 external closure dependencies where the relevant phase says so.
 
@@ -144,6 +336,9 @@ Consequences of that order:
 - Earlier maritime-demo material was superseded by the durable
   domain-neutral-kernel rule. A maritime or pandemic implementation can exist
   only as a domain pack.
+- `Model Pack` is product vocabulary for an exact versioned `DomainPack`
+  release plus its bound evidence/assurance artifacts. It never authorizes a
+  fourth component, new protocol, plugin bus, or kernel domain branch.
 - Partner/funding material is strategic context, not technical authority. No
   real organization, patient, or personal data may be copied into repository
   code, fixtures, tests, or examples.
@@ -153,27 +348,21 @@ Consequences of that order:
 
 ## 3. Verified repository state
 
-At the evidence date:
+At the current 2026-09-01 overlay date:
 
-- Repository: <https://github.com/Xamposs/Encomm_Kalhas>
+- Repository/origin: <https://github.com/Encomm-Tensor-Intelligence/Encomm_Kalhas>
 - Branch: `main`
-- Local `HEAD`: `a905d2af6b155a0f2568037e2b0f410b20be8d91`
-- `origin/main`: `a905d2af6b155a0f2568037e2b0f410b20be8d91`
+- Local `HEAD`: `777a4472ef0d1edc6d30ce61a05851302b981027`
+- `origin/main`: `777a4472ef0d1edc6d30ce61a05851302b981027`
 - Divergence: `0 0`
-- Phase 28 code: absent
+- Gate 27.1: published
+- Phase 28: active in the local dirty/unpublished worktree through partial
+  `H28-S09`; S10–S13 and final closure gates remain open
 - Historical evidence-date snapshot (2026-08-19): at that time the worktree
   held only the preserved untracked `CODEX_HERMES_HANDOFF_CURRENT_STATE.md`
-  plus this strategic handoff. **Superseded by the live state below and by the
-  Gate 27.1 execution-status record near the top of this file.**
-- Live local tree after the audited Gate 27.1 sessions S01–S04, the S05
-  documentation edit, and the post-full-gate correction
-  `H27.1-S05-C01-POST-FULL-GATE-TRUTH`: exactly eleven dirty paths (six
-  modified tracked files — `AGENTS.md`, `README.md`, both architecture docs,
-  `tests/test_boundaries.py`, `tests/test_phase27_boundaries.py` — and five
-  untracked files: this handoff, `CODEX_HERMES_HANDOFF_CURRENT_STATE.md`,
-  `tests/phase27_1_helpers.py`, `tests/test_phase27_1_exact_five_acceptance.py`,
-  `tests/test_phase27_1_boundaries.py`). None is staged, committed, or
-  published.
+  plus this strategic handoff. The exact Gate 27.1 pre-publication inventory is
+  preserved in the historical record at the top; both snapshots are superseded
+  for present-tense execution by the Phase 28 overlay.
 
 The public history is coherent through:
 
@@ -181,9 +370,10 @@ The public history is coherent through:
 - Phase 24: deterministic world-uncertainty realizations;
 - Phase 25: realization-aware runtime `3.0.0`;
 - Phase 26: empirical campaign-outcome distributions;
-- Phase 27: evidence-based campaign decision support.
+- Phase 27: evidence-based campaign decision support;
+- Gate 27.1: truthful unpatched exact-five closure.
 
-Observed scale at this baseline:
+Historical published Phase 27 scale (retained for comparison):
 
 - 50 registered public v1 contracts;
 - 50 synchronized JSON Schema artifacts;
@@ -209,9 +399,14 @@ mypy found no issues in 278 source files; schema artifacts are synchronized;
 Git diff hygiene passed with nothing staged and no Git publication. The
 historical Phase 27 counts above remain historical only.
 
+Current Phase 28 diagnostic scale is recorded only in the overlay: 6,760 tests
+passed completely, Ruff/format/mypy/diff hygiene are green, but S10–S13 and the
+final production/checkpoint evidence remain open. This clean intermediate tree
+is not a Phase 28 checkpoint.
+
 ## 4. What KALHAS implements today
 
-The current evidence chain is:
+The published evidence chain through Gate 27.1 is:
 
 ```text
 Scenario
@@ -247,6 +442,12 @@ KALHAS already owns the correct things:
 These are real strengths. The repository's defensive-copy, forged-hash,
 tamper-position, failure-atomicity, and replay tests are unusually extensive.
 
+The local unpublished Phase 28 tree additionally contains runtime-4 causal
+observation declarations/events, closed adaptive-policy contracts and state,
+adaptive execution/replay, campaign planning, and partial adaptive-versus-static
+comparison evidence. These are implementation progress, not published or
+checkpoint-accepted capability until S10–S13 and the final gates close.
+
 ## 5. What KALHAS does not establish
 
 Deterministic correctness is not the same as scientific validity. The current
@@ -259,6 +460,10 @@ system does not establish:
 - historical predictive performance;
 - robustness to model misspecification;
 - external expert validation;
+- an executable or validated PAN, Maritime, Climate, Energy, Economy, Policy,
+  or other Model Pack before its named future gates close;
+- government certification, procurement suitability, regulatory conformity,
+  or authorization for any public decision;
 - safe production concurrency or durability;
 - authorization to take any real-world action.
 
@@ -274,7 +479,12 @@ The product statement to preserve is:
 Robustness to genuinely wrong or omitted model assumptions is a Phase 30/33
 evaluation target, not a capability established by the current kernel.
 
-## 6. Findings that must be closed before Phase 28 behavior
+## 6. Historical Gate 27.1 findings closed before Phase 28 behavior
+
+Sections 6.1–6.4 below preserve the findings that motivated Gate 27.1 and are
+closed in published commit `777a447`. Sections 6.5–6.7 remain relevant later-
+phase risks. Present-tense repository state comes from the 2026-09-01 overlay,
+not from the pre-closure wording inside these historical findings.
 
 ### 6.1 Active documentation still contains pre-publication claims
 
@@ -412,6 +622,8 @@ Hard integration invariants:
 
 - No KALHAS import of NEXUS or LEGION internals.
 - No shared fourth gateway or hidden integration component.
+- Every Model Pack remains a KALHAS `DomainPack` release/internal domain-pack
+  implementation; it is never a fourth role or direct NEXUS/LEGION integration.
 - LEGION output is always untrusted authoring input.
 - KALHAS owns deterministic IDs, hashes, validation, and evidence.
 - NEXUS may explain evidence but may not alter it.
@@ -447,13 +659,17 @@ provider.
 
 ### 8.2 NEXUS
 
-No auditable NEXUS repository was found in the supplied links, visible public
-repositories, connected repository search, or local workspace. A private or
-differently owned implementation may exist, but it was not evidence available
-to this audit.
+A public NEXUS repository has since been supplied at
+<https://github.com/Encomm-Tensor-Intelligence/Encomm_nexus>, superseding the
+earlier finding that no repository link was available. The 2026-09-01 external-
+simulator review did not perform a fresh NEXUS release/conformance audit, and
+repository existence is not evidence of the Phase 31 exchange profile or
+three-role end-to-end behavior.
 
-NEXUS must therefore be treated as a defined architectural role plus a KALHAS
-placeholder protocol, not as an already verified integration.
+NEXUS must therefore still be treated as a defined architectural role plus a
+not-yet-conformance-proven KALHAS boundary, not as an already verified
+integration. Phase 31 closure requires the real repository to pass its owned
+fixtures and the frozen local three-role acceptance.
 
 ### 8.3 Implication of the cognitive-architecture PDF
 
@@ -502,6 +718,7 @@ a second source of truth.
 | State-derived observation event | KALHAS runtime | Derived ordered evidence, not an independent input authority | Replay recomputes from verified state + addressed noise, hash-compares, then evaluates the policy |
 | Policy snapshot, decision, and switch events | KALHAS runtime | Canonical ordered decision evidence with source step/state/hash | Reconstructed/verified without NEXUS/LEGION/provider calls |
 | Domain-pack manifest and mechanism implementation | Domain pack | Manifest/config/code identity accepted through `DomainPack`; kernel never owns domain behavior | Exact pack/mechanism/numeric version is pinned in run evidence |
+| Model Pack release/assurance profile | KALHAS domain-pack release workflow | Product/catalog metadata bound to one exact `DomainPack`, mechanism, configuration, data, review, and evidence identity; never an executable surface or independent authority | Maturity and claims derive from bound evidence; no version or other pack inherits them silently |
 | Dataset, transformation, split, and benchmark manifests | Offline curator/research workflow | Untrusted until checksum, license class, schema, time, unit, and split validation | Immutable bundle; no runtime download |
 | Benchmark, calibration, validation, and claim-assessment reports | KALHAS evaluation workflow | Derived evidence bound to immutable inputs/protocol versions | Recomputed/verified; earlier reports never overwritten |
 | Campaign comparison and decision brief | KALHAS | Authoritative derived evidence from verified upstream artifacts | Read-only reconstruction; no second persisted authority unless explicitly designed |
@@ -525,6 +742,7 @@ versions below.
 | Runtime | `1.0.0`, `2.0.0`, `3.0.0`; Phase 28 proposes `4.0.0` | New runtime dispatcher/path | Reinterpreting a recorded old runtime is forbidden |
 | `DomainPack` | Current protocol is manifest-only | Explicitly versioned/additive mechanism capability after ADR | Making old manifest implementations executable/incompatible silently is forbidden |
 | Domain mechanism | Absent; Phase 29 introduces independent version | New mechanism version with old implementation retained | Solver/state/action/emission/numeric semantic change requires new mechanism version |
+| Model Pack profile/maturity | Product metadata over an exact `DomainPack` identity; no separate protocol | New evidence may advance the exact release's bounded status without changing execution semantics | Mechanism, assumptions, data, numerics, intended use, behavior, or claim scope change requires a new pack/evidence identity and reassessment |
 | World/model declaration | Existing immutable versioned contracts | New world/model artifact referencing old inputs | Mutation of old world identity or meaning is forbidden |
 | Dataset/transformation/split | Absent as public benchmark lineage | New immutable manifest/checksum/version | Replacing bytes or split membership under same identity is forbidden |
 | Benchmark/calibration protocol | Absent | New protocol/report version | Changing window, score, baseline, threshold, or leakage rule under same version is forbidden |
@@ -546,12 +764,12 @@ Before every new contract, Codex must record whether the change is:
 ```mermaid
 flowchart TD
     G["Gate 27.1: truthful baseline"] --> P28["Phase 28: adaptive runtime 4"]
-    P28 --> P29["Phase 29: mechanism seam and PAN v0.1"]
-    P29 --> P30["Phase 30: benchmark and updating"]
+    P28 --> P29["Phase 29: Model Pack seam/profile and PAN v0.1"]
+    P29 --> P30["Phase 30: pack-generic benchmark, first PAN"]
     P30 --> P31["Phase 31: local interop conformance"]
     P30 --> P33["Phase 33: scientific validation hardening"]
     P31 --> P32A["Phase 32A: authorized local substrate"]
-    P33 --> P34A["Phase 34A: generalization"]
+    P33 --> P34A["Phase 34A: PAN transfer + Maritime-Trade"]
     P31 --> P34A
     P32A --> P34B["Phase 34B: system hardening"]
     P34A --> P35["Phase 35: partner-ready research MVP"]
@@ -569,6 +787,9 @@ Rules:
   implementation cannot bypass its dependency gate.
 - Scientific review and dataset licensing are external entry gates; code
   completion cannot substitute for them.
+- A portfolio catalogue entry creates no capability. Each Model Pack repeats
+  its own data, evidence, review, release, and presentation gates; D34-04 blocks
+  the first substantive non-health implementation.
 - Without an auditable NEXUS implementation, Phase 31 may close only as
   `KALHAS interop-ready`, never as complete three-system integration.
 
@@ -588,6 +809,7 @@ uses one fresh session/one prompt and may not implement the ADR answer.
 | D28-04 | Runtime-4 artifact persistence versus verified derivation | ADR required |
 | D29-01 | Versioned evolution of the manifest-only `DomainPack` protocol | ADR required |
 | D29-02 | Pure mechanism seam, composition/registration, solver, precision, rounding, and platform semantics | ADR required |
+| D29-03 | Product term `Model Pack`, common release/assurance profile, evidence-maturity states, compatibility rules, and portfolio catalogue; this creates no new component or protocol | ADR required before any pack is described beyond `conformance_only` |
 | D30-01 | Dataset license class, raw-to-curated lineage, time/unit/missing/revision rules, and locked holdout | External evidence plus ADR required |
 | D30-02 | Deterministic fitting/baseline rules and evidence-update branching | ADR required |
 | D31-01 | NEXUS-outer/KALHAS/LEGION topology and repository ownership | Role topology frozen; ADR confirms concrete public boundary and legacy `NexusAdapter` disposition; real NEXUS remains external dependency |
@@ -599,6 +821,7 @@ uses one fresh session/one prompt and may not implement the ADR answer.
 | D34-01 | Cross-platform byte equality versus declared numerical tolerance/platform identity | ADR required no later than Phase 29 |
 | D34-02 | Benchmark hardware profiles and performance-regression thresholds | ADR required |
 | D34-03 | Dependency/SBOM license disposition and approved remediation | User/legal governance decision required after inventory |
+| D34-04 | Bounded scope, public/synthetic data rights, intended/prohibited uses, baseline, and domain-review plan for `KALHAS-MARITIME-TRADE` v0.1 | Decision plus domain/data/license readiness evidence required before its implementation |
 | D35-01 | Offline process topology, release-bundle manifest, upgrade/rollback, and verified view model | ADR required |
 | D35-02 | Exact module/view-contract allocation inside the frozen KALHAS read-model and NEXUS presentation-shell roles | ADR required; no fourth component |
 
@@ -659,14 +882,14 @@ makes the Phase 27 baseline honest and integration-ready.
 | --- | --- | --- |
 | 27.1 | Truthful published baseline and unpatched five-plan proof | No stale status, skip, cardinality patch, or fake differentiation |
 | 28 | Adaptive deterministic runtime `4.0.0` | Causal mid-run observations and exact replay |
-| 29 | Versioned mechanism seam and PAN v0.1 | Manifest-only boundary revised; no pandemic logic in kernel |
-| 30 | Historical benchmark and append-only updating | No leakage; offline reproducible calibration/baselines |
+| 29 | Versioned mechanism seam, Model Pack assurance profile, and PAN v0.1 | Manifest-only boundary revised; no pandemic logic or portfolio-specific branch in kernel |
+| 30 | Pack-generic benchmark/calibration machinery, first applied to PAN | No leakage; offline reproducible calibration/baselines and no evidence transfer between packs |
 | 31 | Real local three-role conformance | New LEGION emitter, audited NEXUS role, no direct imports |
 | 32 | Governed durable local substrate, then deployment decision | D32-01 and explicit authorization before persistent/background implementation |
-| 33 | Scientific validation hardening | Sensitivity, identifiability, calibration, ablations, external review |
-| 34A | Scenario/domain generalization | Transfer failures retained; zero domain-specific kernel edits |
+| 33 | Pack-generic scientific validation hardening | Sensitivity, identifiability, calibration, ablations, domain-appropriate external review |
+| 34A | PAN transfer plus substantive Maritime–Trade generalization | Transfer failures retained; synthetic fixture is not counted as the second product pack; zero domain-specific kernel edits |
 | 34B | Cross-platform, security, and performance hardening | Goldens, fuzz/property gates, measured resource ceilings |
-| 35 | Partner-ready local research MVP | Third-party replay and no unsupported claim |
+| 35 | Partner-ready local research MVP and truthful per-pack catalogue | Third-party replay, exact maturity/evidence links, and no unsupported government/product claim |
 
 ## 10. Phase 28 — adaptive policy runtime
 
@@ -804,6 +1027,38 @@ the exogenous conditions compared at the same coordinate must not.
 - No claim that adaptation is scientifically optimal merely because it is
   deterministic.
 
+### Phase 28 -> Phase 29 closure addendum (2026-09-01)
+
+The focused two-static-candidate S09 fixture is not the production-cardinality
+acceptance proof. Preserve it as a bounded component test, but require
+`H28-S12` to construct one repository-native, unpatched end-to-end campaign
+with all of the following:
+
+- the unmodified production invariant of exactly five ordered static strategy
+  candidates plus at least one KALHAS-bound adaptive policy arm;
+- the same ordered world realizations, initial conditions, exogenous draws,
+  observation-noise coordinates, and mechanism coordinates for every arm;
+- at least one causal policy switch whose trigger was available at the exact
+  recorded decision point, never from future or post-run evidence;
+- complete static and adaptive executions, paired comparison evidence,
+  tail/robustness evidence where supported by the accepted contract, and exact
+  runtime-4 replay without NEXUS, LEGION, provider, or network calls;
+- no monkeypatch or mutation of production cardinality, service behavior,
+  final state, evidence, winner, or comparison output; and
+- an adversarial proof that reordered/missing/duplicated strategies or seeds,
+  shifted random coordinates, forged switches, or incomplete evidence fail
+  atomically.
+
+`H28-S13` must also record a small reproducible performance characterization,
+not a hardware-independent correctness claim. At minimum profile the published
+exact-five fixture and the final adaptive production fixture, recording fixture
+shape, strategies, seeds, steps, artifact counts, hardware/runtime identity,
+wall time, peak memory when available, `_deep_copy_contract` calls/cumulative
+time, and the slowest verified store paths. Do not weaken defensive copying,
+immutability, validation, or tenant isolation to improve a benchmark. A later
+optimization is justified only by a named measured threshold and must preserve
+byte-equivalent authority and replay behavior.
+
 ### Exit criteria
 
 - Same recorded world, policy, observations, runtime, and seed produce exact
@@ -815,8 +1070,13 @@ the exogenous conditions compared at the same coordinate must not.
 - Static historical campaigns retain their original meaning and goldens.
 - Every runtime-4 event graph binds back to the same policy/world/seed/runtime
   authority and can be verified independently of execution order.
+- The unpatched exact-five-plus-adaptive production acceptance above is green;
+  a reduced-cardinality focused fixture alone cannot close Phase 28.
+- The performance characterization is recorded truthfully, and any unresolved
+  hotspot is assigned to a later bounded optimization without relaxing an
+  integrity invariant.
 
-## 11. Phase 29 — domain mechanism interface and KALHAS-PAN v0.1
+## 11. Phase 29 — Model Pack foundation and KALHAS-PAN v0.1
 
 ### Objective
 
@@ -829,11 +1089,127 @@ first revise the relevant ADR and boundary rule through an authorized,
 versioned protocol decision. It cannot treat executable mechanisms as an
 already available seam.
 
+### Product vocabulary and Phase 29 scope
+
+`Model Pack` is the product and portfolio name for one exact, versioned
+`DomainPack` release together with its pack-owned mechanism/configuration
+identities, scenario templates, data/evidence references, validation status,
+model card, and limitations. It is not a fourth component, a second protocol,
+an external-provider adapter, a plugin runtime, or an alternative execution
+boundary. Repository and kernel architecture continue to use only
+`DomainPack`, consumed through the authorized protocol under
+`kalhas/domain_packs/`.
+
+A Model Pack is a bounded decision-model package, not automatically a machine-
+learning weight bundle. A foundation forecaster such as TimesFM, an LLM
+judgment, a political probability, or another black-box model output may enter
+only as a pinned, provenance-bound, untrusted scenario input or offline
+baseline. It never becomes replay truth or canonical KALHAS authority merely
+because it was produced by a strong external model.
+
+Phase 29 does **not** implement the complete future portfolio. It freezes the
+reusable release/assurance profile, implements PAN v0.1 as the first
+experimental Model Pack, and proves the seam with one tiny synthetic non-health
+conformance fixture. Every other portfolio entry below remains a plan until its
+own pack, evidence, review, and release gates close.
+
+### Mandatory Model Pack release and assurance profile
+
+Every substantive Model Pack must bind at least:
+
+1. exact pack, mechanism, configuration, implementation, dependency,
+   numerical/platform, time-basis, and compatibility identities;
+2. supported decision questions, users, horizons, resolution, validity
+   envelope, explicit non-goals, intended uses, and prohibited uses;
+3. pack-owned state, action, observation, emission, metric, scenario-template,
+   unit, range, transition, invariant, and failure semantics;
+4. parameter provenance, uncertainty classes, priors/ensembles, tail risks,
+   sensitivity targets, and out-of-distribution boundaries;
+5. every dataset/model input, license, cutoff time, raw snapshot, transform,
+   revision rule, checksum, and derived artifact identity;
+6. calibration and holdout splits, credible domain baselines, scoring rules,
+   validation thresholds, retained failures, and review status;
+7. deterministic replay, paired same-world strategy comparison, resource
+   envelope, degradation behavior, evidence manifest, model card, assumptions,
+   and limitations; and
+8. privacy, security, equity/bias, fundamental-rights, human-oversight, and
+   legal-review requirements appropriate to the declared use.
+
+D29-03 freezes the exact artifact names and representation. It must not create
+a second registry or executable surface. Assurance is evidence-derived and
+bound to one exact pack release; a later version or another domain inherits no
+status or claim.
+
+The minimum truthful maturity vocabulary is:
+
+| State | Meaning |
+| --- | --- |
+| `catalogued` | Roadmap candidate only; no implemented capability |
+| `conformance_only` | Synthetic architecture fixture; never a product pack |
+| `experimental` | Deterministic executable mechanism and conformance evidence only; no empirical adequacy claim |
+| `benchmarked` | Phase 30 evidence exists for the exact version, data vintage, geography, horizon, and claim |
+| `externally_reviewed` | Phase 33 domain/statistical review closed for explicitly bounded claims |
+| `partner_evaluation_ready` | Phase 35 packaging, replay, security, and governance evidence exists; still not production approval |
+
+No Phase 28–35 artifact may assign `government_ready`, `certified`, universally
+validated, autonomous, or production-safe status. Any real public-sector use
+requires later jurisdiction-specific legal, security, privacy, procurement,
+operational, accessibility, independent-validation, and accountable-human
+authorization.
+
+### Government-grade portfolio and delivery waves
+
+The portfolio follows the EU public-sector direction of integrated all-hazards,
+whole-of-government preparedness and cross-sector resilience. Priority means
+product value and dependency order, not that the pack already exists.
+
+| Delivery wave | Model Pack product name | Bounded decision purpose | Honest roadmap allocation |
+| --- | --- | --- | --- |
+| Phase 29–35 | `KALHAS-PAN` — Public Health & Biosecurity | Outbreak, hospital/capacity, stockpile, and conditional intervention comparison | First experimental pack in Phase 29; benchmarked/reviewed through Phases 30/33 |
+| Phase 34A–35 | `KALHAS-MARITIME-TRADE` — Maritime, Ports & Strategic Supply Chains | Declared chokepoint/port degradation, rerouting, capacity, lead-time, inventory, shortage, and contingency trade-offs | First substantive non-health research pack and domain-neutrality proof |
+| Post-35 Wave 1 | `KALHAS-CLIMATE-CIVIL` — Extreme-Weather Impacts & Civil Protection | Wildfire, flood, heat, drought, evacuation, resource allocation, and essential-service continuity under pinned hazard ensembles | Next pack; consumes authoritative offline forecast/reanalysis snapshots and models impacts, not weather itself |
+| Post-35 Wave 1 | `KALHAS-ENERGY-SEC` — Energy Security | Electricity, gas, fuel, storage, adequacy, disruption, demand, price-exposure, and contingency scenarios | Develop after the common evidence profile is proven |
+| Post-35 Wave 1 | `KALHAS-FOOD-WATER` — Food & Water Security | Drought/import shocks, reservoirs, production, logistics, reserves, allocation, and affordability trade-offs | Develop with explicit food/water data and rights review |
+| Post-35 Wave 2 | `KALHAS-CRITICAL-RESILIENCE` — Critical Infrastructure Cascades | Cross-sector dependencies, cascading outages, restoration order, and minimum-service continuity | Only after relevant sector packs are independently validated |
+| Post-35 Wave 2 | `KALHAS-MACRO-FISCAL` — Economy & Public Finance | Conditional inflation, growth, employment, debt, budget, tax/subsidy, and fiscal-sustainability scenarios | Scenario and sensitivity engine, never an economic oracle or financial advice |
+| Post-35 Wave 2 | `KALHAS-DEMOGRAPHY-CAPACITY` — Demography & Public-Service Capacity | Cohort, workforce, ageing, housing, health, and education capacity under declared fertility/mortality/migration assumptions | Aggregate what-if planning only; no individual eligibility scoring |
+| Post-35 Wave 2 | `KALHAS-CYBER-DIGITAL` — Cyber & Digital-Service Resilience | Defensive service-dependency, outage, recovery, and continuity scenarios | Offline/defensive only; no exploit generation, provider calls, or live effects |
+| Post-35 Wave 3 | `KALHAS-GEO-POLICY` — Geopolitical, Trade & Policy Scenarios | Declared sanctions, alliances, route closures, trade regimes, and policy branches with conditional propagation | Last/highest-governance pack; no election/person prediction, voter profiling, persuasion, or surveillance |
+
+`KALHAS-CLIMATE-CIVIL` must not attempt to replace ECMWF, Copernicus, or a
+national meteorological authority. It consumes exact versioned offline hazard
+or weather ensembles and asks what their modeled consequences are under
+alternative decisions. Likewise, `KALHAS-GEO-POLICY` does not predict whether
+the Strait of Hormuz will close, who will win an election, or what a person will
+do; it evaluates declared branches such as "given this recorded closure and
+duration distribution" and reports conditional outcomes and uncertainty.
+
+A later national-resilience coupled product must itself be one separately
+versioned Model Pack through the same `DomainPack` boundary, binding every
+submodel/input identity and owning its coupling semantics. Phase 29 creates no
+pack-to-pack runtime bus, kernel coupling vocabulary, or arbitrary composition
+of independently validated claims. Standalone sector evidence must exist before
+any coupled claim.
+
+### Public-sector prohibited-use floor
+
+All packs are decision support only. They may not autonomously make or execute
+a public decision, eligibility/benefit decision, enforcement recommendation,
+predictive-policing judgment, individual or social score, political persuasion,
+voter targeting, biometric/surveillance assessment, offensive cyber action, or
+other live effect. Outputs are always labeled **conditional modeled outcomes**,
+with assumptions, uncertainty, evidence maturity, alternatives, and accountable
+human authority visible. Aggregate or synthetic data is the default; any later
+restricted data needs explicit purpose, minimization, access, retention, rights,
+and legal controls outside the current no-real-data MVP.
+
 ### Required design
 
 - Version or add a narrow deterministic mechanism protocol reachable only
   through the authorized `DomainPack` boundary, while preserving the old
   manifest meaning.
+- Freeze the Model Pack release/assurance profile and maturity semantics over
+  that same versioned boundary; do not create a separate runtime or registry.
 - Keep public specifications declarative; no executable code references.
 - Place every pandemic term, parameter, transition, and mechanism under the
   pandemic domain pack, never in the kernel.
@@ -851,6 +1227,25 @@ already available seam.
 - Resolve mechanisms generically from the supplied pack at composition time.
   The kernel must not import pandemic implementations, recognize pandemic
   mechanism IDs, or contain a pandemic-specific registry branch.
+- Require counter/key-addressed mechanism randomness. A draw is a pure function
+  of recorded coordinates such as world, realization, step, variable, entity or
+  slot, and draw index; mechanism branching, agent count, call order, retry, or
+  parallel scheduling must not shift unrelated exogenous draws. Precomputed
+  immutable draws remain an allowed equivalent.
+- Keep evidence collection observationally pure. A mechanism returns typed
+  emissions/evidence data, but an analyzer, observer, query, or presentation
+  projection cannot mutate mechanism state, policy state, world authority, or
+  future execution.
+- Do not hardcode a flat compartment representation into the generic protocol.
+  Pack-owned typed state/configuration may later represent generic nodes, typed
+  edges, temporal flows, or columnar entity state, while the kernel remains
+  unaware of geography, mobility, contacts, pathogens, shipping, or any other
+  domain meaning. Phase 29 proves only that the narrow seam does not preclude
+  those representations; it does not implement a global mobility model or ABM.
+- Allow a pack implementation to use bounded columnar state arrays and edge
+  arrays internally for scale, but never expose a mutable array/reference as a
+  public authority. Canonical persisted evidence remains frozen, validated,
+  content-addressed data under the accepted numerical/platform rule.
 
 ### Required mechanism shape and ownership
 
@@ -893,15 +1288,50 @@ rounding rule, dependency, interpreter/platform behavior, or mechanism
 implementation produces a different identity/version unless the accepted
 cross-platform rule proves exact equivalence.
 
+When a configuration or fixture binds any dataset or derived data layer, the
+identity/provenance chain also records source and license class, import date,
+raw checksum, transformation code/version, curated checksum, schema, units,
+missingness/revision rule, and every topology/flow overlay that can affect
+behavior. The MIT license of one reference implementation never grants rights
+to unrelated demographic, epidemiological, airline, commuting, or commercial
+datasets.
+
+### External simulator reference boundary
+
+The 2026-09-01 review establishes these reference-only rules:
+
+- Covasim contributes patterns for columnar person state, layered contact-edge
+  storage, intervention/analyzer separation, multi-run ensembles, calibration,
+  and scientific regression tests. Its mutable monolithic `Sim`, arbitrary
+  callbacks, sequential/global RNG sensitivity, and pickle persistence are not
+  KALHAS authority patterns.
+- Starsim is the current successor reference for modular disease simulation and
+  counter-based/common-random-number handling. Its random-coordinate approach
+  supports the existing KALHAS fairness direction, but it is not a new KALHAS
+  component or kernel dependency.
+- GLEAM/GLEAMviz contributes patterns for structured metapopulation graphs,
+  typed mobility/flow layers, same-definition stochastic ensembles, immutable
+  submitted definitions, export bundles, and linked map/timeline views. Its
+  public client/server execution model, remote server, and restricted data
+  layers are incompatible with the current local/no-network MVP.
+- Do not add `run_covasim()`, a GLEAM server/client adapter, a Starsim import,
+  arbitrary simulator callbacks, or a generic external-simulator integration
+  surface. If a later domain pack uses a pinned external model as an offline
+  differential oracle, its exact inputs/outputs/version/license become
+  non-authoritative benchmark artifacts; KALHAS remains execution/evidence
+  authority.
+
 ### Recommended slices
 
 1. Mechanism requirements, threat model, and domain-neutrality audit.
 2. ADR/boundary-test change and additive/versioned protocol decision.
 3. Declarative mechanism contracts and frozen numerical semantics.
-4. Generic protocol-driven dispatcher/composition seam.
-5. Minimal synthetic pandemic pack.
-6. Runtime 4 integration, cross-platform goldens, and invariant/property tests.
-7. Full pack-to-brief acceptance with truthful limitations.
+4. Model Pack release profile, evidence-maturity rules, and truthful portfolio
+   catalogue over the same `DomainPack` identity.
+5. Generic protocol-driven dispatcher/composition seam.
+6. Minimal synthetic PAN pack and separate non-health conformance fixture.
+7. Runtime 4 integration, cross-platform goldens, and invariant/property tests.
+8. Full pack-to-brief acceptance with truthful limitations.
 
 ### Exit criteria
 
@@ -911,8 +1341,16 @@ cross-platform rule proves exact equivalence.
 - Invalid mass balance, negative populations, invalid units, or impossible
   capacities fail before execution or at a precisely defined runtime boundary.
 - A tiny synthetic non-health protocol fixture can exercise the seam without a
-  kernel change. This is only a boundary proof; Phase 34 develops the maintained
-  generalization/conformance pack and substantive second PAN scenario.
+  kernel change. It is labeled `conformance_only`, never counted as a product
+  or government pack. Phase 34 develops the maintained fixture, substantive
+  first non-health Model Pack, and second PAN scenario.
+- PAN closes Phase 29 only as `experimental`; it cannot inherit later benchmark,
+  review, partner, or public-sector claims.
+- The portfolio catalogue marks every future pack `catalogued`, not implemented,
+  and switching between PAN and the conformance fixture requires zero kernel
+  change.
+- No maturity or supported claim transfers between versions, configurations,
+  datasets, geographies, horizons, or domains.
 
 ## 12. Phase 30 — historical benchmark, calibration, and updating
 
@@ -921,30 +1359,51 @@ cross-platform rule proves exact equivalence.
 Separate computational correctness from empirical adequacy by evaluating the
 domain model and policies against predeclared benchmarks.
 
+The evaluation machinery is pack-generic, but evidence is never transferable
+between Model Packs. Phase 30 applies it first to the exact PAN release. Every
+later pack must supply its own legally usable data, transformations, splits,
+baselines, metrics, thresholds, calibration, OOD evidence, claim boundary, and
+appropriate reviewers.
+
 ### Required design
 
 - Use an offline, checksummed, versioned, legally usable dataset bundle.
 - Prohibit live downloads in the running application and test suite.
 - Predeclare early observation windows, held-out horizons, scoring rules, and
   exclusion rules before evaluating outcomes.
-- Compare against credible mechanistic or epidemiological ensemble baselines,
-  not only against other KALHAS policies.
+- Compare against credible domain-appropriate mechanistic, statistical, or
+  ensemble baselines, not only against other KALHAS policies. PAN may use
+  epidemiological baselines; that does not make them suitable for another pack.
 - Implement baselines as offline, pure evaluation utilities or domain-pack
   code over immutable local inputs. They are not runtime/provider adapters and
   do not create another integration surface.
+- A pinned Covasim/Starsim implementation may be evaluated only as an optional
+  offline differential baseline over synthetic or legally usable immutable
+  inputs. Exported GLEAM results may be used only when their source, license,
+  definition, parameters, initial conditions, version, and checksums are locally
+  available. No benchmark may contact a GLEAM or other external server during
+  application, replay, tests, or clean-room reproduction.
+- Preserve multiple acceptable calibrated parameter sets or posterior draws as
+  an immutable parameter ensemble when the method produces them. A single best
+  fit is not silently treated as known truth, and calibration is never relabeled
+  as out-of-sample validation.
 - Measure calibration, regret, robustness, sensitivity, failure discovery, and
   out-of-distribution behavior.
 - Treat "insufficient validation" as a successful truthful terminal result.
 - Append new evidence versions; never overwrite prior worlds, assumptions,
   policies, runs, or decisions.
 - Require scientific-domain review before any external performance claim.
+- Bind any `benchmarked` status to the exact pack/mechanism/configuration,
+  dataset vintage, geography, horizon, metric, threshold, and claim. A new
+  binding requires new evidence rather than a copied maturity label.
 
 ### Immutable data and evaluation lineage
 
 Phase 30 must represent, hash, and connect at least these artifact roles:
 
 ```text
-raw aggregate dataset bundle
+exact Model Pack/mechanism/configuration + bounded claim
+  -> raw aggregate dataset bundle
   -> transformation/normalization manifest
   -> curated immutable bundle
   -> declared calibration/authoring split
@@ -994,6 +1453,9 @@ Required semantics:
 - Results include negative and inconclusive findings without suppression.
 - Claims distinguish deterministic reproducibility, statistical calibration,
   causal assumptions, and external validity.
+- Any `benchmarked` label resolves to the exact immutable pack/config/data/
+  geography/horizon/metric/claim evidence and disappears rather than transfers
+  when that binding is absent.
 
 ## 13. Phase 31 — real local LEGION and NEXUS boundaries
 
@@ -1070,6 +1532,8 @@ tests, audit, commit authorization, release identity, and handoff.
 The frozen profile must define:
 
 - protocol/profile/schema versions and compatibility negotiation;
+- exact `DomainPack`/Model Pack release identity, maturity-independent
+  action/observation/metric catalogue hashes, and supported request kind;
 - length prefix/framing, UTF-8, canonical JSON, maximum bytes, nesting depth,
   collection counts, and numeric limits;
 - exactly what appears on stdout versus diagnostic stderr;
@@ -1253,9 +1717,11 @@ Phase 32B is not a prerequisite for the local Phase 35 research release.
 
 ### Objective
 
-Harden the Phase 30 benchmark into a defensible scientific evaluation program
-that exposes parameter weakness, model non-identifiability, calibration
-failure, and policy fragility instead of optimizing only for a polished demo.
+Harden the pack-generic Phase 30 benchmark machinery into a defensible
+scientific evaluation program that exposes parameter weakness, model non-
+identifiability, calibration failure, and policy fragility instead of
+optimizing only for a polished demo. Apply the first complete program to PAN;
+every later Model Pack repeats it for its own bounded claims.
 
 ### Required design
 
@@ -1272,8 +1738,13 @@ failure, and policy fragility instead of optimizing only for a polished demo.
 - Pre-agree scientific acceptance thresholds and claim language before seeing
   final benchmark results.
 - Preserve failed, null, and contradictory evaluations; do not cherry-pick.
-- Produce an independent epidemiology/statistics review packet with complete
-  reproduction instructions.
+- Produce an independent domain-expert plus statistical/model-validation review
+  packet appropriate to the exact Model Pack and bounded claim, with complete
+  reproduction instructions. PAN requires epidemiology expertise; another
+  pack's reviewer cannot be inferred from PAN.
+- Bind `externally_reviewed` to the exact pack release, configuration, data
+  vintage, geography, horizon, metrics, claim, reviewer scope, and retained
+  objections. Review status never transfers to a new version or domain.
 
 ### Required scientific artifact roles
 
@@ -1309,13 +1780,17 @@ bindings, and negative-result states are mandatory.
 - Reviewers can distinguish numerical correctness, fit, calibration, causal
   assumptions, transfer limits, and decision usefulness.
 - Public/product claims are no stronger than the signed-off evidence.
+- `externally_reviewed` is emitted only for the exact evidence/claim binding
+  accepted by the appropriate domain and statistical review; unresolved or
+  rejected findings remain visible.
 
 ## 16. Phase 34 — generalization and system-hardening proof
 
 ### Objective
 
-Show that KALHAS and the PAN mechanism work beyond one fitted scenario while
-also proving that the kernel remains reusable outside the pandemic domain.
+Show that PAN works beyond one fitted scenario and that the same unchanged
+KALHAS kernel can support one substantive non-health Model Pack with its own
+mechanism, data, uncertainty, evidence, review, and truthful claim boundary.
 
 Deliver Phase 34 as two separately closable gates so generalization evidence is
 not blocked by an unlimited hardening/refactor program.
@@ -1332,20 +1807,55 @@ report but Phase 34A cannot close.
 - Stress policies across both in-domain scenarios and record transfer failure,
   not only transfer success.
 - Maintain a lightweight synthetic non-health conformance pack that exercises
-  the same kernel without changing it.
+  the same kernel without changing it. It remains `conformance_only` and is not
+  counted as the second product pack.
+- After D34-04 closes, implement `KALHAS-MARITIME-TRADE` v0.1 as the first
+  substantive non-health research pack. Its bounded reference question is:
+  given a recorded degradation/closure branch for a strategic chokepoint or
+  port and a declared duration/recovery distribution, which contingency
+  strategies remain robust under identical modeled conditions?
+- Keep ports, routes, chokepoints, capacities, transit times, inventories,
+  demand, costs, service levels, closure/delay/recovery dynamics, rerouting,
+  capacity allocation, reserve/stock actions, shortage metrics, and all
+  maritime/trade vocabulary inside the pack. Repository fixtures use fictional
+  or legally usable aggregate data, never real company or personal data.
+- Express the bounded mechanism through pack-owned nodes, typed edges, temporal
+  flows, columnar state where justified, and deterministic overlays. The kernel
+  gains no geographic, transport, shipping, commodity, company, contact-
+  network, or disease semantics.
+- Treat the disruption as an explicit scenario branch, not a prediction that a
+  strait will close. Report conditional throughput, delay, shortage/cost proxy,
+  recovery, tail-risk, feasibility, and regret distributions with assumptions
+  and unsupported claims visible.
+- Reuse the generic Phase 30/33 evaluation machinery but repeat its applicable
+  data, license, split, baseline, sensitivity, OOD, review, and claim gates for
+  the exact Maritime–Trade release. PAN evidence cannot qualify it. If those
+  gates do not close, it remains `experimental` and cannot be called partner-
+  evaluation-ready in Phase 35.
+- A global shipping model, live AIS feed, commercial mobility dataset, detailed
+  ABM, external simulator service, real-time forecast, or operational routing
+  recommendation is not required or authorized for Phase 34A.
 - Run the same world -> adaptive campaign -> evidence -> presentation chain
-  under every conformance target.
+  under PAN, the synthetic fixture, and Maritime–Trade, preserving identical-
+  condition comparison inside each pack.
 - Produce immutable `GeneralizationPlan` and `GeneralizationReport` roles that
   bind source/target packs, locked policies, metrics, expected failure modes,
-  transfer/OOD results, and retained negative findings.
+  pack-specific maturity, transfer/OOD results, and retained negative findings.
 
 #### Exit criteria for 34A
 
-- The second PAN scenario and non-health conformance pack require no
-  domain-specific kernel edit.
+- The second PAN scenario, synthetic non-health fixture, and substantive
+  Maritime–Trade pack require no domain-specific kernel edit.
+- The synthetic fixture is never counted as the second product pack; PAN and
+  Maritime–Trade have separate identities, model cards, evidence, reviewers,
+  maturity states, and claim boundaries.
 - Results include documented transfer failures and OOD limits.
-- Both targets pass the relevant mechanism, runtime, replay, and evidence
-  conformance suites.
+- All three targets pass the relevant mechanism, runtime, replay, and evidence
+  conformance suites. Maritime–Trade also closes its predeclared bounded
+  benchmark/review gate or remains explicitly `experimental` and blocks the
+  corresponding Phase 35 partner-readiness claim.
+- Neither conditional scenario output nor NEXUS presentation is described as a
+  prediction, government instruction, autonomous recommendation, or live route.
 
 ### Phase 34B — system hardening
 
@@ -1356,6 +1866,14 @@ report but Phase 34A cannot close.
 - Refactor oversized internal files only through behavior-preserving slices.
 - Add deterministic chunking and bounded parallel execution only where proved
   equivalent.
+- Evaluate columnar state and edge-array layouts inside the relevant domain
+  pack when measured scale warrants them. Optimization must preserve canonical
+  authority bytes/hashes, exact recorded-coordinate randomness, and replay;
+  mutable pack-internal arrays never become public/store authority.
+- Use the Phase 28 performance characterization as the first historical
+  baseline for store/deep-copy behavior. Prefer eliminating redundant verified
+  reads through bounded batch/snapshot APIs or immutable canonical storage over
+  weakening defensive copy isolation.
 - Complete threat modeling, dependency/SBOM review, license decisions, and
   secure-default configuration.
 
@@ -1430,7 +1948,11 @@ do not become a fourth orchestrator/component.
 
 - One complete adaptive pandemic reference demonstration.
 - One complete second-scenario generalization demonstration and its failures.
-- One synthetic non-health kernel-conformance demonstration.
+- One bounded substantive `KALHAS-MARITIME-TRADE` non-health Model Pack
+  demonstration, with conditional chokepoint/port disruption assumptions,
+  independent evidence status, and retained failures.
+- One separate synthetic non-health `conformance_only` kernel fixture; it is not
+  substituted for or counted as the Maritime–Trade product demonstration.
 - A reproducible historical/held-out benchmark and baseline report.
 - A local NEXUS–LEGION–KALHAS integrated demonstration.
 - Durable evidence, replay, audit, and verified presentation bundles.
@@ -1440,6 +1962,14 @@ do not become a fourth orchestrator/component.
   policy-switch explanations, and failure-state inspection.
 - Model cards, assumption registers, known-failure catalog, threat model,
   privacy/data statement, SBOM, license, and reproducibility instructions.
+- A versioned Model Pack catalogue listing each exact released/candidate pack,
+  implementation state, maturity, supported and unsupported claims, evidence
+  links, intended/prohibited uses, and post-35 dependency order. `catalogued`
+  entries are visibly unimplemented.
+- One public-sector governance annex per released pack covering human
+  accountability, privacy/data minimization, equity/fundamental-rights risks,
+  prohibited uses, security, legal-review status, and the explicit absence of
+  government/production approval.
 - A concise operator/developer runbook and a scripted offline demo.
 - A partner evaluation protocol that records external findings without
   overwriting prior evidence.
@@ -1474,6 +2004,8 @@ The immutable consolidated manifest must bind:
 - exporter identity/version and the top-level content hash;
 - supported API/contract/schema/runtime/mechanism/pack/interop/store/job/
   checkpoint/partner-evaluation protocol versions;
+- exact Model Pack release-profile version, catalogue hash, maturity state,
+  bounded claims, intended/prohibited uses, and evidence/review links per pack;
 - every schema, configuration, dataset, transformation, split, benchmark,
   policy, world, seed ensemble, run, report, brief, and view-model hash;
 - executable/dependency lock, SBOM/license, platform support, and checksums;
@@ -1513,9 +2045,10 @@ person/organization data remains outside version control.
 
 Phase 35 can be called a partner-ready research MVP or release candidate. It
 must not be called a production autonomous platform, clinically validated
-system, universal predictor, or proven TRL achievement solely by internal
-assertion. A TRL or domain-validity claim requires the relevant external
-evidence and review.
+system, government-certified system, universal predictor, economic/political
+oracle, or proven TRL achievement solely by internal assertion. A TRL, public-
+sector suitability, or domain-validity claim requires the relevant external,
+jurisdiction-specific evidence, review, and authorization.
 
 ### Exit criteria
 
@@ -1524,7 +2057,12 @@ evidence and review.
   self-referential tracked manifest.
 - A fresh local environment can reproduce the demonstrations and evidence
   from documented immutable inputs.
-- Both domain packs pass the same kernel conformance suite.
+- PAN and Maritime–Trade pass the same kernel conformance suite while retaining
+  independent domain evidence and claim boundaries; the synthetic fixture
+  passes separately as `conformance_only`.
+- The release catalogue cannot imply that post-35 Climate, Energy, Food/Water,
+  Infrastructure, Macro-Fiscal, Demography, Cyber, or Geo-Policy packs have
+  been implemented, validated, or approved.
 - Independent reviewers can trace every output claim to recorded assumptions
   and artifacts.
 - Every verified visual state is traceable to an artifact ID and hash;
@@ -1569,6 +2107,30 @@ Every phase must preserve all of the following:
     timing never enter scientific/decision identity unless explicitly modeled.
 17. Negative, failed, contradicted, and insufficient-evidence results are
     retained under the same provenance standards as positive results.
+18. Evidence collectors, analyzers, queries, and presentation projections are
+    observationally pure and cannot mutate world, mechanism, policy, or future
+    execution state.
+19. Pack-internal columnar/graph representations may be used for performance,
+    but no mutable reference crosses an authority boundary; persisted evidence
+    remains canonical, validated, and content-addressed.
+20. External simulators are reference implementations or pinned offline
+    baselines only. They never become a fourth component, live provider,
+    replay dependency, or canonical KALHAS execution/evidence authority.
+21. `Model Pack` is product vocabulary for one exact versioned `DomainPack`
+    release and its bound assurance artifacts; it never creates a component,
+    protocol, runtime, registry, plugin bus, or integration surface.
+22. No pack or version inherits calibration, validation, review, maturity,
+    government suitability, or supported claims from PAN or any other pack.
+23. Weather, climate-impact, economic, demographic, maritime, and geopolitical
+    outputs remain conditional modeled scenarios, not certain forecasts or
+    instructions. External forecasts/probabilities are pinned untrusted inputs.
+24. No pack performs individual/social scoring, surveillance, political
+    persuasion, election prediction, benefits/eligibility decisions,
+    predictive policing, offensive cyber behavior, or autonomous live action.
+25. A coupled cross-sector/national-resilience product is a separately
+    versioned `DomainPack` release with explicit coupling/data/evidence identity;
+    arbitrary pack-to-pack execution and domain coupling in the kernel are
+    forbidden.
 
 ### Cross-phase test matrix
 
@@ -1589,6 +2151,8 @@ not silently omit a row because the proof is slow.
 | Concurrency/recovery | Race, lease expiry, duplicate worker, cancel point, checkpoint corruption, restart |
 | Property/fuzz | Closed AST/state-machine invariants, schema/parser limits, no code/path execution |
 | Scientific | Split leakage, null/failed result retention, calibration threshold, OOD, missing/revised data |
+| Model Pack assurance | Exact release/evidence binding, no maturity or claim inheritance, future catalogue entries remain unimplemented, intended/prohibited-use consistency |
+| Public-sector safeguards | Conditional-output labels, accountable-human boundary, no individual/social scoring, persuasion, surveillance, eligibility/enforcement, offensive cyber, or live action |
 | Cross-platform | Declared exact/tolerance rule, runtime/platform identity, canonical bundle checksums |
 | Performance | Preregistered profile, ceiling rejection, memory/time/storage regression, bounded failure |
 | UI fidelity | Source ID/hash for every verified value, synthetic labeling, terminal/error/accessibility states |
@@ -1602,12 +2166,14 @@ Every phase closes with one authoritative handoff/evidence packet containing:
 2. accepted ADRs and unresolved external blockers;
 3. exact changed/created/generated file inventory;
 4. contract/schema/API/runtime/pack/mechanism/dataset/interop/store version
-   changes and compatibility statement;
+   changes, Model Pack release-profile/maturity changes, and compatibility
+   statement;
 5. artifact/authority/data-flow changes;
 6. exact focused, boundary, acceptance, static, schema, and full-gate commands,
    counts, exits, and final repository/preflight plus content/gate fingerprints;
 7. adversarial, replay, fairness, tenant, and atomicity proof inventory;
-8. scientific claim boundary, negative/inconclusive results, and residual risks;
+8. scientific claim boundary, pack-specific intended/prohibited uses, negative/
+   inconclusive results, review status, and residual risks;
 9. hashes for new public artifacts and critical implementation files;
 10. explicit no-network/provider/live-action and data-hygiene statements;
 11. exact Git operations performed or confirmation that none occurred;
@@ -1623,6 +2189,13 @@ Code alone will not make Phases 29–35 defensible. Run these tracks in parallel
   sensitivity, and negative-result reporting.
 - Product research: how users understand uncertainty, inconclusive results,
   policy switching, and provenance.
+- Model Pack portfolio governance: one bounded decision purpose, dependency
+  order, evidence maturity, domain owner/reviewer, data/license readiness,
+  intended/prohibited uses, and model card per exact release. Never build many
+  shallow packs in parallel merely to fill a catalogue.
+- Public-sector assurance: accountable-human decision boundary, fundamental-
+  rights/privacy/equity assessment, jurisdiction/legal review, procurement and
+  operational controls, accessibility, and explicit absence of live authority.
 - Security/privacy: threat model, data classification, local identity,
   artifact integrity, dependency review, and incident/recovery procedures.
 - Publication governance: release tags, protected branches, CI, changelog,
@@ -1636,7 +2209,16 @@ Code alone will not make Phases 29–35 defensible. Run these tracks in parallel
 
 LLMs can help propose abstractions, candidate strategies, explanations, and
 failure hypotheses. They must not become the unrecorded numerical disease
-engine or the source of replay truth.
+engine, weather/economic/political oracle, or the source of replay truth.
+
+After Phase 35, each new pack follows the same gated order: bounded use-case
+brief -> data/license feasibility -> pack-owned schemas/catalogues -> pure
+mechanism -> determinism/replay/fairness conformance -> calibration/holdout/
+sensitivity/OOD evidence -> domain/statistical review -> evidence-faithful
+presentation -> model card/release. Climate–Civil, Energy, and Food–Water are
+the first post-35 wave; Critical Infrastructure follows only when the relevant
+sector dependencies are independently credible. Macro-Fiscal, Demography,
+Cyber, and Geo-Policy follow with their higher evidence/governance burden.
 
 ## 20. Risk register
 
@@ -1644,7 +2226,16 @@ engine or the source of replay truth.
 | --- | --- | --- |
 | Adding Phase 28 before closing stale truth | False source of truth | Gate 27.1 |
 | Silent production-cardinality change | Untested behavior/cost drift | Explicit compatibility decision, bounds, and tests |
+| Treating a patched/reduced-cardinality focused fixture as production proof | False Phase 28 closure | Unpatched exact-five-plus-adaptive H28-S12 acceptance |
 | Copying domain logic into kernel | Architecture violation | DomainPack-only mechanism |
+| Treating `Model Pack` as a new component, protocol, registry, plugin, or runtime | Architecture fragmentation | Product alias only over one exact `DomainPack` release |
+| Attempting the entire portfolio in Phase 29 | Shallow unvalidated packs, credit drain, and unstable seam | Freeze one assurance profile; implement only PAN plus a tiny conformance fixture |
+| Copying PAN maturity/evidence to another pack or version | False scientific and government-suitability claim | Exact pack/config/data/geography/horizon/claim evidence binding and reassessment |
+| Repeated deep copies/verified reads scale with campaign size | Slow tests and impractical campaigns | Recorded profiles, hard resource budgets, bounded batch/snapshot optimization without weakening isolation |
+| Mutable columnar/graph state escapes a pack | Corrupted authority and replay | Pack-internal only; canonical frozen boundary artifacts |
+| External simulator becomes a runtime dependency | Fourth integration surface and non-replayable history | Reference/offline-oracle status only; pinned local inputs/outputs and versions |
+| External weather/foundation/economic/political model output becomes truth | Black-box, mutable, or non-replayable authority | Pinned provenance-bound untrusted input/baseline with independent KALHAS evaluation |
+| Assuming reference-code license covers mobility/demographic datasets | Legal and reproducibility failure | Per-dataset source/license/checksum/transformation manifest |
 | Treating LEGION output as authority | Non-auditable evidence | Validate and bind in KALHAS |
 | Keeping only a raw-proposal hash | Proposal bytes cannot be audited | Immutable local/content-addressed bytes plus hash |
 | Treating NEXUS prose as evidence | Altered decision meaning | Artifact-faithful presentation contract |
@@ -1655,26 +2246,49 @@ engine or the source of replay truth.
 | In-memory race or partial write | Duplicate/invalid authority | Transactions and concurrency tests |
 | Unbounded strategy/seed matrices | Resource exhaustion | Cost model and hard ceilings |
 | Colony animation mistaken for real agents | Product deception | Verified/synthetic labeling |
-| One-domain success | Hidden domain coupling | Second non-health pack |
-| Missing NEXUS repository | False integration claim | Audit real implementation before closure |
+| One-domain success | Hidden domain coupling | Substantive Maritime–Trade pack; synthetic fixture is not counted |
+| Synthetic non-health fixture marketed as a second product pack | False generalization claim | Separate substantive Maritime–Trade pack and evidence gate |
+| Conditional scenario presented as certain forecast or instruction | Misleading or unsafe public decision | Assumption-first language, distributions/tail risk, alternatives, human authority |
+| Political/individual scoring, persuasion, surveillance, eligibility, policing, or offensive cyber use | Fundamental-rights, legal, and safety harm | Explicit prohibited-use contracts/governance tests; no live action |
+| Phase 35 called government-ready or certified | Unsupported procurement/regulatory claim | Partner-ready research label only; later jurisdiction-specific external gates |
+| Arbitrary pack-to-pack runtime coupling | Hidden semantics and invalid inherited evidence | Separately versioned coupled `DomainPack` with explicit coupling identity after standalone validation |
+| Missing audited NEXUS conformance implementation | False integration claim | Audit supplied real implementation and full Phase 31 path before closure |
 | Calling `interop-ready` full integration | False Phase 35 dependency | Require audited NEXUS end-to-end proof |
 | RBAC without identity authority | Spoofed tenant/role access | Local authentication/session/key ADR before authorization |
 | Missing CI/releases/license | Weak external reproducibility | Publication-governance track |
 
 ## 21. Recommended immediate sequence
 
-Do not start by implementing the whole Phase 28. Use this order:
+Use this current order after reconciling the live tree with the 2026-09-01
+overlay:
 
-1. Authorize and complete Gate 27.1 as one narrow audited change.
-2. Perform a read-only Phase 28 architecture audit against the final Gate 27.1
-   tree.
-3. Freeze Phase 28 contracts, closed operators, observation timing, switch
-   bounds, runtime-version behavior, and adversarial matrix before coding.
-4. Implement Phase 28 in small allowlisted slices with independent Codex
-   inspection after each slice.
-5. Close Phase 28 completely before beginning the Phase 29 mechanism seam.
-6. Run scientific/domain review concurrently with Phase 29–30 engineering.
-7. Begin LEGION/NEXUS conformance design early, but declare integration only in
+1. Audit whether any bounded `H28-S09` rejection/fairness work remains; mypy is
+   currently green, so do not manufacture a correction. If S09 is incomplete,
+   finish only that exact scope in a fresh authorized session; do not broaden it
+   into S10 or a store refactor.
+2. Complete `H28-S10` read-only projections and `H28-S11` API/OpenAPI exposure
+   as their own one-prompt sessions.
+3. Make `H28-S12` the unpatched exact-five-plus-adaptive production acceptance,
+   compatibility, causal/replay, and architecture-boundary proof defined in
+   the Phase 28 closure addendum.
+4. Make `H28-S13` the truthful documentation/handoff plus reproducible
+   performance characterization. Record the deep-copy/store hotspot without
+   weakening snapshot isolation or starting Phase 34B optimization early.
+5. Let Codex audit the grouped final Phase 28 fingerprint and run the complete
+   Pytest, Ruff, mypy, schema, format, and diff/status gates. A timeout or a
+   focused green subset cannot assign `CHECKPOINT_ACCEPTED`.
+6. Before `H29-S01`, perform one read-only Phase 29 entry audit covering the
+   DomainPack protocol transition, D29-03 Model Pack release/assurance profile,
+   maturity/claim rules, numerical/platform rule, adapter impact, and the
+   Covasim/Starsim/GLEAM/reference-model boundary. This audit changes no code
+   and does not move Phase 31 integration forward.
+7. Enter Phase 29 through its existing small-session map. Implement only the
+   minimal generic mechanism seam, assurance profile, inspectable PAN v0.1, and
+   tiny `conformance_only` fixture. Keep every future pack `catalogued`; do not
+   build the portfolio, a full ABM, global mobility system, visual client,
+   pack-to-pack bus, or external-simulator adapter.
+8. Run scientific/domain and licensing review concurrently with Phase 29–30.
+   Begin LEGION/NEXUS conformance design early, but declare integration only in
    Phase 31 after real implementations pass it.
 
 ## 22. Codex–Hermes continuation protocol
@@ -2333,7 +2947,8 @@ Default full-gate checkpoints are declared before work starts:
 
 - `CP27.1`: `H27.1-S01` through `S05`, then one full gate.
 - `CP28-A`: `H28-S01` through `S07`; `CP28-B`: `S08` through `S13`.
-- `CP29-A`: `H29-S01` through `S06`; `CP29-B`: `S07` through `S09`.
+- `CP29-A`: `H29-S01`, `S02A`, `S02B`, and `S03` through `S06`;
+  `CP29-B`: `S07` through `S09`.
 - `CP30-A`: `H30-S01` through `S06`, including `S02A/S02B`; `CP30-B`:
   `S07` through `S13`, including external `H30-X01` before final docs.
 - `CP31-K-CONTRACTS`: `H31-K01A/K01B/K01C`, full gate, then a separately
@@ -2351,9 +2966,13 @@ Default full-gate checkpoints are declared before work starts:
   (`S04A`–`S06`); `CP32A-D`: equivalence/recovery/retention/docs
   (`S07A`–`S08`).
 - `CP33-A`: `H33-S01` through `S05C`; `CP33-B`: `S06`–`S07`.
-- `CP34A-K`: KALHAS scenario/report sessions, KALHAS full gate, then a separate
-  user-authorized immutable report/release identity; `CP34A-N` is pinned to that
-  identity for NEXUS presentation conformance and outer integration acceptance.
+- `CP34A-A`: `H34A-K01/K02`, accepted D34-04, `H34A-K03A` through `K03E`,
+  external `H34A-X01`, and any fresh bounded correction sessions, then one
+  grouped full gate; `CP34A-B`: `H34A-K04A/K04B/K-CLOSE`, then one final full
+  gate. Intermediate sessions use only their focused gates. A separate user
+  authorization then freezes the final KALHAS report/release identity.
+  `CP34A-N` is pinned to that identity for NEXUS presentation conformance and
+  outer integration acceptance.
 - `CP34B-ROBUSTNESS`: `S01`–`S03B`; `CP34B-PERFORMANCE`: `S04A`–`S04C`.
 - `CP34B-REFACTOR-<N>`: exactly one named `S05*` refactor (or one very small
   predeclared batch) and its full gate before another refactor checkpoint; omit
@@ -2402,12 +3021,21 @@ row in the map.
 - `H28-S06`: runtime-4 adaptive execution only.
 - `H28-S07`: replay recomputation and recorded-evidence verification only.
 - `H28-S08`: campaign integration with shared seed/noise/initial conditions.
-- `H28-S09`: adaptive-versus-static comparison evidence and fairness proof.
+- `H28-S09`: adaptive-versus-static comparison evidence and focused fairness
+  proof; reduced-cardinality fixtures are component evidence only and cannot
+  close production acceptance.
 - `H28-S10`: verified read-only query projection for observations, decisions,
   and switches.
 - `H28-S11`: API v1/OpenAPI exposure of the already accepted query surfaces.
-- `H28-S12`: causal acceptance, compatibility, and architecture-boundary proof.
-- `H28-S13`: truthful documentation and Phase 28 handoff.
+- `H28-S12`: causal acceptance, compatibility, and architecture-boundary proof,
+  including one unpatched production campaign with exactly five ordered static
+  candidates plus an adaptive policy arm under identical world/seed/noise/
+  mechanism coordinates, real causal switching, paired evidence, and exact
+  replay; no production/cardinality/final-state/evidence patching.
+- `H28-S13`: truthful documentation and Phase 28 handoff, including the bounded
+  reproducible exact-five/adaptive store/deep-copy performance characterization
+  defined in the Phase 28 closure addendum; no optimization/refactor mixed into
+  the documentation session.
 
 Representative objective: implement only the causal observation/timing
 contract slice; do not touch runtime execution, storage, campaign services,
@@ -2417,15 +3045,25 @@ self-consistently rehashed observation evidence.
 #### Phase 29
 
 - `H29-S01`: implement the already accepted protocol ADR and boundary-test
-  transition.
-- `H29-S02`: declarative mechanism contracts and numerical semantics.
+  transition. The ADR freezes the `Model Pack` product alias/no-new-surface
+  rule, counter/key-addressed mechanism randomness, observationally pure
+  evidence collection, representation-neutral typed graph/flow/columnar
+  compatibility without domain vocabulary, complete numerical/dependency/data-
+  license identity, and the reference-only Covasim/Starsim/GLEAM boundary.
+- `H29-S02A`: declarative mechanism contracts and numerical semantics.
+- `H29-S02B`: Model Pack release/assurance profile, evidence-derived maturity,
+  intended/prohibited-use semantics, and versioned catalogue metadata through
+  the same accepted `DomainPack` evolution; no second registry, protocol,
+  executable surface, or future-pack implementation.
 - `H29-S03`: generic DomainPack-driven pure mechanism dispatcher.
 - `H29-S04`: minimal synthetic PAN pack outside the kernel.
 - `H29-S05`: runtime-4 mechanism integration and identity binding only.
 - `H29-S06`: conservation, bounds, numerical adversaries, and canonical goldens.
-- `H29-S07`: tiny synthetic non-health conformance pack/fixture only.
+- `H29-S07`: tiny synthetic non-health `conformance_only` pack/fixture only.
 - `H29-S08`: pack-to-runtime-to-brief acceptance and kernel-neutrality proof.
-- `H29-S09`: truthful documentation and Phase 29 handoff.
+- `H29-S09`: truthful documentation, Model Pack catalogue/maturity/limitations,
+  and Phase 29 handoff. PAN is only `experimental`; every future pack remains
+  `catalogued`.
 
 Representative objective: implement only the generic mechanism seam through
 `DomainPack`; no pandemic vocabulary, ID branch, import, or behavior may enter
@@ -2438,7 +3076,10 @@ the kernel, and no PAN implementation is edited in the dispatcher session.
 - `H30-S02A`: deterministic transformation and curated-dataset lineage.
 - `H30-S02B`: split-membership manifest and sealed-holdout authority.
 - `H30-S03`: benchmark/scoring/baseline contracts.
-- `H30-S04`: pure offline baseline utilities.
+- `H30-S04`: pure offline baseline utilities; an optional pinned
+  Covasim/Starsim differential baseline or legally usable checksummed GLEAM
+  export may be included only as non-authoritative local evidence, never as a
+  runtime/network dependency.
 - `H30-S05`: preregistered early-window authoring and replay.
 - `H30-S06`: sealed-holdout evaluation without tuning or authority mutation.
 - `H30-S07`: calibration/coverage report.
@@ -2495,9 +3136,10 @@ real patient/company data.
 - `H31-N-CLOSE` (NEXUS): three-role documentation/handoff and final checkpoint
   preparation. Codex owns the NEXUS gate and consolidated evidence audit.
 
-`H31-N01A/N01B/N02A/N02B/I01` remain blocked until an auditable NEXUS repository or
-explicitly accepted NEXUS-role-owned reference exists. One session never edits
-two repositories.
+`H31-N01A/N01B/N02A/N02B/I01` remain blocked until the supplied NEXUS repository
+or an explicitly accepted NEXUS-role-owned reference has an audited baseline
+and freezes the required conformance profile. One session never edits two
+repositories.
 
 Representative LEGION objective: for one declared request kind, emit exactly
 five ordered KALHAS-conformance static candidates or adaptive-policy drafts
@@ -2562,23 +3204,47 @@ negative results, mutate history, or add product claims.
 
 - `H34A-K01` (KALHAS): second PAN scenario/domain-pack artifacts.
 - `H34A-K02` (KALHAS): transfer/OOD evaluation and retained failures.
-- `H34A-K03` (KALHAS): maintained synthetic non-health conformance pack.
-- `H34A-K04` (KALHAS): shared-kernel conformance and immutable
-  generalization report.
+- `D34-04` (Codex/user/domain/data governance; no Hermes implementation):
+  accept or block the exact Maritime–Trade scope, use/prohibited-use profile,
+  public/synthetic data and license plan, baselines, thresholds, and reviewers.
+- `H34A-K03A` (KALHAS): accepted Maritime–Trade Model Pack release profile,
+  state/action/observation/outcome schemas, units, catalogues, scenario
+  templates, and immutable data plan only.
+- `H34A-K03B` (KALHAS): pure pack-owned graph/flow mechanism, numerical
+  semantics, conservation/bounds, and no kernel edits.
+- `H34A-K03C` (KALHAS): bounded chokepoint/port disruption actions,
+  deterministic overlays, runtime/campaign binding, and conditional outcome
+  evidence only.
+- `H34A-K03D` (KALHAS): determinism, replay, paired fairness, kernel-neutrality,
+  bounded baseline, sensitivity/OOD, license, and negative-result packet.
+- `H34A-X01` (external maritime/logistics plus statistical reviewer; no Hermes
+  implementation): execute the frozen review protocol and record findings.
+- `H34A-K03D-C01`, `C02`, ... (KALHAS, only when required): one fresh Hermes
+  session and one prompt per bounded review correction; never edit the review
+  finding or suppress a negative result.
+- `H34A-K03E` (KALHAS): evidence-derived maturity, model card, assumptions,
+  limitations, intended/prohibited uses, and pack-to-brief acceptance.
+- `H34A-K04A` (KALHAS): maintained synthetic non-health `conformance_only`
+  fixture; it remains separate from the Maritime–Trade product pack.
+- `H34A-K04B` (KALHAS): shared-kernel conformance and immutable generalization
+  report across PAN, Maritime–Trade, and the synthetic fixture.
 - `H34A-K-CLOSE` (KALHAS): truthful report/handoff and checkpoint preparation.
 - Codex runs the KALHAS Phase 34A gate; a separate user authorization freezes
   an immutable report/release identity before any NEXUS presentation session.
 - `H34A-N01` (NEXUS): artifact-faithful presentation conformance across the
-  exact frozen KALHAS target-report identity; no KALHAS edits and blocked until
-  Phase 31 closes.
+  exact frozen KALHAS target-report identity, including pack maturity,
+  assumptions, conditional-not-predicted outcomes, uncertainty, and unsupported
+  claims; no KALHAS edits and blocked until Phase 31 closes.
 - `H34A-I01` (NEXUS outer owner): full-chain acceptance using frozen KALHAS and
   LEGION releases without cross-repository edits.
 - `H34A-N-CLOSE` (NEXUS): truthful presentation/integration handoff and final
   NEXUS checkpoint preparation.
 
-Representative Phase 34A objective: add one second-domain pack through the
-accepted protocol; any need for domain-specific kernel behavior is a blocker,
-not permission to edit the kernel.
+Representative Phase 34A objective: implement only the accepted bounded
+Maritime–Trade mechanism through `DomainPack`; evaluate a declared closure
+branch rather than predict one. Any need for domain-specific kernel behavior,
+live AIS/network data, real-company fixtures, or a pack-to-pack bus is a
+blocker, not permission to broaden the kernel.
 
 #### Phase 34B
 
@@ -2591,7 +3257,9 @@ not permission to edit the kernel.
 - `H34B-S03A`: Windows canonical/numeric harness and recorded goldens.
 - `H34B-S03B`: actual Linux execution of the same frozen harness and explicit
   cross-platform comparison; blocked until a real Linux environment exists.
-- `H34B-S04A`: preregistered resource/performance measurement profiles.
+- `H34B-S04A`: preregistered resource/performance measurement profiles,
+  including the Phase 28 store/deep-copy baseline and any pack-internal
+  columnar/edge-array profile justified by measured scale.
 - `H34B-S04B`: pre-allocation limit enforcement and regression ceilings.
 - `H34B-S04C`: deterministic chunking/bounded-parallel implementation plus
   one-shot equivalence proof; omit if direct audit finds no justified use.
@@ -2619,19 +3287,29 @@ broaden the trust boundary.
 #### Phase 35
 
 - `H35-K01` (KALHAS): immutable KALHAS evidence sub-bundle manifest/export with
-  exact supported versions and artifact hashes; not the final three-repository
-  manifest.
+  exact supported versions, Model Pack profile/maturity/catalogue identities,
+  and artifact hashes; not the final three-repository manifest.
 - `H35-L01` (LEGION): frozen offline emitter packaging and bundle-conformance
   proof; no KALHAS/NEXUS edits.
 - `H35-N01` (NEXUS): outer offline launch/integration manifest referencing the
   exact KALHAS and LEGION releases; no edits to those repositories.
-- `H35-K02` (KALHAS): authoritative living-simulation read/view-model source.
+- `H35-K02` (KALHAS): authoritative living-simulation read/view-model source;
+  it may expose verified temporal graph/flow projections suitable for maps,
+  timelines, uncertainty bands, and propagation views without adopting a
+  GLEAM client/server dependency or domain semantics in the kernel.
 - `H35-N02` (NEXUS): artifact-faithful living presentation and full source
-  traceability.
+  traceability, including linked map/timeline/graph views only when every value
+  resolves to KALHAS artifact IDs/hashes, conditional-versus-observed status,
+  pack maturity, assumptions, and modeled-versus-verified status.
 - `H35-N03` (NEXUS outer owner): scripted offline three-role demonstration;
   blocked until a real audited NEXUS exists and never edits KALHAS/LEGION.
-- `H35-K03` (KALHAS): model cards, assumptions, limitations, and retained
-  failures.
+- `H35-K03A` (KALHAS): truthful versioned Model Pack catalogue with exact
+  released/candidate identities, evidence-derived maturity, supported/
+  unsupported claims, intended/prohibited uses, evidence links, and post-35
+  order; future packs remain visibly `catalogued`.
+- `H35-K03B` (KALHAS): per-released-pack model cards, assumptions, limitations,
+  retained failures, human-accountability boundary, and public-sector
+  governance annexes; no government-ready or certified label.
 - `H35-K04`, `H35-L02`, `H35-N04` (one repository each): repository-local
   privacy/security annexes reusing, not regenerating, the accepted Phase 34
   SBOM/license evidence.
@@ -2676,6 +3354,49 @@ every presented item references an authoritative ID/hash, with no provider,
 autonomous action, hidden recommendation rewrite, synthetic-agent overclaim,
 or production-readiness claim.
 
+#### Generic post-35 Model Pack session template
+
+This template makes the catalogue executable later without reopening the kernel
+architecture. It does not pre-authorize a pack. Before `K01`, Codex performs a
+read-only entry audit and the user/domain/data/legal owners accept the bounded
+decision scope, evidence plan, data rights, intended/prohibited uses, and review
+roles. Then every row below is one fresh Hermes session, one repository, one
+prompt, and one final report:
+
+- `HMP-<PACK>-K01`: exact Model Pack brief/release profile, users, questions,
+  validity envelope, non-goals, use/prohibited-use rules, and resource envelope.
+- `HMP-<PACK>-K02`: pack-owned state/action/observation/outcome schemas, units,
+  catalogues, configuration, uncertainty declarations, and scenario templates.
+- `HMP-<PACK>-K03`: pure deterministic mechanism only; no kernel domain branch,
+  provider, live data, policy choice, or persistence authority.
+- `HMP-<PACK>-K04`: invariants, numerical adversaries, replay, paired fairness,
+  kernel-neutrality, and conformance evidence.
+- `HMP-<PACK>-K05`: immutable dataset/license/transformation/split lineage and
+  credible offline baselines only.
+- `HMP-<PACK>-K06`: calibration, holdout, sensitivity, identifiability, OOD,
+  ablation, tail-risk, and retained negative-result packet.
+- `HMP-<PACK>-X01` (external reviewer; not a Hermes implementation prompt):
+  execute the frozen domain/statistical/legal review protocol.
+- `HMP-<PACK>-K06-C01`, `C02`, ...: one fresh correction session per accepted
+  bounded finding; never suppress or rewrite the external finding.
+- `HMP-<PACK>-K07`: evidence-derived maturity, claim assessment, model card,
+  limitations, public-sector governance annex, handoff, and release preparation.
+- Codex runs the predeclared KALHAS full gate; a separate user authorization
+  freezes the exact KALHAS pack/release identity.
+- `HMP-<PACK>-L01` (LEGION, only if pack-specific proposal conformance is
+  required): emit candidates from frozen KALHAS catalogues; no KALHAS edits,
+  execution, winner claim, or invented identifiers.
+- `HMP-<PACK>-N01` (NEXUS, only against frozen identities): artifact-faithful
+  authoring/presentation of assumptions, conditional outcomes, uncertainty,
+  maturity, provenance, limitations, and failures; no evidence rewrite.
+- `HMP-<PACK>-I01` (NEXUS outer owner): offline three-role acceptance against
+  frozen releases, with no cross-repository edits or live action.
+
+If a pack can reuse the frozen generic LEGION/NEXUS conformance without a
+behavioral change, Codex records that proof instead of manufacturing `L01/N01`
+work. The template never permits one session to edit multiple repositories or
+to implement two packs.
+
 ### 22.16 Cost-control principle
 
 The cost-saving mechanism is precise context, one prompt, one repository, one
@@ -2708,8 +3429,9 @@ phase is not complete.
 
 Primary technical evidence:
 
-- Local KALHAS repository at commit `a905d2a`.
-- Public KALHAS repository and published Phase 22–27 history.
+- Local/published KALHAS baseline at commit `777a447` (Gate 27.1 closure), plus
+  the unpublished Phase 28 worktree observed on 2026-09-01.
+- Public KALHAS repository and published Phase 22–27/Gate 27.1 history.
 - Public LEGION repository at commit `1db6022`.
 - `AGENTS.md`.
 - `CODEX_HERMES_HANDOFF_CURRENT_STATE.md`.
@@ -2718,6 +3440,85 @@ Primary technical evidence:
   tests.
 - Phase 23–27 implementation blueprint, including its accepted Phase 28–32
   continuation.
+
+External scientific/engineering references reviewed on 2026-09-01 (reference
+patterns and possible offline baselines only; never evidence that KALHAS has
+implemented or validated their behavior):
+
+- Covasim official repository, MIT license, documentation, reproducibility FAQ,
+  and peer-reviewed architecture paper:
+  `https://github.com/starsimhub/covasim`,
+  `https://docs.covasim.org/faq.html`, and
+  `https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1009149`.
+- Starsim official documentation, especially modular simulation and
+  counter-based/common-random-number semantics:
+  `https://docs.starsim.org/` and
+  `https://docs.starsim.org/api/distributions.html`.
+- Google Research TimesFM official repository: a time-series foundation-model
+  reference that a future pack may evaluate as a pinned offline untrusted
+  forecast/baseline; it is not a Model Pack, kernel dependency, weather model,
+  or KALHAS authority:
+  `https://github.com/google-research/timesfm`.
+- GLEAM Project, GLEAMviz tool description, and the v7.2 client manual covering
+  metapopulation/mobility layers, stochastic multi-runs, immutable submitted
+  definitions, client/server execution, and result export:
+  `https://www.gleamproject.org/`,
+  `https://www.gleamproject.org/tools/gleamviz`, and
+  `https://www.gleamviz.org/simul/man/GLEAMviz_client_manual_v7.2.pdf`.
+
+Official public-sector strategy/evidence reviewed on 2026-09-01 (used to
+prioritize the portfolio and guardrails, never to imply procurement,
+endorsement, certification, or current KALHAS capability):
+
+- European Commission Preparedness Union Strategy: integrated all-hazards,
+  whole-of-government/whole-of-society preparedness, comprehensive risk
+  assessment, crisis dashboards, Earth observation, health readiness, and
+  critical-resource continuity:
+  `https://commission.europa.eu/topics/preparedness_en`.
+- EU Critical Entities Resilience Directive 2022/2557: cross-sector and cross-
+  border risk/dependency assessment across energy, transport, banking/finance,
+  health, water/wastewater, digital infrastructure, public administration,
+  space, and food-related essential services:
+  `https://eur-lex.europa.eu/eli/dir/2022/2557/oj/eng`.
+- EEA European Climate Risk Assessment: 36 risks spanning energy, food,
+  infrastructure, water, financial stability, ecosystems, and health:
+  `https://www.eea.europa.eu/en/analysis/publications/european-climate-risk-assessment`.
+- Council of the EU revised Maritime Security Strategy: maritime awareness,
+  freedom of navigation, ports, pipelines, undersea cables, offshore/LNG
+  infrastructure, preparedness, climate, hybrid, and cyber risk:
+  `https://www.consilium.europa.eu/en/press/press-releases/2023/10/24/maritime-security-council-approves-revised-eu-strategy-and-action-plan/`.
+- Copernicus Emergency Management Service and Climate Data Store: authoritative
+  hazard/reanalysis/forecast inputs for later pinned offline Climate–Civil
+  studies, not KALHAS weather authority:
+  `https://emergency.copernicus.eu/help-support/` and
+  `https://climate.copernicus.eu/the-climate-data-store`.
+- European Commission energy, water, food, and transport preparedness material:
+  `https://energy.ec.europa.eu/topics/energy-security/security-electricity-supply_en`,
+  `https://commission.europa.eu/topics/environment/water-resilience-strategy_en`,
+  `https://food.ec.europa.eu/food-safety/biological-safety/crisis-preparedness-management_en`,
+  and
+  `https://transport.ec.europa.eu/news-events/news/protecting-eu-transport-times-crisis-commission-adopts-contingency-plan-transport-2022-05-23_en`.
+- European Commission/Eurostat scenario practice for macro-fiscal and
+  demographic work: alternative scenarios/sensitivity around explicit
+  baselines and demographic projections described as hypothetical `what-if`
+  cases:
+  `https://economy-finance.ec.europa.eu/publications/debt-sustainability-monitor-2025_en`
+  and
+  `https://ec.europa.eu/eurostat/web/population-demography/population-projections`.
+- European Commission Strategic Foresight/JRC scenario work: difficult futures
+  are explored for policy stress-testing under uncertainty, not treated as
+  certain predictions:
+  `https://commission.europa.eu/strategy-and-policy/strategic-foresight/2025-strategic-foresight-report_en`
+  and
+  `https://knowledge4policy.ec.europa.eu/foresight/topic/reference-foresight-scenarios_en`.
+- WHO PRET public-health preparedness and the EU AI Act/ENISA public-sector
+  guardrails for health readiness, prohibited social/personal risk practices,
+  high-risk oversight, traceability, robustness, and defensive critical-sector
+  resilience:
+  `https://www.who.int/initiatives/preparedness-and-resilience-for-emerging-threats`,
+  `https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai`,
+  and
+  `https://www.enisa.europa.eu/topics/cybersecurity-of-critical-sectors`.
 
 Conversation and strategic evidence reviewed:
 
@@ -2803,42 +3604,55 @@ Hermes session, before assigning `CHECKPOINT_ACCEPTED`.
 
 ### First eligible implementation sequence
 
-Status (2026-08-25, post-full-gate): steps 1–9 below are complete — S01,
-S02, S03, the corrected S04, and `H27.1-S05` are `SESSION_AUDITED`, the
-`H27.1-S05-C01-POST-FULL-GATE-TRUTH` mechanical correction updated both
-handoffs, and Codex's single authoritative full repository gate ran on the
-grouped final `S01`–`S05` fingerprint on 2026-08-25, completely green (see
-the Gate 27.1 execution-status record near the top of this file for exact
-evidence). Step 9's original audit-plus-first-full-gate wording below is
-preserved as the historical process description of the state before that
-Codex full gate. The next eligible action is the post-correction flow:
-Codex audits these corrected handoffs and their final fingerprints,
-performs the required post-correction verification on the final
-documentation fingerprint, and only if green performs step 9's disposition —
-records `CP27.1` as `CHECKPOINT_ACCEPTED`. Steps 10–11 (separate
-user-authorized Git operations; Phase 28 read-only ADR/design audit before
-`H28-S01`) have not started.
+Status (2026-09-02, publication overlay): the H28-S13 status paragraph below
+is preserved as the closure-candidate record of its time; its "first eligible
+action is the independent Codex final Phase 28 audit" is **superseded** —
+that audit accepted `CP28-B` on 2026-09-02, Phase 28 is complete and is being
+published by the user-authorized publication session (see the 2026-09-02
+Phase 28 publication overlay near the top of this document). The next
+eligible action is therefore STOP: awaiting explicit Phase 29 authorization,
+then the read-only Phase 29 entry audit of §13 before any `H29-S01`.
+
+Status (2026-09-02, H28-S13 closure-candidate overlay): Gate 27.1 is published
+at `777a447`. Locally, `H28-S01` through `H28-S12` are complete and
+unpublished, and `H28-S13` (truthful documentation/handoff plus the bounded
+performance characterization) is complete once this continuation's gates
+finish — see the dated 2026-09-02 closure-candidate overlay near the top of
+this document. This status paragraph replaces the stale 2026-09-01 wording
+("Phase 28 is active in the local unpublished worktree through a partial
+`H28-S09`; `H28-S10` through `H28-S13` and the final Phase 28 checkpoint
+remain open"), which no longer describes the live tree. The complete
+current suite (6,850 tests, 0 failures/errors/skips, from the `H28-S12`
+session full gate) and Ruff/format/mypy/diff gates were green on the
+closure-candidate tree. Therefore Phase 29 is not eligible yet: the first
+eligible action is the independent Codex final Phase 28 fingerprint/gate
+audit, then STOP awaiting explicit Phase 29 instructions.
 
 Unless the live repository has already moved forward through an independently
 verified closure, the first eligible sequence is:
 
-1. Codex read-only Gate 27.1 audit and exact slice freeze.
-2. User authorization for `H27.1-S01`.
-3. One prompt in one fresh Hermes session.
-4. Hermes report -> Codex live-folder audit.
-5. User authorization, then fresh `H27.1-S02` session only after S01
-   is `SESSION_AUDITED` inside the still-open Gate 27.1 checkpoint.
-6. User authorization, then fresh `H27.1-S03` five-plan proof session only
-   after S02 is `SESSION_AUDITED`.
-7. User authorization, then fresh `H27.1-S04` acceptance/boundary session only
-   after S03 is `SESSION_AUDITED`.
-8. User authorization, then fresh `H27.1-S05` documentation/handoff session
-   only after S04 is `SESSION_AUDITED`.
-9. Codex audits S05, runs one full Pytest on the grouped final fingerprint, and
-   only then marks the Gate 27.1 checkpoint `CHECKPOINT_ACCEPTED` and the gate
-   closed; it does not run full Pytest after S01–S04 individually.
-10. Separate user-authorized Git operations.
-11. Phase 28 read-only ADR/design audit before `H28-S01`.
+1. Reconcile the live tree and exact current H28 session ledger; do not assume
+   this snapshot names the latest sub-slice.
+2. Audit whether H28-S09 has any remaining bounded work. Mypy is already green;
+   create a fresh authorized Hermes correction session only for a real remaining
+   defect, never to repeat already-green work.
+3. Complete H28-S10 and H28-S11 in separate fresh one-prompt sessions, with a
+   Codex live-folder audit after each report.
+4. Execute H28-S12 as the unpatched exact-five-plus-adaptive production-path
+   acceptance defined in Section 10; a reduced-cardinality fixture cannot
+   substitute for it.
+5. Execute H28-S13 as truthful documentation/handoff plus the bounded
+   performance characterization; do not mix in performance optimization.
+6. Codex audits the grouped final Phase 28 fingerprint and runs the complete
+   required gates. Only a normally completed green gate may assign the Phase 28
+   checkpoint `CHECKPOINT_ACCEPTED`.
+7. After separate user authorization for any Git operations, perform the
+   read-only Phase 29 entry audit covering the mechanism ADR, D29-03 Model Pack
+   release/assurance and maturity rules, adapter impact, numerical/platform
+   rule, and external-reference boundary. Future portfolio entries remain
+   `catalogued`, not Phase 29 implementation scope.
+8. Only then authorize `H29-S01` under the existing one-prompt/fresh-session
+   discipline.
 
 The user may explicitly authorize a named batch of already frozen session IDs;
 otherwise authorization is per session. A completed report or

@@ -227,8 +227,8 @@ def test_structural_event_kinds_are_exactly_three() -> None:
     )
 
 
-def test_public_contracts_remain_exactly_forty() -> None:
-    assert len(PUBLIC_CONTRACTS) == 50
+def test_public_contracts_preserve_accepted_50_prefix() -> None:
+    assert len(PUBLIC_CONTRACTS) >= 50
 
 
 def test_existing_v1_contracts_unchanged_and_matrix_appended() -> None:

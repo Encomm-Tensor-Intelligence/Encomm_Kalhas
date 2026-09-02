@@ -1,0 +1,570 @@
+{
+  "$defs": {
+    "AdaptivePolicyRule": {
+      "additionalProperties": false,
+      "description": "One bound rule of an ``AdaptivePolicy``.\n\nSame closed shape as the draft rule, but constructed only inside the\nKALHAS-bound immutable policy whose observation-binding catalog gives\nits condition leaves complete exact authority coverage. Deliberately\na separate class from the draft rule so trusted and untrusted rules\nnever share a type surface.",
+      "properties": {
+        "enter_condition": {
+          "$ref": "#/$defs/EnterCondition"
+        },
+        "per_rule_switch_budget": {
+          "minimum": 0,
+          "title": "Per Rule Switch Budget",
+          "type": "integer"
+        },
+        "priority": {
+          "minimum": 0,
+          "title": "Priority",
+          "type": "integer"
+        },
+        "retain_condition": {
+          "$ref": "#/$defs/RetainCondition"
+        },
+        "rule_id": {
+          "minLength": 1,
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "target_action_id": {
+          "minLength": 1,
+          "title": "Target Action Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_id",
+        "priority",
+        "target_action_id",
+        "enter_condition",
+        "retain_condition",
+        "per_rule_switch_budget"
+      ],
+      "title": "AdaptivePolicyRule",
+      "type": "object"
+    },
+    "BoundAdaptiveAction": {
+      "additionalProperties": false,
+      "description": "One immutable bound action of an ``AdaptivePolicy``.\n\nThe logical ``action_id`` together with the exact strategy candidate\nidentity/hash and a non-empty canonically ordered tuple of immutable\ntrajectory-plan bindings. Bindings are ordered ascending by\n``(state_model_identifier, trajectory_plan_id)``, hold at most one\nbinding per state-model identifier, and never repeat a plan\nidentifier.",
+      "properties": {
+        "action_id": {
+          "minLength": 1,
+          "title": "Action Id",
+          "type": "string"
+        },
+        "strategy_candidate_id": {
+          "minLength": 1,
+          "title": "Strategy Candidate Id",
+          "type": "string"
+        },
+        "strategy_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Strategy Content Hash",
+          "type": "string"
+        },
+        "trajectory_plan_bindings": {
+          "items": {
+            "$ref": "#/$defs/TrajectoryPlanBinding"
+          },
+          "minItems": 1,
+          "title": "Trajectory Plan Bindings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "action_id",
+        "strategy_candidate_id",
+        "strategy_content_hash",
+        "trajectory_plan_bindings"
+      ],
+      "title": "BoundAdaptiveAction",
+      "type": "object"
+    },
+    "ConditionAllNode": {
+      "additionalProperties": false,
+      "description": "Bounded ``all`` compound node: conjunction over 2-8 children.",
+      "properties": {
+        "children": {
+          "items": {
+            "$ref": "#/$defs/ConditionNode"
+          },
+          "maxItems": 8,
+          "minItems": 2,
+          "title": "Children",
+          "type": "array"
+        },
+        "condition_id": {
+          "minLength": 1,
+          "title": "Condition Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "all",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "condition_id",
+        "children"
+      ],
+      "title": "ConditionAllNode",
+      "type": "object"
+    },
+    "ConditionAnyNode": {
+      "additionalProperties": false,
+      "description": "Bounded ``any`` compound node: disjunction over 2-8 children.",
+      "properties": {
+        "children": {
+          "items": {
+            "$ref": "#/$defs/ConditionNode"
+          },
+          "maxItems": 8,
+          "minItems": 2,
+          "title": "Children",
+          "type": "array"
+        },
+        "condition_id": {
+          "minLength": 1,
+          "title": "Condition Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "any",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "condition_id",
+        "children"
+      ],
+      "title": "ConditionAnyNode",
+      "type": "object"
+    },
+    "ConditionComparisonLeaf": {
+      "additionalProperties": false,
+      "description": "One closed numeric comparison against one logical observation.\n\nCompares the referenced observation's value with one exact finite\n``threshold`` using exactly one closed operator. ``missing_behavior``\nis explicit (exactly ``\"false\"`` or ``\"error\"``) and is never\ninferred. Integer comparisons require an exact ``int`` threshold;\nnumber comparisons accept an exact finite ``int`` or ``float``.\nBooleans, strings, containers, NaN, and Infinity fail before any\ncoercion. No tolerance, clipping, negation, or callback is\nexpressible.",
+      "properties": {
+        "condition_id": {
+          "minLength": 1,
+          "title": "Condition Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "comparison",
+          "title": "Kind",
+          "type": "string"
+        },
+        "missing_behavior": {
+          "enum": [
+            "false",
+            "error"
+          ],
+          "title": "Missing Behavior",
+          "type": "string"
+        },
+        "observation_id": {
+          "minLength": 1,
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "observed_value_kind": {
+          "enum": [
+            "integer",
+            "number"
+          ],
+          "title": "Observed Value Kind",
+          "type": "string"
+        },
+        "operator": {
+          "enum": [
+            "lt",
+            "lte",
+            "eq",
+            "gte",
+            "gt"
+          ],
+          "title": "Operator",
+          "type": "string"
+        },
+        "threshold": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Threshold"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "kind",
+        "condition_id",
+        "observation_id",
+        "observed_value_kind",
+        "operator",
+        "threshold",
+        "missing_behavior"
+      ],
+      "title": "ConditionComparisonLeaf",
+      "type": "object"
+    },
+    "ConditionNode": {
+      "discriminator": {
+        "mapping": {
+          "all": "#/$defs/ConditionAllNode",
+          "any": "#/$defs/ConditionAnyNode",
+          "comparison": "#/$defs/ConditionComparisonLeaf"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ConditionComparisonLeaf"
+        },
+        {
+          "$ref": "#/$defs/ConditionAllNode"
+        },
+        {
+          "$ref": "#/$defs/ConditionAnyNode"
+        }
+      ]
+    },
+    "EnterCondition": {
+      "discriminator": {
+        "mapping": {
+          "all": "#/$defs/ConditionAllNode",
+          "any": "#/$defs/ConditionAnyNode",
+          "comparison": "#/$defs/ConditionComparisonLeaf"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ConditionComparisonLeaf"
+        },
+        {
+          "$ref": "#/$defs/ConditionAllNode"
+        },
+        {
+          "$ref": "#/$defs/ConditionAnyNode"
+        }
+      ]
+    },
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ObservationBinding": {
+      "additionalProperties": false,
+      "description": "One authoritative copied observation-catalog entry.\n\nBinds one stable logical ``observation_id`` to one immutable\n``RuntimeObservationDeclaration`` (identifier and content hash) with\nthe copied observed value kind, optional unit, and explicit missing\nbehavior. Provenance is copied verbatim from stored records;\ncross-checking these values against the stored declaration belongs\nto the later binding-authority service, never to this contract.",
+      "properties": {
+        "missing_behavior": {
+          "enum": [
+            "false",
+            "error"
+          ],
+          "title": "Missing Behavior",
+          "type": "string"
+        },
+        "observation_id": {
+          "minLength": 1,
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "observed_value_kind": {
+          "enum": [
+            "integer",
+            "number"
+          ],
+          "title": "Observed Value Kind",
+          "type": "string"
+        },
+        "runtime_observation_declaration_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Runtime Observation Declaration Content Hash",
+          "type": "string"
+        },
+        "runtime_observation_declaration_id": {
+          "minLength": 1,
+          "title": "Runtime Observation Declaration Id",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "observation_id",
+        "runtime_observation_declaration_id",
+        "runtime_observation_declaration_content_hash",
+        "observed_value_kind",
+        "missing_behavior"
+      ],
+      "title": "ObservationBinding",
+      "type": "object"
+    },
+    "RetainCondition": {
+      "discriminator": {
+        "mapping": {
+          "all": "#/$defs/ConditionAllNode",
+          "any": "#/$defs/ConditionAnyNode",
+          "comparison": "#/$defs/ConditionComparisonLeaf"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ConditionComparisonLeaf"
+        },
+        {
+          "$ref": "#/$defs/ConditionAllNode"
+        },
+        {
+          "$ref": "#/$defs/ConditionAnyNode"
+        }
+      ]
+    },
+    "TrajectoryPlanBinding": {
+      "additionalProperties": false,
+      "description": "One immutable trajectory-plan binding behind a bound action.\n\nCarries only authoritative references copied from stored immutable\nrecords: the ``StrategyTrajectoryPlan`` identifier and content hash\nplus the manifest and state-model identity/hash quadruple. No\ntransition or state values, outcomes, callbacks, or executable\ncontent is expressible.",
+      "properties": {
+        "manifest_id": {
+          "minLength": 1,
+          "title": "Manifest Id",
+          "type": "string"
+        },
+        "state_model_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "State Model Content Hash",
+          "type": "string"
+        },
+        "state_model_id": {
+          "minLength": 1,
+          "title": "State Model Id",
+          "type": "string"
+        },
+        "state_model_identifier": {
+          "minLength": 1,
+          "title": "State Model Identifier",
+          "type": "string"
+        },
+        "trajectory_plan_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Trajectory Plan Content Hash",
+          "type": "string"
+        },
+        "trajectory_plan_id": {
+          "minLength": 1,
+          "title": "Trajectory Plan Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trajectory_plan_id",
+        "trajectory_plan_content_hash",
+        "manifest_id",
+        "state_model_identifier",
+        "state_model_id",
+        "state_model_content_hash"
+      ],
+      "title": "TrajectoryPlanBinding",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Immutable KALHAS-bound adaptive-policy authority for runtime 4.0.0.\n\nBinds the closed condition language to complete immutable authority:\ncampaign/scenario/world provenance with the world content hash, the\nexact runtime literal ``4.0.0``, a stable logical ``policy_id`` with\na semantic ``policy_version``, the non-empty canonically ordered\nobservation-binding catalog, the non-empty canonically ordered tuple\nof immutable bound actions, the initial and fallback choices, the\npriority-ordered bound rules, the frozen state-machine declarations,\na self-covering ``content_hash``, the deterministic caller-supplied\n``bound_at``, and finite JSON-compatible metadata. Every condition\nleaf resolves through the observation-binding catalog with exact\nvalue-kind/unit/missing-behavior agreement, and every binding is\nused, so policy identity contains only complete used authority. The\npolicy holds no mutable runtime state, observations, decisions,\nswitches, outcomes, recommendations, or evaluation results; stored-\ndeclaration verification and execution belong to later slices.",
+  "properties": {
+    "actions": {
+      "items": {
+        "$ref": "#/$defs/BoundAdaptiveAction"
+      },
+      "maxItems": 64,
+      "minItems": 1,
+      "title": "Actions",
+      "type": "array"
+    },
+    "bound_at": {
+      "format": "date-time",
+      "title": "Bound At",
+      "type": "string"
+    },
+    "campaign_id": {
+      "minLength": 1,
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "cooldown_steps": {
+      "minimum": 0,
+      "title": "Cooldown Steps",
+      "type": "integer"
+    },
+    "fallback_action_id": {
+      "minLength": 1,
+      "title": "Fallback Action Id",
+      "type": "string"
+    },
+    "global_switch_budget": {
+      "minimum": 0,
+      "title": "Global Switch Budget",
+      "type": "integer"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "initial_action_id": {
+      "minLength": 1,
+      "title": "Initial Action Id",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "minimum_dwell_steps": {
+      "minimum": 0,
+      "title": "Minimum Dwell Steps",
+      "type": "integer"
+    },
+    "observation_bindings": {
+      "items": {
+        "$ref": "#/$defs/ObservationBinding"
+      },
+      "minItems": 1,
+      "title": "Observation Bindings",
+      "type": "array"
+    },
+    "policy_id": {
+      "minLength": 1,
+      "title": "Policy Id",
+      "type": "string"
+    },
+    "policy_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Policy Version",
+      "type": "string"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/AdaptivePolicyRule"
+      },
+      "maxItems": 64,
+      "title": "Rules",
+      "type": "array"
+    },
+    "runtime_version": {
+      "const": "4.0.0",
+      "title": "Runtime Version",
+      "type": "string"
+    },
+    "scenario_id": {
+      "minLength": 1,
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "world_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "World Content Hash",
+      "type": "string"
+    },
+    "world_version_id": {
+      "minLength": 1,
+      "title": "World Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "campaign_id",
+    "scenario_id",
+    "world_version_id",
+    "world_content_hash",
+    "runtime_version",
+    "policy_id",
+    "policy_version",
+    "observation_bindings",
+    "actions",
+    "initial_action_id",
+    "fallback_action_id",
+    "rules",
+    "minimum_dwell_steps",
+    "cooldown_steps",
+    "global_switch_budget",
+    "content_hash",
+    "bound_at"
+  ],
+  "title": "AdaptivePolicy",
+  "type": "object"
+}

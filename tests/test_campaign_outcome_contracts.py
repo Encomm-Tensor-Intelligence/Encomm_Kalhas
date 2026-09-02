@@ -25,10 +25,12 @@ Phase 26 contract-slice tests for
   for all three directions, count/probability consistency, worst
   violation equality, CVaR bounds, and adverse-tail structural bounds;
 - the architectural boundary: both models are plain ``BaseModel``
-  value objects, never registered in ``PUBLIC_CONTRACTS`` (exactly 50
-  contracts with the exact runtime-3 tail at indexes 40-45, the
-  campaign outcome-distribution matrix at index 46, the decision
-  contracts at indexes 47-49, and exactly 50 schema artifacts), the
+  value objects, never registered in ``PUBLIC_CONTRACTS`` (the accepted
+  Phase 27 50-contract prefix is preserved: the exact runtime-3 tail at
+  indexes 40-45, the campaign outcome-distribution matrix at index 46,
+  the decision contracts at indexes 47-49, with later additive
+  contracts allowed and schema artifact count following
+  ``PUBLIC_CONTRACTS``), the
   module imports only
   the standard library and pydantic, exposes no executable surface and
   no wall-clock/randomness calls, contains no phase-number literals,
@@ -2138,9 +2140,9 @@ class TestArchitectureCompatibility:
         assert issubclass(CampaignOutcomeDistributionMatrix, VersionedContract)
         assert issubclass(CampaignOutcomeDistributionMatrix, BaseModel)
 
-    def test_models_are_not_registered_and_contracts_are_50(self) -> None:
+    def test_models_are_not_registered_and_accepted_50_prefix_preserved(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
-        assert len(PUBLIC_CONTRACTS) == 50
+        assert len(PUBLIC_CONTRACTS) >= 50
         assert names[40:46] == _RUNTIME3_CONTRACTS
         assert names[46] == "CampaignOutcomeDistributionMatrix"
         assert names[47] == "CampaignDecisionPolicy"
@@ -2152,7 +2154,7 @@ class TestArchitectureCompatibility:
 
     def test_schema_artifacts_are_50_with_only_matrix_registered(self) -> None:
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
-        assert len(schema_files) == 50
+        assert len(schema_files) == len(PUBLIC_CONTRACTS)
         titles = {json.loads(path.read_text(encoding="utf-8"))["title"] for path in schema_files}
         names = {contract.__name__ for contract in PUBLIC_CONTRACTS}
         assert titles == names

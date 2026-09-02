@@ -1238,14 +1238,14 @@ class TestModuleBoundaries:
         for symbol in symbols:
             assert not forbidden.search(symbol), f"forbidden symbol {symbol!r}"
 
-    def test_public_contracts_and_schemas_are_50(self) -> None:
+    def test_public_contracts_and_schemas_preserve_accepted_50_prefix(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
-        assert len(PUBLIC_CONTRACTS) == 50
+        assert len(PUBLIC_CONTRACTS) >= 50
         assert names[47] == "CampaignDecisionPolicy"
         assert names[48] == "CampaignStrategyComparison"
         assert names[49] == "CampaignDecisionBrief"
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
-        assert len(schema_files) == 50
+        assert len(schema_files) == len(PUBLIC_CONTRACTS)
         file_names = {path.name for path in schema_files}
         assert "CampaignDecisionPolicy.schema.json" in file_names
         assert "CampaignStrategyComparison.schema.json" in file_names

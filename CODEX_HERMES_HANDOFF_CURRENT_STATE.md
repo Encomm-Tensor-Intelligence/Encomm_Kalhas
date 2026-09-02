@@ -1,27 +1,34 @@
 # Codex–Hermes Handoff — Current KALHAS State
 
-Originally created for the next Codex chat after the official publication of
-the completed KALHAS work through Phase 27. Rewritten in place on 2026-08-25
-by session `H27.1-S05` so this document truthfully described the local
-Gate 27.1 closure candidate left by the four audited implementation sessions
-(`S01`–`S04`), without claiming any acceptance that had not happened.
-Corrected in place on 2026-08-25 by the mechanical post-full-gate session
-`H27.1-S05-C01-POST-FULL-GATE-TRUTH` after Codex independently audited
-`H27.1-S05` and ran the single authoritative full repository gate on the
-grouped final `S01`–`S05` fingerprint on 2026-08-25 — completely green; the
-gate evidence is recorded in §8.3.
+Created for the next Codex chat after the official publication of the
+completed KALHAS work through Phase 27. Rewritten in place on 2026-08-25 by
+session `H27.1-S05` for the Gate 27.1 closure candidate, corrected on
+2026-08-25 by `H27.1-S05-C01-POST-FULL-GATE-TRUTH` (§8.3 of that revision
+records the green Codex-owned full gate), and **rewritten again in place on
+2026-09-02 by session `H28-S13-DOCS-PERF-CLOSURE`** so this document now
+truthfully describes the local Phase 28 closure-candidate state. The
+2026-08-25 Gate 27.1 content is preserved as a dated historical snapshot at
+`C:/Users/xampos/AppData/Local/hermes/profiles/kalhas-project/cache/h28-s13/CODEX_HERMES_HANDOFF_CURRENT_STATE.pre-h28s13.md`
+(SHA-256 `2ae6ab022a131c0e06fae19effee5ab9ea2e093873c95e0072f687040a64d926`)
+and as dated historical records inside `KALHAS_STRATEGIC_HANDOFF_PHASES_28_35.md`;
+Gate 27.1 itself was published as commit `777a4472ef0d1edc6d30ce61a05851302b981027`
+and its `CHECKPOINT_ACCEPTED` disposition belongs to the Codex audit record.
 
 This document is a current-state and working-method handoff only. It does not
-authorize, design, schedule, or imply additional implementation. It does not
-declare the Gate 27.1 checkpoint (`CP27.1`) accepted: the implementation and
-full repository gates are green, but this mechanical documentation correction
-does not independently assign checkpoint authority, and the latest Codex
-live-folder audit is authoritative for the final `CP27.1` disposition. After
-Codex verifies this correction on the final documentation fingerprint, it may
-record `CP27.1` as `CHECKPOINT_ACCEPTED` without another handoff edit.
+authorize implementation, staging, committing, pushing, provider access, or any
+live action. It does **not** declare the Phase 28 checkpoint (`CP28-B`)
+accepted: every implementation and repository gate run locally is green (§8),
+but checkpoint authority belongs exclusively to the independent Codex final
+fingerprint/gate audit. After that audit verifies this handoff and the live
+**Superseded 2026-09-02, later the same day:** the independent Codex final
+Phase 28 audit has since verified the closure-candidate tree and recorded
+`CP28-B` as `CHECKPOINT_ACCEPTED`. Phase 28 is complete. The user has
+explicitly authorized the publication session to stage, commit, and push the
+audited Phase 28 inventory; see "Publication status overlay — 2026-09-02"
+below and §13. Phase 29 remains not started and not authorized.
 
-**Durable workflow rule** (supersedes every older session/correction wording
-in this file and in historical handoffs):
+**Durable workflow rule** (unchanged; supersedes every older session/correction
+wording in this file and in historical handoffs):
 
 ```text
 one fresh Hermes session = one prompt = one bounded slice/report
@@ -29,20 +36,19 @@ one fresh Hermes session = one prompt = one bounded slice/report
 
 Any correction or continuation uses a new session ID and a fresh Hermes
 session. Section 22 of `KALHAS_STRATEGIC_HANDOFF_PHASES_28_35.md` is the
-governing continuation protocol; wherever its instructions differ from older
-wording, Section 22 supersedes.
+governing continuation protocol.
 
 ## 1. Required read order in the next chat
 
 The next Codex chat must:
 
 1. Read `AGENTS.md` completely and treat it as the durable repository policy.
-2. Read `KALHAS_STRATEGIC_HANDOFF_PHASES_28_35.md` — at minimum §9 (Gate 27.1
-   deliverables and exit criteria), §22 (Codex–Hermes continuation protocol,
-   including the §22.15 Gate 27.1 session map), and §25 (bootstrap and the
-   current first eligible sequence).
+2. Read `KALHAS_STRATEGIC_HANDOFF_PHASES_28_35.md` — at minimum the 2026-09-01
+   Phase 28 overlay and the 2026-09-02 H28-S13 closure overlay at the top,
+   §10 (Phase 28 scope, closure addendum, exit criteria), §22 (continuation
+   protocol), and §25 (bootstrap).
 3. Read this file completely for the split between the published baseline and
-   the local Gate 27.1 closure candidate.
+   the local Phase 28 closure candidate.
 4. Inspect the repository directly rather than relying only on handoff prose:
    - `git status -sb`
    - `git branch --show-current`
@@ -54,72 +60,82 @@ The next Codex chat must:
 5. Confirm its understanding to the user and wait. It must not begin new work
    merely because this handoff exists.
 
-`KALHAS_HANDOFF_PHASE_27.md` is a historical pre-publication snapshot. Read it
-only when exact Phase 27 implementation, hash, or gate evidence is needed.
+`KALHAS_HANDOFF_PHASE_27.md` remains a historical pre-publication snapshot.
+Read it only when exact Phase 27 implementation, hash, or gate evidence is
+needed.
 
 ## 2. Exact repository state
 
 Two layers must never be conflated: what is published, and what exists only
-locally as the Gate 27.1 closure candidate.
+locally as the Phase 28 closure candidate.
 
 ### 2.1 Published baseline (identical to `origin/main`)
 
-- Repository root:
-  `C:/Users/xampos/Desktop/Encomm-Kalhas`
+- Repository root: `C:/Users/xampos/Desktop/Encomm-Kalhas`
 - Branch: `main`
-- Local `HEAD`:
-  `a905d2af6b155a0f2568037e2b0f410b20be8d91`
-- `origin/main`:
-  `a905d2af6b155a0f2568037e2b0f410b20be8d91`
+- Local `HEAD`: `777a4472ef0d1edc6d30ce61a05851302b981027`
+  (`Gate 27.1: truthful baseline closure`)
+- `origin/main`: `777a4472ef0d1edc6d30ce61a05851302b981027`
 - Divergence: `0 0`
 - Index: empty (nothing staged)
-- Configured origin:
-  `https://github.com/Xamposs/Encomm_Kalhas.git`
-- GitHub visibility: public; default branch: `main`
+- Configured origin: `https://github.com/Xamposs/Encomm_Kalhas.git`
 
-Published `main` ends at the Phase 27 commit. **No Gate 27.1 change is
-published.** Everything listed in §2.2 is local, unstaged, uncommitted, and
-absent from `origin/main`.
+**No Phase 28 change is published.** Everything in §2.2 is local, unstaged,
+uncommitted, and absent from `origin/main`.
 
 ### 2.2 Actual local closure-candidate tree (dirty, unpublished)
 
-After the Gate 27.1 implementation sessions, the working tree deliberately
-holds exactly eleven dirty paths — six modified tracked files and five
-untracked files. The working tree is **not clean**, and it is not "one
-untracked handoff file":
+At the H28-S13 session baseline (before its documentation edits) the working
+tree held exactly **102 dirty paths = 34 modified tracked files + 68 untracked
+files**. The H28-S13 documentation slice then modified three additional
+tracked files — `README.md`, `docs/architecture/README.md`, and
+`docs/architecture/contracts-and-lifecycle.md` (each clean at
+`777a447` since Gate 27.1 published them) — and rewrote this handoff file and
+the strategic handoff in place (both untracked, status unchanged). The final
+expected state is therefore exactly **105 dirty paths = 37 modified + 68
+untracked**.
 
-Modified tracked paths (with the audited slice that changed them):
+> **Correction (publication session, 2026-09-02):** the paragraph above
+> miscounted and misclassified two paths. The audited final state — verified
+> live by the publication session against the H28-S13 resume and the 90-entry
+> protected ledger — is exactly **106 dirty paths = 38 modified tracked files
+> + 68 untracked files**: `CODEX_HERMES_HANDOFF_CURRENT_STATE.md` is a
+> modified *tracked* file (published before Gate 27.1; the S13 rewrite made
+> it dirty), and only `KALHAS_STRATEGIC_HANDOFF_PHASES_28_35.md` is
+> untracked. The exact 106-path inventory is recorded in the external session
+> resume `h28-s13-resume.md` under
+> `C:/Users/xampos/AppData/Local/hermes/profiles/kalhas-project/skills/coding/kalhas-project/references/`.
+> In summary:
 
-| Path | Changed by |
-| --- | --- |
-| `AGENTS.md` | S02 (architecture-role clarification: ordinary internal KALHAS modules are not additional components) |
-| `README.md` | S01 (post-publication Phase 26/27 status wording) |
-| `docs/architecture/README.md` | S01 (post-publication Phase 27 status) |
-| `docs/architecture/contracts-and-lifecycle.md` | S01 (post-publication Phase 27 status) |
-| `tests/test_boundaries.py` | S02 (approval-gated skip removed; deterministic, policy-consistent assertion) |
-| `tests/test_phase27_boundaries.py` | S01 (boundaries assert the post-publication wording) |
+- **Modified tracked paths (final: 38; the pre-publication paragraph above
+  said 37)**: the three active documentation
+  surfaces above (Phase 28 closure overlays added by `H28-S13`), the v1
+  registry (`kalhas/contracts/v1/__init__.py`), the store
+  (`kalhas/application/in_memory_store.py`), the API app/errors
+  (`kalhas/api/app.py`, `kalhas/api/errors.py`), the strategic handoff, and
+  24 test files that earlier Phase 28 sessions legitimately advanced
+  (registry/cardinality appends and boundary updates).
+  `docs/decisions/ADR-004-deterministic-adaptive-runtime-4.md` is **not** in
+  this set: it is byte-pinned by tests (§11) and the `H28-S13` session left
+  it byte-identical.
+- **Untracked paths (68)**: 31 new `kalhas/application/` adaptive/runtime-4
+  modules, 5 new `kalhas/contracts/v1/` Phase 28 contract modules, 5 new
+  `schemas/v1/` Phase 28 schema artifacts, this handoff file, the strategic
+  handoff, and 24 new Phase 28 test files (contracts, services, replay,
+  store, API, comparison, registry compatibility, and the S12 acceptance
+  suite).
 
-Untracked paths:
-
-| Path | Role |
-| --- | --- |
-| `CODEX_HERMES_HANDOFF_CURRENT_STATE.md` | S05 (this file) |
-| `KALHAS_STRATEGIC_HANDOFF_PHASES_28_35.md` | S05 execution-status updates only (Phase 28–35 roadmap otherwise unchanged) |
-| `tests/phase27_1_helpers.py` | S03 (unpatched exact-five causal fixture) |
-| `tests/test_phase27_1_exact_five_acceptance.py` | S03 (real exact-five acceptance proof) |
-| `tests/test_phase27_1_boundaries.py` | S04/C01 (permanent closure boundaries plus the derived-evidence injection detector) |
-
-All eleven paths are preserved exactly as their audited sessions produced
-them, except the two handoff files, which the `H27.1-S05` documentation slice
-and its mechanical post-full-gate correction `H27.1-S05-C01-POST-FULL-GATE-
-TRUTH` edited within their own allowlists. Nothing is staged, nothing is
-committed, and nothing is pushed.
+Note: `CODEX_HERMES_HANDOFF_CURRENT_STATE.md` and
+`KALHAS_STRATEGIC_HANDOFF_PHASES_28_35.md` were untracked before this rewrite
+and remain untracked; the rewrite changed their bytes only, not their Git
+status. Nothing is staged, nothing is committed, and nothing is pushed.
 
 ## 3. Published Git lineage
 
 The published `main` history currently ends with:
 
 ```text
+777a447 Gate 27.1: truthful baseline closure
 a905d2a Phase 27: evidence-based campaign decision support
 886f398 Phase 26: empirical campaign outcome distributions
 e6a39e7 Phase 25: complete realization-aware runtime 3.0.0 closure
@@ -128,15 +144,9 @@ f40e83d Phase 25: handoff documentation
 043ee22 Phase 24: deterministic world uncertainty realizations
 dfe8511 Phase 23: objective-to-metric evaluation semantics
 215729d KALHAS: domain-neutral decision-world kernel through Phase 22
-f153f3c KALHAS: domain-neutral decision-world kernel through Phase 19
 ```
 
-The Phase 26 and Phase 27 handoffs are present in the public repository:
-
-- `KALHAS_HANDOFF_PHASE_26.md`
-- `KALHAS_HANDOFF_PHASE_27.md`
-
-None of the Gate 27.1 paths in §2.2 appears in this published lineage.
+None of the Phase 28 paths in §2.2 appears in this published lineage.
 
 ## 4. What KALHAS is
 
@@ -149,121 +159,113 @@ three-role architecture:
 - **KALHAS** owns versioned world models, uncertainty, deterministic
   simulation campaigns, evidence, replay, comparison, and decision artifacts.
 
-No fourth component or hidden integration surface is allowed.
-
-The KALHAS kernel is domain-neutral. Domain-specific behavior may enter only
-through domain packs implementing the accepted `DomainPack` protocol. KALHAS
-does not import NEXUS or LEGION internals; the only permitted coupling is the
-placeholder adapter protocols under `kalhas/adapters/`.
+No fourth component or hidden integration surface is allowed. The kernel is
+domain-neutral; runtime 4 is ordinary governed KALHAS machinery, not a new
+component. KALHAS does not import NEXUS or LEGION internals; the only
+permitted coupling is the placeholder adapter protocols under
+`kalhas/adapters/`.
 
 ## 5. What has been implemented
 
-Sections 5.1–5.6 describe the published Phase 0–27 baseline. Section 5.7
-describes the local Gate 27.1 closure layer on top of it.
+Sections 5.1–5.7 describe the published Phase 0–27/Gate 27.1 baseline.
+Section 5.8 describes the local Phase 28 closure layer on top of it.
 
 ### 5.1 Versioned deterministic foundation
 
-- Versioned public v1 contracts and synchronized JSON Schema artifacts.
-- Canonical serialization, content hashes, immutable identifiers, and
-  provenance binding.
-- Tenant isolation and explicit ownership checks.
-- In-memory persistence seams with snapshot isolation.
-- Deterministic replay from recorded inputs and seeds.
-- Closed-world catalog and domain-pack boundaries.
+Versioned public v1 contracts and synchronized JSON Schema artifacts;
+canonical serialization, content hashes, immutable identifiers, provenance
+binding; tenant isolation and explicit ownership checks; in-memory
+persistence with snapshot isolation; deterministic replay; closed-world
+catalog and domain-pack boundaries.
 
 ### 5.2 World uncertainty and realizations
 
-- Versioned world models and immutable world content identity.
-- Explicit uncertainty declarations.
-- Deterministic world realizations bound to recorded scenario seeds.
-- Realization-aware runtime `3.0.0` execution paths.
-- Exact input-integrity verification before execution or derivation.
+Versioned world models with immutable content identity; explicit uncertainty
+declarations; deterministic realizations bound to recorded scenario seeds;
+realization-aware runtime `3.0.0` execution; exact input-integrity
+verification before execution or derivation.
 
 ### 5.3 Campaign execution and trajectory evidence
 
-- Deterministic campaign planning over strategy × shared-seed matrices.
-- Fair comparisons under identical recorded conditions.
-- Strategy trajectory declarations and deterministic state transitions.
-- Realization trajectory execution and replay verification.
-- Run-level and campaign-level metric-observation extraction.
-- Campaign trajectory, observation, and statistics matrices.
-- Read-only verified query services that reconstruct and validate authority
-  rather than trusting stored derived payloads.
+Deterministic campaign planning over strategy × shared-seed matrices; fair
+comparisons under identical recorded conditions; strategy trajectory
+declarations and deterministic state transitions; realization trajectory
+execution and replay verification; run-level and campaign-level metric
+observations; trajectory/observation/statistics matrices; read-only verified
+query services.
 
 ### 5.4 Objective and outcome evidence
 
-- Objective-to-metric evaluation semantics.
-- Exact target and optimization-direction handling.
-- Empirical campaign outcome distributions.
-- Deterministic Type-7 quantiles and fixed 95% tail statistics.
-- Strict finite-number and large-integer conversion validation.
-- Strategy/objective outcome matrices with identity and content hashes.
-- Read-only verified retrieval of outcome evidence.
+Objective-to-metric evaluation semantics; exact target and optimization
+direction handling; empirical campaign outcome distributions; deterministic
+Type-7 quantiles and fixed 95% tail statistics; strict finite-number
+validation; outcome matrices with identity and content hashes; read-only
+verified retrieval.
 
 ### 5.5 Campaign decision support
 
-- Immutable per-campaign decision policy.
-- Global or per-objective target-feasibility requirements.
-- Paired strategy comparisons over identical ordered seed evidence.
-- Exact win/loss/tie counts and paired-delta orientation.
-- Weighted regret and downside evidence.
-- Feasibility assessment and Pareto dominance over feasible strategies.
-- Deterministic minimax-regret selection with declared tie tolerance.
-- Explicit preferred, inconclusive, insufficient-evidence, and
-  no-feasible-strategy terminal states.
-- Deterministic structured campaign decision briefs.
-- Independent verification against authoritative policy and outcome records.
-- Read-only API operations for policy, strategy comparison, and decision brief.
-- Fixed 100-seed acceptance proofs and adversarial tamper coverage.
+Immutable per-campaign decision policy; target feasibility requirements;
+paired same-seed comparisons; weighted regret and minimax robustness; Pareto
+dominance; explicit preferred/inconclusive/insufficient-evidence/
+no-feasible-strategy terminal states; deterministic briefs; independent
+verification; read-only API operations; 100-seed acceptance proofs.
 
 ### 5.6 Colony UI
 
 The repository includes a visually improved local Colony demonstration with
 synthetic mock activity. It is intentionally separate from the verified
-decision pipeline.
+decision pipeline, is not evidence, not a calibrated prediction, not a
+real-world recommendation, and performs no autonomous external actions.
 
-The Colony display is not evidence that live agents are acting, is not a
-calibrated prediction, is not a real-world recommendation, and does not
-perform autonomous external actions.
+### 5.7 Gate 27.1 closure proof (published at `777a447`)
 
-### 5.7 Gate 27.1 closure proof (local, unpublished; audited, not checkpoint-accepted)
+The Gate 27.1 changes — active-documentation truth with boundary assertions,
+the architecture-policy conflict resolution with the approval-gated skip
+removed, and the unpatched exact-five trajectory-plan proof (five causally
+different declared plans over four shared seeds, real decision policy,
+comparison, and brief through the real services, with permanent closure
+boundaries in `tests/test_phase27_1_boundaries.py`) — were audited, fully
+gated (5,480 passed, 0 failed, 0 skipped, 901.64 seconds, Codex-owned run),
+and published as commit `777a4472ef0d1edc6d30ce61a05851302b981027`. They are
+now part of the published baseline, not a local candidate layer.
 
-On top of the published Phase 27 baseline, the local Gate 27.1 changes add a
-truthful-baseline closure layer whose proofs live entirely in the §2.2
-documentation and test/helper paths:
+### 5.8 Phase 28 adaptive runtime 4.0.0 (local, unpublished; gated, not checkpoint-accepted)
 
-- Active documentation (`README.md`, the architecture docs, `AGENTS.md`)
-  states the true post-publication Git state, and the boundary tests assert
-  that wording, so stale pre-publication claims cannot silently return.
-- The architecture-policy conflict is resolved: ordinary internal KALHAS
-  modules are explicitly not additional components or integration surfaces,
-  and the former approval-gated skip in `tests/test_boundaries.py` is gone —
-  the boundary suites now run deterministically with zero skips.
-- An end-to-end runtime-3.0.0 campaign proves the real public path under the
-  unmodified production `EXPECTED_STRATEGY_SET_SIZE == 5` invariant: the real
-  `MockLegionAdapter` supplies exactly five default/reference strategies,
-  made causally different by five declared transition-reference orders —
-  five executable plans, not five labels.
-- Exactly four immutable shared seeds drive twenty real executions
-  (5 strategies × 4 seeds); realization identity and content hashes are
-  identical across strategies per shared seed (shared-seed fairness),
-  executions are replay-verifiable, and the five trajectory/outcome
-  signatures are pairwise distinct as a causal consequence of the distinct
-  declared plans applied to the shared realized worlds.
-- Decision policy, strategy comparison, and the decision brief are derived
-  through the real, unmodified production services and read-only verified
-  queries against authoritative upstream records — no injected
-  comparison/brief, no copied decision algorithm, no second persisted
-  authority.
-- Replay, fairness, lineage, read-only reconstruction, tenant isolation, and
-  failure atomicity are exercised together in the acceptance proof.
-- `tests/test_phase27_1_boundaries.py` permanently encodes the closure
-  boundaries: candidate-cardinality patching, mock replacement or subclassing,
-  manufactured evidence, skip/xfail reintroduction, production imports of the
-  test-only Gate 27.1 helpers, and direct derived-evidence
-  persistence/injection are all structurally forbidden. A reusable detector
-  (`_direct_derived_persistence_violations`) is itself proven against
-  constructed violations while accepting legal read/service paths.
+On top of the published Gate 27.1 baseline, the local Phase 28 tree
+(`H28-S01` through `H28-S13`, complete) adds additive runtime `4.0.0`:
+
+- **Contracts and schemas** (D28-01–D28-04 frozen in ADR 004): five new
+  top-level v1 contracts — `RuntimeObservationDeclaration`,
+  `ExternalObservationInputBundle`, `AdaptivePolicy`,
+  `AdaptiveRunTrajectoryExecution`, `AdaptiveRunTrajectoryReplayManifest` —
+  registered at `PUBLIC_CONTRACTS` indexes 50–54 (55 total), with five new
+  synchronized schema artifacts (55 total; 56 files in `schemas/v1/`). The
+  50-contract prefix, all historical schema bytes, `API_VERSION`, and
+  `SCHEMA_VERSION` are unchanged. Nested evidence roles (drafts, observation
+  events, snapshots, decision/switch events) carry no independent authority.
+- **Causal execution**: the frozen within-step schedule (resolve step-addressed
+  external inputs → observe → validate/record → evaluate → decide → apply →
+  record) with counter/key-addressed observation noise under the frozen
+  `kalhas-observation-noise-v1` coordinate; a policy can act only on
+  observations available at the exact decision point. Runtimes
+  1.0.0/2.0.0/3.0.0 keep their exact historical meaning; nothing recorded is
+  reinterpreted.
+- **Immutable evidence**: one self-hashing `AdaptiveRunTrajectoryExecution`
+  per adaptive run; replay independently recomputes state-derived
+  observations, addressed noise, decisions, switches, and state evolution and
+  fails closed on any mismatch, persisting only the
+  `AdaptiveRunTrajectoryReplayManifest`. Read-only verified projections
+  expose observations, decisions, and switches through three additive API
+  paths (`/v1/runs/{run_id}/adaptive/{observations,decisions,switches}`);
+  the static-versus-adaptive comparison is derived, never stored.
+- **Unpatched production acceptance**
+  (`tests/test_phase28_exact_five_adaptive_acceptance.py`, 24 focused tests):
+  the real exact-five campaign (production `EXPECTED_STRATEGY_SET_SIZE == 5`,
+  five causally different declared plans) plus one bound adaptive policy arm
+  over the same four shared seeds/world coordinates — causal switching under
+  dwell/cooldown/budgets, paired comparison evidence, exact replay, tenant
+  isolation, and adversarial rejection of tampering. No cardinality patching,
+  no production mutation, no manufactured evidence.
 
 These are deterministic proofs about recorded models and recorded seeds. They
 do not establish scientific validity, calibrated forecasting, real-world
@@ -271,28 +273,18 @@ causality, or any live-action capability (see §7).
 
 ## 6. Current public surface
 
-The current public-contract catalog contains 50 versioned contracts. The
-latest additive contracts are:
+The public-contract catalog contains **55** versioned contracts. The Phase 28
+tail (indexes 50–54) is `RuntimeObservationDeclaration`,
+`ExternalObservationInputBundle`, `AdaptivePolicy`,
+`AdaptiveRunTrajectoryExecution`, `AdaptiveRunTrajectoryReplayManifest`. The
+latest Phase 27 additive contracts (indexes 47–49) are `CampaignDecisionPolicy`,
+`CampaignStrategyComparison`, `CampaignDecisionBrief`.
 
-- `CampaignDecisionPolicy`
-- `CampaignStrategyComparison`
-- `CampaignDecisionBrief`
-
-The API remains under the existing v1 segment. The decision surface adds
-exactly four operations across three paths:
-
-- create a campaign decision policy;
-- retrieve the recorded decision policy;
-- retrieve the verified strategy comparison;
-- retrieve the deterministic decision brief.
-
-The policy is persisted. Strategy comparison and decision brief are derived
-read-only from verified recorded evidence and are not independently persisted.
-
-Gate 27.1 added no public surface: no new contracts, schema artifacts, API
-paths, or operations. The Phase 27 boundary suite pins the catalog at exactly
-50 contracts with unchanged indexes and the three decision-tail entries, and
-pins the API at exactly the four decision operations.
+The API remains under the existing v1 segment: 46 documented paths / 57
+operations, including the three Phase 28 read-only adaptive paths. Gate 27.1
+added no public surface; Phase 28 added exactly the three adaptive paths, five
+contracts, and five schema artifacts listed above. The decision policy is
+persisted; comparisons and briefs remain derived read-only.
 
 ## 7. Truthfulness and safety boundaries
 
@@ -300,6 +292,9 @@ The next chat must preserve these statements:
 
 - KALHAS currently produces deterministic evidence under declared models and
   recorded assumptions.
+- Deterministic replay and repository acceptance are not scientific validity,
+  not calibration, not production readiness, not certification, and not a
+  guarantee of any outcome.
 - It does not prove that the model is an accurate representation of reality.
 - It does not claim calibrated forecasting or certainty.
 - It does not establish real-world causality merely because replay is
@@ -311,71 +306,60 @@ The next chat must preserve these statements:
   recorded KALHAS artifacts by later authorized work.
 - Public v1 contracts are backward-compatible. Breaking changes require a new
   contract module and API version rather than mutation in place.
-- The Gate 27.1 exact-five campaign is a deterministic closure proof over a
-  synthetic, domain-neutral fixture world. It is not evidence that the model
-  represents reality, that four seeds suffice for any real decision, or that
-  any preferred strategy is a real-world recommendation.
+- The exact-five and exact-five-plus-adaptive campaigns are deterministic
+  closure proofs over a synthetic, domain-neutral fixture world. They are not
+  evidence that the model represents reality, that four seeds suffice for any
+  real decision, or that any preferred strategy is a real-world
+  recommendation.
 
 ## 8. Quality evidence
 
-### 8.1 Historical Phase 27 publication evidence (explicitly historical)
+### 8.1 Historical Phase 27 and Gate 27.1 evidence (explicitly historical)
 
-The following values describe the published `a905d2a` tree at the official
-Phase 27 closure. They are retained only as historical publication evidence.
-They are **not** the Gate 27.1 result and must not be quoted as the current
-suite state:
+The 2026-08-25 historical snapshot (preserved in the external pre-rewrite
+copy named at the top of this file and in §9 of the strategic handoff)
+records: Phase 27 publication evidence (5,411 collected / 5,410 passed / one
+then-approved skip, 724.4 s); the Gate 27.1 focused gates; and the Codex-owned
+Gate 27.1 full gate on the grouped `S01`–`S05` fingerprint — **5,480 passed,
+0 failed, 0 skipped, 4 warnings, 901.64 seconds**, Ruff/format/mypy/schema/diff
+all green, nothing staged, no publication. These values describe those
+historical trees only and must not be quoted as the current suite state.
 
-- Pytest collected exactly **5,411 tests**; **5,410 passed**.
-- **1 test skipped** through the then-documented `AGENTS.md` approval gate;
-  0 failed and 0 errored.
-- `tests/test_phase27_boundaries.py`: **54 passed**.
-- Phase 26 + Phase 27 acceptance gate: **70 passed**.
-- `ruff check .`, `ruff format --check .`, `mypy kalhas tests`, schema-export
-  synchronization, and Git diff hygiene: all passed.
-- The independent Codex full-suite run took 724.4 seconds.
+### 8.2 Phase 28 session evidence (local, audited progressively through S12)
 
-Note: the one skipped architecture test above no longer exists. S02 removed
-the approval-gated skip; the current boundary suites run with zero skips.
+Per-slice evidence through `H28-S12` was audited progressively by Codex; the
+pinned, independently re-verifiable H28-S12 facts are:
 
-### 8.2 Audited Gate 27.1 focused evidence (per slice, as independently audited by Codex)
+- Acceptance suite:
+  `tests/test_phase28_exact_five_adaptive_acceptance.py` — git blob
+  `5d962408330fe0e6a80e972e47beb2af7d65b2bb`, 50,604 bytes, 1,090 lines, 24
+  focused tests, zero forbidden markers (no skip/xfail/noqa/type-ignore).
+- Full suite (H28-S12 session, exactly one run, normal exit):
+  **6,850 tests, 0 failures, 0 errors, 0 skipped, 810.94 seconds**; JUnit
+  artifact at `C:/Users/xampos/AppData/Local/Temp/h28s12_full.xml`
+  (1,039,417 bytes, well-formed, no failure/error elements).
+- Supporting gates from the S12 session: focused 24 passed; Gate 27.1 pair 92
+  passed 0F/0E/0S; related Phase 28/adaptive suites 1,201 passed; ruff check
+  and format-check green; mypy green (340 source files); schema export
+  `--check` synchronized; `git diff --check` clean; staged 0.
+- Protected S11 pins byte-exact: `tests/test_api_phase28.py`
+  `67b38646afac4276be92d40c068b972009628669` (44,408 B / 1,046 L),
+  `kalhas/api/routes_adaptive_run_execution.py`
+  `498bef4a4ab1e034858c25215d9e8c0f0e8eed6a` (5,656 B / 136 L),
+  `kalhas/api/app.py` `f6e2ff0e40fb8c89483beb15280a595950497342`
+  (2,329 B / 53 L), `kalhas/api/errors.py`
+  `d97918755878a84e5bf13c9662c34d446a97806a` (14,896 B / 347 L).
+- H28-S13 (this session) added: the six documentation-surface updates (this
+  file, both active READMEs, contracts-and-lifecycle, the strategic handoff;
+  ADR-004 untouched and byte-identical — see §11) and a bounded,
+  fixture-specific performance characterization recorded entirely outside the
+  repository (raw JSON + script under
+  `C:/Users/xampos/AppData/Local/Temp/h28s13/`, hashes in the external
+  resume). Its gates are listed with this session's final report; the
+  authoritative full-suite run for the grouped final fingerprint belongs to
+  the independent Codex audit.
 
-| Slice | Audit status | Focused evidence |
-| --- | --- | --- |
-| `H27.1-S01` | `SESSION_AUDITED` | Active post-publication documentation truth and its exact boundary assertions in `tests/test_phase27_boundaries.py`. |
-| `H27.1-S02` | `SESSION_AUDITED` | `tests/test_boundaries.py`: 17 passed, 0 skipped. Combined boundary gate at S02 audit time: 72 passed, 0 skipped. |
-| `H27.1-S03` | `SESSION_AUDITED` | Real unpatched exact-five campaign proof: focused 35 passed; Phase 26 + Phase 27 + S03: 105 passed. No production/cardinality mutation and no manufactured evidence. |
-| `H27.1-S04-C01-DERIVED-INJECTION-DETECTOR` (correction of the original `H27.1-S04-CLOSURE-BOUNDARY`) | `SESSION_AUDITED` | Final focused boundary gate: 33 passed. Combined boundaries: 105 passed. S03 acceptance + S04 boundaries: 68 passed. Ruff, format-check, and mypy green. The corrected reusable detector catches constructed derived-evidence persistence/injection and accepts legal read/service paths. |
-
-Slice IDs, allowlists, diffs, and file hashes were verified by Codex against
-the live tree at each audit.
-
-### 8.3 Completed: the single final repository gate (Codex-owned, 2026-08-25)
-
-After independently auditing the `H27.1-S05` documentation slice, Codex ran
-the one authoritative full repository gate on the grouped final `S01`–`S05`
-fingerprint on 2026-08-25. The complete observed result:
-
-- Pytest: exit 0 — **5,480 passed**, **0 failed**, **0 skipped**,
-  4 warnings (one pre-existing Starlette deprecation warning plus expected
-  Pydantic serialization warnings exercised by adversarial tests), 901.64
-  seconds. No full-suite count was rounded or changed.
-- Ruff check: exit 0 — all checks passed.
-- Ruff format check: exit 0 — 295 files already formatted.
-- mypy: exit 0 — no issues found in 278 source files.
-- Schema export synchronization (`scripts/export_schemas.py --check`): exit 0
-  — all schema artifacts synchronized.
-- Git diff hygiene (`git diff --check`): exit 0.
-- Staged paths (`git diff --cached --name-only`): empty; nothing staged.
-- No Git publication occurred; every Gate 27.1 change remains local.
-
-The full gate itself was completely green. This document records that
-evidence mechanically; it does not itself assign checkpoint authority for
-`CP27.1`. The latest Codex live-folder audit is authoritative for the final
-`CP27.1` disposition: after Codex verifies this documentation correction on
-the final documentation fingerprint, it may record `CP27.1`
-`CHECKPOINT_ACCEPTED` without another handoff edit.
-
-Any behavioral change must continue to pass at minimum:
+### 8.3 Gate commands any change must pass
 
 ```powershell
 uv run pytest
@@ -389,70 +373,44 @@ uv run python scripts/export_schemas.py --check
 
 ### 9.1 User
 
-The user owns product direction and authorization. The user decides:
-
-- what is worked on;
-- when a design is accepted;
-- when implementation begins;
-- when a phase is officially closed;
-- whether Git changes may be committed or pushed.
-
-No agent may infer permission for a new scope from previous momentum.
+The user owns product direction and authorization: what is worked on, when a
+design is accepted, when implementation begins, when a phase is officially
+closed, and whether Git changes may be committed or pushed. No agent may
+infer permission for a new scope from previous momentum.
 
 ### 9.2 Codex
 
-Codex is the orchestrator, reviewer, and repository auditor.
-
-Codex must:
-
-- inspect the live folder directly;
-- understand the architectural boundary before writing a prompt;
-- divide implementation into narrow, independently verifiable slices;
-- give Hermes exact allowlisted files and explicit forbidden scope;
-- review every Hermes report against the actual working tree;
-- detect incomplete runs, false claims, stale wording, and hidden Git changes;
-- issue narrowly bounded corrections as fresh sessions, never as follow-ups;
-- independently run proportionate gates before closure;
-- perform Git stage/commit/push only after explicit user authorization.
-
-Hermes reports are evidence to inspect, not authority by themselves.
+Codex is the orchestrator, reviewer, and repository auditor. Codex must
+inspect the live folder directly, divide work into narrow independently
+verifiable slices, give Hermes exact allowlists, review every report against
+the actual working tree, detect incomplete runs/false claims/stale
+wording/hidden Git changes, issue corrections as fresh sessions, run
+proportionate gates before closure, and perform Git stage/commit/push only
+after explicit user authorization. Hermes reports are evidence to inspect,
+not authority.
 
 ### 9.3 Hermes
 
-Hermes is the bounded implementation agent.
-
-Hermes must:
-
-- begin with exact repository preflight;
-- work only in the files explicitly permitted by the Codex prompt;
-- preserve all unrelated worktree state;
-- implement one bounded slice or correction;
-- add adversarial tests for behavioral changes;
-- run the requested focused gates;
-- report exact observed counts, errors, Git state, and changed files;
-- stop at the requested boundary;
-- never stage, commit, push, amend, rebase, reset, stash, clean, or create a
-  branch unless a later prompt explicitly authorizes that exact operation.
+Hermes is the bounded implementation agent. Hermes must begin with exact
+repository preflight, work only in explicitly permitted files, preserve all
+unrelated worktree state, implement one bounded slice or correction, add
+adversarial tests for behavioral changes, run the requested focused gates,
+report exact observed counts/errors/Git state/changed files, stop at the
+requested boundary, and never stage, commit, push, amend, rebase, reset,
+stash, clean, or create a branch unless a later prompt explicitly authorizes
+that exact operation.
 
 ## 10. Codex–Hermes session discipline
 
 The durable rule is:
-
-```text
-one fresh Hermes session = one prompt = one bounded slice/report
-```
+`one fresh Hermes session = one prompt = one bounded slice/report`.
 
 - Every slice, correction, or continuation opens a **new** session with a new
   session ID, receives exactly one prompt, and produces exactly one final
-  report. No follow-up prompts are sent into a finished session. This replaces
-  the older allowance for a same-session correction/closure prompt, which is
-  obsolete everywhere.
+  report. No follow-up prompts are sent into a finished session.
 - Each prompt carries its own preflight fingerprint, allowlist, gates, and
-  stop conditions. The canonical template is §22.12 of
-  `KALHAS_STRATEGIC_HANDOFF_PHASES_28_35.md`.
-- Do not make Hermes rediscover the whole architecture on every prompt;
-  provide exact required reads and anchors.
-- Do not ask for redundant full-suite executions when an authoritative run
+  stop conditions (canonical template: §22.12 of the strategic handoff).
+- Do not request redundant full-suite executions when an authoritative run
   already covers the same final file state; evidence reuse requires the
   identical content/gate fingerprint.
 - For long tests, run one process and wait for it. Never launch duplicate
@@ -461,130 +419,91 @@ one fresh Hermes session = one prompt = one bounded slice/report
   or needs any correction, that session is finished: Codex inspects the live
   folder and issues the smallest remaining scope as one new prompt to a fresh
   session.
-- Only one writer session may be active for a repository/worktree. Do not edit
-  the same worktree concurrently from Codex, another agent, an IDE formatter,
-  or a second Hermes session.
+- Only one writer session may be active for a repository/worktree.
 
-## 11. Required Hermes prompt structure
+## 11. Scope note: ADR-004 is byte-pinned, not annotated in place
 
-The canonical prompt template is §22.12 of
-`KALHAS_STRATEGIC_HANDOFF_PHASES_28_35.md`, which supersedes the older sketch
-below wherever the two differ. The stable skeleton remains:
+The H28-S13 prompt asked for a non-normative implementation-status note in
+`docs/decisions/ADR-004-deterministic-adaptive-runtime-4.md`. That file is
+byte-pinned by four independent test functions
+(`tests/test_adaptive_condition_evaluator.py`,
+`tests/test_adaptive_policy_contracts.py`,
+`tests/test_adaptive_policy_state_machine.py`, and the 90-entry baseline
+ledger check in `tests/test_adaptive_campaign_planning_service.py`, ledger
+line 1 — all pin git blob
+`32518c01baa8443da73650b106cbd674b86b7ae8`). Editing it would break those
+tests, and editing tests was outside this session's allowlist. The non-
+normative implementation-status note therefore lives in the three active
+documentation surfaces and in this handoff and the strategic handoff instead;
+ADR-004 remains byte-identical (`32518c01...`, 12,997 bytes, 269 lines). Its
+at-time-of-writing sentence "No Phase 28 implementation exists at the time of
+writing" remains true as of its 2026-08-25 writing date and is now
+historically superseded by the dated 2026-09-02 overlays elsewhere — exactly
+the preserve-as-historical pattern this repository already applies to ADRs
+and handoffs.
 
-### A. Baseline
-
-- repository root;
-- expected branch, HEAD, origin, and divergence;
-- expected index/worktree state;
-- mandatory files to read;
-- instruction to clear unexpected `PYTHONPATH` state.
-
-### B. Exact scope
-
-- explicit permitted files;
-- explicit forbidden files and subsystems;
-- whether new files may be created;
-- no Git history operations.
-
-### C. Behavioral contract
-
-- exact inputs and outputs;
-- ordering and determinism rules;
-- identity, content-hash, tenant, and provenance requirements;
-- exact error classes and atomicity requirements;
-- explicit non-goals.
-
-### D. Adversarial proof
-
-- malformed inputs;
-- missing, duplicate, reordered, or foreign records;
-- forged self-consistent hashes;
-- first/middle/last-position tampering;
-- no partial write or partial artifact on failure;
-- preservation of already accepted behavior.
-
-### E. Gates
-
-- focused tests;
-- related boundary and acceptance suites;
-- Ruff and formatting;
-- mypy;
-- schema synchronization;
-- full pytest only when the prompt declares this session as its owner;
-- final Git diff/status checks.
-
-### F. Final report and hard stop
-
-Hermes must report:
-
-- exact changed behavior and files;
-- exact tests added or modified;
-- exact command results and counts;
-- final Git state;
-- anything incomplete or blocked;
-- explicit confirmation that no unauthorized Git operation occurred;
-- a hard stop without beginning unrelated work.
-
-## 12. Codex review checklist
-
-For every Hermes result, Codex should independently verify:
-
-1. Repository root, branch, HEAD, origin, divergence, and index.
-2. Exact changed and untracked path membership.
-3. Diff against the file allowlist.
-4. Public signatures, constants, `__all__`, and schema catalog changes.
-5. Domain neutrality and absence of forbidden NEXUS/LEGION imports.
-6. Deterministic ordering, shared-seed fairness, replay, and provenance.
-7. Tenant isolation and read-only/no-partial-write guarantees.
-8. Adversarial tests and non-weakened historical tests.
-9. Documentation truthfulness and absence of overclaims.
-10. Focused gates, static gates, schema synchronization, and the full suite
-    exactly when this session/checkpoint owns it.
-11. That no stage/commit/push/history operation occurred unless explicitly
-    authorized.
-
-If a report and the folder disagree, the folder and independently observed
-command results are authoritative.
-
-## 13. Git publication discipline
+## 12. Git publication discipline
 
 - Normal development remains unstaged until a bounded slice has been audited.
 - Hermes does not publish changes.
-- Codex stages only the confirmed phase/scope path set.
-- Codex inspects the staged name-status, path count, diff, and whitespace
-  policy before committing.
+- Codex stages only the confirmed phase/scope path set and inspects the staged
+  name-status, path count, diff, and whitespace policy before committing.
 - Commit messages follow the existing concise `Phase N: description` style
   when a numbered phase is being officially closed.
 - No force push, amend, squash, rebase, reset, or history rewrite without an
-  explicit user request.
-- A normal push requires separate, explicit user authorization.
-- After a push, Codex verifies `HEAD == origin/main`, divergence `0 0`, a clean
-  tree/index, and the remote commit through GitHub.
+  explicit user request; a normal push requires separate explicit user
+  authorization.
+- After a push, Codex verifies `HEAD == origin/main`, divergence `0 0`, a
+  clean tree/index, and the remote commit through GitHub.
 
-## 14. Next eligible action
+## 13. Next eligible action
 
-The action after this `H27.1-S05-C01-POST-FULL-GATE-TRUTH` correction report
-is exactly:
+The action after the `H28-S13-DOCS-PERF-CLOSURE` report is exactly:
 
-1. Codex audits the two corrected handoffs
-   (`CODEX_HERMES_HANDOFF_CURRENT_STATE.md` and
-   `KALHAS_STRATEGIC_HANDOFF_PHASES_28_35.md`) and their final fingerprints
-   against the live folder.
-2. Codex performs the required post-correction verification on the final
-   documentation fingerprint.
-3. Only if green, Codex records `CP27.1` `CHECKPOINT_ACCEPTED`.
-4. Git staging, commit, and push require separate explicit user authorization.
-5. Phase 28 does not start automatically and remains not started.
-6. Before `H28-S01`, perform the required read-only Phase 28 ADR/design audit.
-
-The implementation and full repository gates are green, but this mechanical
-documentation correction does not independently assign checkpoint authority:
-the latest Codex live-folder audit is authoritative for the final `CP27.1`
-disposition. Until Codex records that disposition on the corrected
-documentation fingerprint, the local tree is a fully gated closure candidate,
-not an accepted checkpoint. After reading and verifying this handoff, the
-next chat should confirm the split between the published baseline (§2.1) and
-the local closure candidate (§2.2), state the remaining Gate 27.1 closure
-steps above, and wait for the user's explicit instruction.
+1. **Codex performs the independent final Phase 28 fingerprint/gate audit**:
+   verify the exact dirty inventory against the session allowlists, the
+   documented hashes/counts, the pinned S11/S12 fingerprints, the ledger
+   (90/90), the schema counts (55/56), and the gate evidence; then run the
+   complete repository gate once on the grouped final Phase 28 fingerprint.
+2. Only if that audit is green, Codex records `CP28-B`
+   `CHECKPOINT_ACCEPTED`. This session does not assign that disposition.
+3. Git staging, commit, and push require separate explicit user
+   authorization.
+4. **Then STOP awaiting explicit Phase 29 instructions.** Phase 29 is not
+   started, not designed for implementation, and not authorized. Before any
+   `H29-S01`, the required read-only Phase 29 entry audit (mechanism ADR,
+   D29-03 Model Pack release/assurance profile, maturity/claim rules,
+   numerical/platform rule, adapter impact, external-reference boundary)
+   must occur, and every future portfolio entry remains `catalogued`.
 
 That is the complete handoff. No additional work is authorized by this file.
+
+## 14. Publication status overlay — 2026-09-02
+
+Recorded by the user-authorized publication session after the independent
+Codex final Phase 28 fingerprint/gate audit accepted the closure candidate
+(`CP28-B`: `CHECKPOINT_ACCEPTED`, 2026-09-02). The publication session
+verified live: branch `main`; `HEAD == origin/main ==
+777a4472ef0d1edc6d30ce61a05851302b981027`; divergence `0 0`; staged 0; dirty
+exactly 106 = 38 modified + 68 untracked, byte-exact against the H28-S13
+resume inventory; protected ledger SHA-256 `a7937bf7...ee152` with 90/90
+entries re-verified; schemas 55/56; no repository-writer processes; no
+credentials, caches, temporary files, or unrelated binaries across all 106
+paths.
+
+Current truthful status:
+
+- `H28-S01` through `H28-S13` are **complete**; Phase 28 (adaptive
+  deterministic runtime `4.0.0`) is **complete**: implementation-finished,
+  fully gated, and independently audited.
+- `CP28-B` was independently accepted by Codex on **2026-09-02**.
+- This publication session stages and commits exactly the audited Phase 28
+  inventory (38 modified + 68 untracked paths) plus minimal final status
+  corrections to the active handoff documentation, after re-running the
+  focused Phase 28, Ruff, format, mypy, and schema-synchronization gates. It
+  then polishes the repository presentation (banner, README, community and
+  CI files) as a separate documentation commit — both under the user's
+  explicit authorization.
+- **Phase 29 is NOT STARTED and NOT AUTHORIZED.** It requires new explicit
+  user authorization and the read-only Phase 29 entry audit described in
+  §13 before any implementation session.

@@ -24,8 +24,10 @@ negative assertions. Proves:
   recorded run plans (never caller input), the required X-Tenant-ID
   header, ``CampaignOutcomeDistributionMatrix`` at public-contract
   index 46 with the exact unchanged 46-contract prefix and the
-  decision contracts at indexes 47-49, exactly 50 public schema
-  artifacts, nested Phase 26 value objects unregistered,
+  decision contracts at indexes 47-49 within the accepted Phase 27
+  50-contract prefix, schema artifact count following ``PUBLIC_CONTRACTS``
+  with later additive contracts allowed, nested Phase 26 value objects
+  unregistered,
   and the Phase 25 paths/operations unchanged;
 - statistical/decision boundary: no ranking, winner, preferred
   strategy, recommendation, decision brief, LLM narrative, confidence
@@ -566,7 +568,7 @@ class TestPublicApiSurface:
 
     def test_public_contract_index_46_and_historical_prefix_unchanged(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
-        assert len(PUBLIC_CONTRACTS) == 50
+        assert len(PUBLIC_CONTRACTS) >= 50
         assert names[:46] == _PRE_PHASE26_CONTRACTS
         assert names[46] == "CampaignOutcomeDistributionMatrix"
         assert names[47] == "CampaignDecisionPolicy"
@@ -578,10 +580,10 @@ class TestPublicApiSurface:
         assert "EmpiricalDistributionSummary" not in names
         assert "StrategyObjectiveOutcome" not in names
 
-    def test_exactly_50_schema_artifacts_with_matching_titles(self) -> None:
+    def test_schema_artifacts_follow_the_public_registry_with_matching_titles(self) -> None:
         schema_dir = KALHAS_ROOT.parent / "schemas" / "v1"
         schema_files = sorted(schema_dir.glob("*.schema.json"))
-        assert len(schema_files) == 50
+        assert len(schema_files) == len(PUBLIC_CONTRACTS)
         titles = {json.loads(path.read_text(encoding="utf-8"))["title"] for path in schema_files}
         names = {contract.__name__ for contract in PUBLIC_CONTRACTS}
         assert titles == names

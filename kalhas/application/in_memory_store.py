@@ -20,10 +20,31 @@ from __future__ import annotations
 
 import copy
 import warnings
-from typing import cast
+from typing import Literal, cast
 
 from pydantic import ValidationError
 
+from kalhas.application.adaptive_policy_binding_errors import (
+    AdaptivePolicyAlreadyExistsError,
+    AdaptivePolicyIntegrityError,
+    AdaptivePolicyNotFoundError,
+)
+from kalhas.application.adaptive_policy_identity import verify_adaptive_policy_identity
+from kalhas.application.adaptive_trajectory_execution_errors import (
+    AdaptiveRunTrajectoryExecutionAlreadyExistsError,
+    AdaptiveRunTrajectoryExecutionIntegrityError,
+    AdaptiveRunTrajectoryExecutionNotFoundError,
+    AdaptiveRunTrajectoryExecutionValidationError,
+)
+from kalhas.application.adaptive_trajectory_execution_integrity import (
+    AdaptiveRunExecutionAuthorities,
+)
+from kalhas.application.adaptive_trajectory_replay_errors import (
+    AdaptiveRunTrajectoryReplayManifestAlreadyExistsError,
+    AdaptiveRunTrajectoryReplayManifestIntegrityError,
+    AdaptiveRunTrajectoryReplayManifestNotFoundError,
+    AdaptiveRunTrajectoryReplayManifestValidationError,
+)
 from kalhas.application.campaign_decision_errors import (
     CampaignDecisionPolicyAlreadyExistsError,
     CampaignDecisionPolicyIntegrityError,
@@ -64,7 +85,17 @@ from kalhas.application.domain_errors import (
     TrajectoryPlansAlreadyPreparedError,
     TrajectoryPlansNotFoundError,
     WorldNotFoundError,
+    WorldSnapshotIntegrityError,
 )
+from kalhas.application.external_observation_input_errors import (
+    ExternalObservationInputAlreadyExistsError,
+    ExternalObservationInputIntegrityError,
+    ExternalObservationInputNotFoundError,
+)
+from kalhas.application.external_observation_input_identity import (
+    verify_external_observation_input_bundle_identity,
+)
+from kalhas.application.hashing import canonical_json, sha256_hex
 from kalhas.application.objective_evaluation_errors import (
     EvaluationProfileAlreadyExistsError,
     EvaluationProfileIntegrityError,
@@ -83,23 +114,42 @@ from kalhas.application.realization_errors import (
     RealizationRunTrajectoryReplayManifestConflictError,
     RealizationRunTrajectoryReplayManifestNotFoundError,
 )
+from kalhas.application.run_planner import run_identifier
+from kalhas.application.runtime_observation_declaration_errors import (
+    RuntimeObservationDeclarationAlreadyExistsError,
+    RuntimeObservationDeclarationIntegrityError,
+    RuntimeObservationDeclarationNotFoundError,
+)
+from kalhas.application.runtime_observation_declaration_identity import (
+    verify_runtime_observation_declaration_identity,
+)
+from kalhas.application.world_integrity import (
+    extract_world_catalog,
+    verify_world_snapshot,
+)
 from kalhas.application.world_uncertainty_errors import (
+    WorldRealizationIntegrityError,
+    WorldRealizationSamplingError,
     WorldUncertaintyModelAlreadyExistsError,
     WorldUncertaintyModelIntegrityError,
     WorldUncertaintyModelNotFoundError,
 )
 from kalhas.application.world_uncertainty_identity import (
+    seed_content_hash,
     verify_world_uncertainty_model_identity,
 )
 from kalhas.contracts.v1.activity import OperationalActivityEvent, OperationalActivityKind
-from kalhas.contracts.v1.campaign import CampaignSpec, CampaignStatus
+from kalhas.contracts.v1.adaptive_policy import AdaptivePolicy
+from kalhas.contracts.v1.adaptive_trajectory_execution import AdaptiveRunTrajectoryExecution
+from kalhas.contracts.v1.adaptive_trajectory_replay import AdaptiveRunTrajectoryReplayManifest
+from kalhas.contracts.v1.campaign import CampaignSpec, CampaignState, CampaignStatus
 from kalhas.contracts.v1.campaign_decision import CampaignDecisionPolicy
 from kalhas.contracts.v1.domain_pack import (
     DomainCapabilityDeclaration,
     DomainPackBinding,
     DomainPackManifest,
 )
-from kalhas.contracts.v1.execution import ReplayManifest, RunStatus
+from kalhas.contracts.v1.execution import ReplayManifest, RunState, RunStatus
 from kalhas.contracts.v1.integrity import RunInputIntegrityManifest
 from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
 from kalhas.contracts.v1.objective_evaluation import ScenarioEvaluationProfile
@@ -112,6 +162,11 @@ from kalhas.contracts.v1.realization_trajectory_execution import (
 )
 from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
 from kalhas.contracts.v1.run_plan import RunPlan
+from kalhas.contracts.v1.runtime_observation import (
+    ExternalObservationInputBundle,
+    ExternalObservationSource,
+    RuntimeObservationDeclaration,
+)
 from kalhas.contracts.v1.scenario import ScenarioSpec
 from kalhas.contracts.v1.shared import AwareDatetime, JsonValue
 from kalhas.contracts.v1.simulation import RunEvent
@@ -679,8 +734,437 @@ def revalidate_stored_campaign_decision_policy(
         ) from None
 
 
+_BINDINGS_KEY = "domain_pack_bindings"
+
+
+def revalidate_stored_runtime_observation_declaration(
+    declaration: object,
+    tenant_id: str,
+    scenario_id: str,
+    world_version_id: str,
+    observation_id: str,
+) -> None:
+    """Strictly revalidate one stored runtime observation declaration.
+
+    ``model_copy``/``model_construct`` and private-store injection can
+    produce a ``RuntimeObservationDeclaration`` instance whose contract
+    validators never ran - for example a validator-bypassed nested
+    observation source or noise, an invalid hash pattern, an
+    unsupported runtime literal, a non-finite metadata value, or a
+    source/noise/value-kind contradiction. Revalidating the record's
+    Python-mode serialized data with ``strict=True`` re-runs every
+    field rule, including the nested contracts and the declaration-level
+    rules, so a validator-bypassed stored record is rejected before any
+    field of it is trusted. The metadata non-finite rule is enforced
+    explicitly as well (pydantic strict float validation still accepts
+    NaN/Infinity by default), and the deterministic identity
+    (ownership, identifier, content hash) is independently re-verified
+    over the revalidated record. The temporary revalidated object is
+    discarded; the actual stored snapshot is what callers continue to
+    verify. Any failure raises
+    :class:`RuntimeObservationDeclarationIntegrityError` with a safe
+    generic public message - validation details, raw hashes,
+    identifiers, and metadata values are never exposed - and storage is
+    never repaired, normalized, replaced, or rewritten.
+    """
+    if type(declaration) is not RuntimeObservationDeclaration:
+        raise RuntimeObservationDeclarationIntegrityError(
+            tenant_id,
+            scenario_id,
+            world_version_id,
+            reason="stored declaration violates its contract",
+        )
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+            )
+            serialized = declaration.model_dump(mode="python")
+        revalidated = RuntimeObservationDeclaration.model_validate(serialized, strict=True)
+        if _contains_non_finite(revalidated.metadata):
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration violates its contract",
+            )
+        verify_runtime_observation_declaration_identity(
+            revalidated,
+            tenant_id=tenant_id,
+            scenario_id=scenario_id,
+            world_version_id=world_version_id,
+            observation_id=observation_id,
+        )
+    except (
+        ValidationError,
+        TypeError,
+        ValueError,
+        AttributeError,
+        RuntimeObservationDeclarationIntegrityError,
+    ):
+        raise RuntimeObservationDeclarationIntegrityError(
+            tenant_id,
+            scenario_id,
+            world_version_id,
+            reason="stored declaration violates its contract",
+        ) from None
+
+
+def revalidate_stored_adaptive_policy(
+    policy: object,
+    tenant_id: str,
+    campaign_id: str,
+) -> None:
+    """Strictly revalidate one stored adaptive policy.
+
+    ``model_copy``/``model_construct`` and private-store injection can produce
+    an ``AdaptivePolicy`` instance whose contract validators never ran - for
+    example a wrong-typed nested condition leaf or rule, an invalid hash
+    pattern, a non-``4.0.0`` runtime literal, a non-canonical binding or
+    action ordering, an unused or unknown observation binding, or non-finite
+    metadata. Revalidating the record's Python-mode serialized data with
+    ``strict=True`` re-runs every field rule, including the nested contracts
+    and the policy-level rules, so a validator-bypassed stored record is
+    rejected before any field of it is trusted, and the deterministic
+    identity (ownership, identifier, content hash) is independently
+    re-verified over the revalidated record. The temporary revalidated object
+    is discarded; the actual stored snapshot is what callers continue to
+    verify. Any failure raises :class:`AdaptivePolicyIntegrityError` with a
+    safe generic public message - validation details, raw hashes, identities,
+    thresholds, and metadata values are never exposed - and storage is never
+    repaired, normalized, replaced, or rewritten.
+    """
+    if type(policy) is not AdaptivePolicy:
+        raise AdaptivePolicyIntegrityError(
+            tenant_id, campaign_id, reason="stored adaptive policy violates its contract"
+        )
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+            )
+            serialized = policy.model_dump(mode="python")
+        revalidated = AdaptivePolicy.model_validate(serialized, strict=True)
+        if _contains_non_finite(revalidated.metadata):
+            raise AdaptivePolicyIntegrityError(
+                tenant_id, campaign_id, reason="stored adaptive policy violates its contract"
+            )
+        verify_adaptive_policy_identity(
+            revalidated,
+            tenant_id=tenant_id,
+            campaign_id=campaign_id,
+            scenario_id=revalidated.scenario_id,
+            world_version_id=revalidated.world_version_id,
+            policy_id=revalidated.policy_id,
+            policy_version=revalidated.policy_version,
+        )
+    except (
+        ValidationError,
+        TypeError,
+        ValueError,
+        AttributeError,
+        AdaptivePolicyIntegrityError,
+    ):
+        raise AdaptivePolicyIntegrityError(
+            tenant_id, campaign_id, reason="stored adaptive policy violates its contract"
+        ) from None
+
+
+def _strategy_candidate_content_hash(candidate: StrategyCandidate) -> str:
+    """Canonical SHA-256 of the exact full strategy candidate snapshot."""
+    return sha256_hex(canonical_json(candidate.model_dump(mode="json")))
+
+
+def revalidate_stored_external_observation_input_bundle(
+    bundle: object,
+    tenant_id: str,
+    campaign_id: str,
+) -> None:
+    """Strictly revalidate one stored external observation input bundle.
+
+    ``model_copy``/``model_construct`` and private-store injection can
+    produce an ``ExternalObservationInputBundle`` instance whose contract
+    validators never ran - for example a validator-bypassed nested entry
+    (wrong-typed value, non-finite value, forged identifier or step), an
+    invalid hash pattern, a non-``4.0.0`` runtime literal, an empty or
+    non-canonical entry tuple, or a duplicate coordinate. Revalidating the
+    record's Python-mode serialized data with ``strict=True`` re-runs every
+    field rule, including the nested entry contracts and the bundle-level
+    ordering/uniqueness rules, so a validator-bypassed stored record is
+    rejected before any field of it is trusted, and the deterministic
+    identity (ownership, identifier, content hash) of the bundle and of
+    every entry is independently re-verified over the revalidated record.
+    The temporary revalidated object is discarded; the actual stored
+    snapshot is what callers continue to verify. Any failure raises
+    :class:`ExternalObservationInputIntegrityError` with a safe generic
+    public message - validation details, raw hashes, identifiers, values,
+    channels, and steps are never exposed - and storage is never repaired,
+    normalized, replaced, or rewritten.
+    """
+    if type(bundle) is not ExternalObservationInputBundle:
+        raise ExternalObservationInputIntegrityError(
+            tenant_id, campaign_id, reason="stored bundle violates its contract"
+        )
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+            )
+            serialized = bundle.model_dump(mode="python")
+        revalidated = ExternalObservationInputBundle.model_validate(serialized, strict=True)
+        verify_external_observation_input_bundle_identity(
+            revalidated,
+            tenant_id=tenant_id,
+            campaign_id=campaign_id,
+            scenario_id=revalidated.scenario_id,
+            world_version_id=revalidated.world_version_id,
+            scenario_seed_id=revalidated.scenario_seed_id,
+        )
+    except (
+        ValidationError,
+        TypeError,
+        ValueError,
+        AttributeError,
+        ExternalObservationInputIntegrityError,
+    ):
+        raise ExternalObservationInputIntegrityError(
+            tenant_id, campaign_id, reason="stored bundle violates its contract"
+        ) from None
+
+
 class InMemoryScenarioStore:
     """Process-local store for scenarios, worlds, campaigns, and run plans."""
+
+    def _adaptive_run_authorities(
+        self,
+        execution: AdaptiveRunTrajectoryExecution,
+        *,
+        tenant_id: str,
+        run_id: str,
+        run_plan: RunPlan,
+        run_status: RunStatus,
+    ) -> AdaptiveRunExecutionAuthorities:
+        """Load and verify every runtime-4 authority the execution must agree with.
+
+        The already store-verified run plan and run status are received
+        as required arguments, and the campaign lifecycle status is
+        loaded through :meth:`get_campaign_status` and retained
+        separately - it is never overwritten with the run status. All
+        three are passed straight into the concrete authority
+        dataclass, so the integrity verifier always receives a
+        statically typed :class:`AdaptiveRunExecutionAuthorities` with
+        explicitly named ``campaign_status`` and ``run_status`` members.
+        Every other stored authority is fetched through the store's own
+        getters (each strictly re-verifies its record on read). The
+        deterministic Phase 24 world realization is re-derived from the
+        verified world, its catalog state models, the exact embedded/stored
+        uncertainty model, and the exact campaign seed - mirroring the
+        established run-input derivation. Any missing authority raises
+        the typed validation error; any corrupt authority raises the
+        typed integrity error; nothing is written, repaired, or executed.
+        """
+        from kalhas.application.adaptive_trajectory_execution_identity import (
+            RUNTIME_VERSION_LITERAL,
+        )
+        from kalhas.application.world_realization_builder import build_world_realization
+
+        campaign_id = execution.campaign_id
+        try:
+            campaign = self.get_campaign(tenant_id, campaign_id)
+        except CampaignNotFoundError as exc:
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="campaign authority missing"
+            ) from exc
+        try:
+            campaign_status = self.get_campaign_status(tenant_id, campaign_id)
+        except CampaignNotFoundError as exc:
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="campaign status authority missing"
+            ) from exc
+        try:
+            world = self.get_world(tenant_id, campaign.world_version_id)
+            manifest = self.get_manifest(tenant_id, campaign.world_version_id)
+        except WorldNotFoundError as exc:
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="world authority missing"
+            ) from exc
+        try:
+            verify_world_snapshot(world, manifest)
+        except WorldSnapshotIntegrityError as exc:
+            raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                tenant_id, run_id, reason="world authority corrupt"
+            ) from exc
+        if world.tenant_id != tenant_id or world.source_scenario_id != campaign.scenario_id:
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="campaign/scenario/world identity mismatch"
+            )
+        seed = next(
+            (
+                candidate
+                for candidate in campaign.seed_ensemble
+                if candidate.identifier == execution.scenario_seed_id
+            ),
+            None,
+        )
+        if seed is None:
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="scenario seed authority missing"
+            )
+        if seed.tenant_id != tenant_id:
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="scenario seed tenant mismatch"
+            )
+        try:
+            policy = self.get_adaptive_policy(tenant_id, campaign_id)
+        except AdaptivePolicyNotFoundError as exc:
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="adaptive policy authority missing"
+            ) from exc
+        except AdaptivePolicyIntegrityError as exc:
+            raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                tenant_id, run_id, reason="adaptive policy authority corrupt"
+            ) from exc
+        if (
+            policy.runtime_version != RUNTIME_VERSION_LITERAL
+            or policy.tenant_id != tenant_id
+            or policy.campaign_id != campaign_id
+            or policy.scenario_id != campaign.scenario_id
+            or policy.world_version_id != world.identifier
+            or policy.world_content_hash != world.content_hash
+        ):
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="campaign/policy/scenario/world identity mismatch"
+            )
+        catalog = extract_world_catalog(world)
+        declarations: dict[str, RuntimeObservationDeclaration] = {}
+        for binding in policy.observation_bindings:
+            try:
+                declaration = self.get_runtime_observation_declaration(
+                    tenant_id, campaign.scenario_id, world.identifier, binding.observation_id
+                )
+            except RuntimeObservationDeclarationNotFoundError as exc:
+                raise AdaptiveRunTrajectoryExecutionValidationError(
+                    tenant_id, run_id, reason="observation declaration authority missing"
+                ) from exc
+            except RuntimeObservationDeclarationIntegrityError as exc:
+                raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                    tenant_id, run_id, reason="observation declaration authority corrupt"
+                ) from exc
+            if (
+                declaration.runtime_version != RUNTIME_VERSION_LITERAL
+                or declaration.tenant_id != tenant_id
+                or declaration.scenario_id != campaign.scenario_id
+                or declaration.world_version_id != world.identifier
+                or declaration.world_content_hash != world.content_hash
+                or binding.runtime_observation_declaration_id != declaration.identifier
+                or binding.runtime_observation_declaration_content_hash != declaration.content_hash
+                or binding.observed_value_kind != declaration.observed_value_kind
+                or binding.unit != declaration.unit
+                or binding.missing_behavior != declaration.missing_behavior
+            ):
+                raise AdaptiveRunTrajectoryExecutionValidationError(
+                    tenant_id, run_id, reason="policy binding disagrees with stored authority"
+                )
+            declarations[binding.observation_id] = declaration
+        try:
+            stored_plans = self.get_strategy_trajectory_plans(tenant_id, campaign_id)
+        except TrajectoryPlansNotFoundError as exc:
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="trajectory plan authority missing"
+            ) from exc
+        plans_by_id = {plan.identifier: plan for plan in stored_plans}
+        action_plans: dict[str, tuple[StrategyTrajectoryPlan, ...]] = {}
+        for action in policy.actions:
+            bound_plans: list[StrategyTrajectoryPlan] = []
+            for plan_binding in action.trajectory_plan_bindings:
+                plan = plans_by_id.get(plan_binding.trajectory_plan_id)
+                if plan is None:
+                    raise AdaptiveRunTrajectoryExecutionValidationError(
+                        tenant_id, run_id, reason="action plan authority missing"
+                    )
+                # Exact stored-plan binding authority: catalog membership
+                # alone is never sufficient - every TrajectoryPlanBinding
+                # must agree exactly with the stored plan it cites.
+                if (
+                    plan.content_hash != plan_binding.trajectory_plan_content_hash
+                    or plan.state_model_identifier != plan_binding.state_model_identifier
+                    or plan.state_model_id != plan_binding.state_model_id
+                    or plan.state_model_content_hash != plan_binding.state_model_content_hash
+                ):
+                    raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                        tenant_id, run_id, reason="action plan authority mismatch"
+                    )
+                bound_plans.append(plan)
+            action_plans[action.action_id] = tuple(bound_plans)
+        requires_bundle = any(
+            isinstance(declaration.observation_source, ExternalObservationSource)
+            for declaration in declarations.values()
+        )
+        bundle: ExternalObservationInputBundle | None = None
+        if requires_bundle or execution.external_observation_input_bundle_id is not None:
+            try:
+                bundle = self.get_external_observation_input_bundle(
+                    tenant_id=tenant_id,
+                    campaign_id=campaign_id,
+                    scenario_seed_id=seed.identifier,
+                )
+            except ExternalObservationInputNotFoundError as exc:
+                raise AdaptiveRunTrajectoryExecutionValidationError(
+                    tenant_id, run_id, reason="external bundle authority missing"
+                ) from exc
+            except ExternalObservationInputIntegrityError as exc:
+                raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                    tenant_id, run_id, reason="external bundle authority corrupt"
+                ) from exc
+        embedded = catalog.uncertainty_model
+        model: WorldUncertaintyModel | None = None
+        if embedded is not None:
+            try:
+                model = self.get_world_uncertainty_model(tenant_id, campaign.scenario_id)
+            except WorldUncertaintyModelNotFoundError as exc:
+                raise AdaptiveRunTrajectoryExecutionValidationError(
+                    tenant_id, run_id, reason="stored uncertainty model missing"
+                ) from exc
+            if (
+                model.tenant_id != tenant_id
+                or model.scenario_id != campaign.scenario_id
+                or model.model_dump(mode="json") != embedded.model_dump(mode="json")
+            ):
+                raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                    tenant_id, run_id, reason="stored and embedded uncertainty model mismatch"
+                )
+        try:
+            realization = build_world_realization(
+                world=world,
+                state_models=catalog.state_models,
+                model=model,
+                seed=seed,
+                realized_at=campaign.created_at,
+            )
+        except WorldRealizationIntegrityError as exc:
+            raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                tenant_id, run_id, reason="world realization derivation failed"
+            ) from exc
+        except WorldRealizationSamplingError as exc:
+            raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                tenant_id, run_id, reason="world realization derivation failed"
+            ) from exc
+        return AdaptiveRunExecutionAuthorities(
+            tenant_id=tenant_id,
+            run_id=run_id,
+            campaign=campaign,
+            campaign_status=campaign_status,
+            run_status=run_status,
+            run_plan=run_plan,
+            world=world,
+            seed=seed,
+            realization=realization,
+            uncertainty_model=model,
+            policy=policy,
+            declarations=declarations,
+            action_plans=action_plans,
+            external_bundle=bundle,
+        )
 
     def __init__(self) -> None:
         self._scenarios: dict[tuple[str, str], ScenarioSpec] = {}
@@ -709,6 +1193,13 @@ class InMemoryScenarioStore:
         self._evaluation_profiles: dict[tuple[str, str], ScenarioEvaluationProfile] = {}
         self._world_uncertainty_models: dict[tuple[str, str], WorldUncertaintyModel] = {}
         self._campaign_decision_policies: dict[tuple[str, str], CampaignDecisionPolicy] = {}
+        self._adaptive_policies: dict[tuple[str, str], AdaptivePolicy] = {}
+        self._runtime_observation_declarations: dict[
+            tuple[str, str, str, str], RuntimeObservationDeclaration
+        ] = {}
+        self._external_observation_input_bundles: dict[
+            tuple[str, str, str], ExternalObservationInputBundle
+        ] = {}
         self._operational_activity: dict[tuple[str, str], OperationalActivityEvent] = {}
         self._activity_sequences: dict[str, int] = {}
         self._strategy_trajectory_plans: dict[
@@ -727,6 +1218,12 @@ class InMemoryScenarioStore:
         ] = {}
         self._realization_run_metric_observation_sets: dict[
             tuple[str, str], RealizationRunMetricObservationSet
+        ] = {}
+        self._adaptive_run_trajectory_executions: dict[
+            tuple[str, str], AdaptiveRunTrajectoryExecution
+        ] = {}
+        self._adaptive_run_trajectory_replay_manifests: dict[
+            tuple[str, str], AdaptiveRunTrajectoryReplayManifest
         ] = {}
 
     def put_scenario(self, scenario: ScenarioSpec) -> None:
@@ -1754,6 +2251,857 @@ class InMemoryScenarioStore:
         revalidate_stored_campaign_decision_policy(stored, tenant_id, campaign_id)
         return _deep_copy_contract(stored)
 
+    def _verify_adaptive_policy_authority(
+        self,
+        policy: AdaptivePolicy,
+        *,
+        tenant_id: str,
+        campaign_id: str,
+    ) -> None:
+        """Cross-check a completed policy against every stored authority.
+
+        Re-verifies, on write and read, that the policy's recorded
+        campaign/scenario/world/status authority, observation bindings, and
+        action/strategy/trajectory-plan bindings still agree exactly with the
+        stored authorities of the same ``(tenant, campaign)`` locality. The
+        campaign must be exactly COMPILED, the world and manifest must pass
+        :func:`verify_world_snapshot`, the world identity/hash must match the
+        policy, every action must reference an exact stored strategy candidate
+        with the recomputed strategy content hash and complete equal
+        state-model coverage over the world's embedded state models, every
+        trajectory-plan binding must reference a stored plan whose recorded
+        strategy/manifest/state-model identity and hash agree, and every
+        observation binding must agree with the stored, identity-verified
+        declaration. Any mismatch - including a self-consistently rehashed
+        altered provenance - is rejected with
+        :class:`AdaptivePolicyIntegrityError` and never repaired.
+        """
+        try:
+            campaign = self.get_campaign(tenant_id, campaign_id)
+            status = self.get_campaign_status(tenant_id, campaign_id)
+        except CampaignNotFoundError as exc:
+            raise AdaptivePolicyIntegrityError(
+                tenant_id, campaign_id, reason="campaign authority missing"
+            ) from exc
+        if status.state is not CampaignState.COMPILED:
+            raise AdaptivePolicyIntegrityError(
+                tenant_id, campaign_id, reason="campaign must be exactly COMPILED"
+            )
+        scenario_id = campaign.scenario_id
+        world_version_id = campaign.world_version_id
+        if policy.scenario_id != scenario_id:
+            raise AdaptivePolicyIntegrityError(
+                tenant_id, campaign_id, reason="policy scenario mismatch"
+            )
+        if policy.world_version_id != world_version_id:
+            raise AdaptivePolicyIntegrityError(
+                tenant_id, campaign_id, reason="policy world mismatch"
+            )
+        try:
+            world = self.get_world(tenant_id, world_version_id)
+            manifest = self.get_manifest(tenant_id, world_version_id)
+        except WorldNotFoundError as exc:
+            raise AdaptivePolicyIntegrityError(
+                tenant_id, campaign_id, reason="world authority missing"
+            ) from exc
+        try:
+            verify_world_snapshot(world, manifest)
+        except WorldSnapshotIntegrityError as exc:
+            raise AdaptivePolicyIntegrityError(
+                tenant_id, campaign_id, reason="world authority corrupt"
+            ) from exc
+        if world.tenant_id != tenant_id or world.source_scenario_id != scenario_id:
+            raise AdaptivePolicyIntegrityError(
+                tenant_id, campaign_id, reason="world authority mismatch"
+            )
+        if policy.world_content_hash != world.content_hash:
+            raise AdaptivePolicyIntegrityError(
+                tenant_id, campaign_id, reason="policy world hash mismatch"
+            )
+
+        catalog = extract_world_catalog(world)
+        embedded_models = {model.identifier: model for model in catalog.state_models}
+        expected_state_models = set(embedded_models.keys())
+
+        try:
+            stored_candidates = self.get_strategy_candidates(tenant_id, campaign_id)
+        except CampaignNotFoundError as exc:
+            raise AdaptivePolicyIntegrityError(
+                tenant_id, campaign_id, reason="strategy candidates missing"
+            ) from exc
+        candidates_by_id = {candidate.identifier: candidate for candidate in stored_candidates}
+        try:
+            plans = self.get_strategy_trajectory_plans(tenant_id, campaign_id)
+        except TrajectoryPlansNotFoundError as exc:
+            raise AdaptivePolicyIntegrityError(
+                tenant_id, campaign_id, reason="trajectory plans missing"
+            ) from exc
+        plans_by_id = {plan.identifier: plan for plan in plans}
+
+        for action in policy.actions:
+            strategy = candidates_by_id.get(action.strategy_candidate_id)
+            if strategy is None:
+                raise AdaptivePolicyIntegrityError(
+                    tenant_id, campaign_id, reason="unknown strategy"
+                )
+            if action.strategy_content_hash != _strategy_candidate_content_hash(strategy):
+                raise AdaptivePolicyIntegrityError(
+                    tenant_id, campaign_id, reason="strategy hash mismatch"
+                )
+            covered: set[str] = set()
+            for binding in action.trajectory_plan_bindings:
+                covered.add(binding.state_model_identifier)
+                plan = plans_by_id.get(binding.trajectory_plan_id)
+                if plan is None:
+                    raise AdaptivePolicyIntegrityError(
+                        tenant_id, campaign_id, reason="unknown trajectory plan"
+                    )
+                if plan.strategy_candidate_id != action.strategy_candidate_id:
+                    raise AdaptivePolicyIntegrityError(
+                        tenant_id, campaign_id, reason="trajectory plan strategy mismatch"
+                    )
+                if plan.content_hash != binding.trajectory_plan_content_hash:
+                    raise AdaptivePolicyIntegrityError(
+                        tenant_id, campaign_id, reason="trajectory plan hash mismatch"
+                    )
+                if plan.manifest_id != binding.manifest_id:
+                    raise AdaptivePolicyIntegrityError(
+                        tenant_id, campaign_id, reason="trajectory plan manifest mismatch"
+                    )
+                if plan.state_model_identifier != binding.state_model_identifier:
+                    raise AdaptivePolicyIntegrityError(
+                        tenant_id, campaign_id, reason="state model identifier mismatch"
+                    )
+                if plan.state_model_id != binding.state_model_id:
+                    raise AdaptivePolicyIntegrityError(
+                        tenant_id, campaign_id, reason="state model identity mismatch"
+                    )
+                if plan.state_model_content_hash != binding.state_model_content_hash:
+                    raise AdaptivePolicyIntegrityError(
+                        tenant_id, campaign_id, reason="state model hash mismatch"
+                    )
+            if covered != expected_state_models:
+                raise AdaptivePolicyIntegrityError(
+                    tenant_id, campaign_id, reason="incomplete or unequal state-model coverage"
+                )
+
+        for obs_binding in policy.observation_bindings:
+            try:
+                stored = self.get_runtime_observation_declaration(
+                    tenant_id, scenario_id, world_version_id, obs_binding.observation_id
+                )
+            except (
+                RuntimeObservationDeclarationNotFoundError,
+                RuntimeObservationDeclarationIntegrityError,
+            ) as exc:
+                raise AdaptivePolicyIntegrityError(
+                    tenant_id, campaign_id, reason="observation declaration missing"
+                ) from exc
+            if obs_binding.runtime_observation_declaration_id != stored.identifier:
+                raise AdaptivePolicyIntegrityError(
+                    tenant_id, campaign_id, reason="observation declaration identity mismatch"
+                )
+            if obs_binding.runtime_observation_declaration_content_hash != stored.content_hash:
+                raise AdaptivePolicyIntegrityError(
+                    tenant_id, campaign_id, reason="observation declaration hash mismatch"
+                )
+            if obs_binding.observed_value_kind != stored.observed_value_kind:
+                raise AdaptivePolicyIntegrityError(
+                    tenant_id, campaign_id, reason="observation value kind mismatch"
+                )
+            if obs_binding.unit != stored.unit:
+                raise AdaptivePolicyIntegrityError(
+                    tenant_id, campaign_id, reason="observation unit mismatch"
+                )
+            if obs_binding.missing_behavior != stored.missing_behavior:
+                raise AdaptivePolicyIntegrityError(
+                    tenant_id, campaign_id, reason="observation missing behavior mismatch"
+                )
+
+    def put_adaptive_policy(
+        self,
+        tenant_id: str,
+        campaign_id: str,
+        policy: AdaptivePolicy,
+    ) -> None:
+        """Store one immutable adaptive policy; rejects duplicates and forgeries.
+
+        Policies are immutable and at most one policy may exist per
+        ``(tenant_id, campaign_id)``: a second write raises
+        AdaptivePolicyAlreadyExistsError and never overwrites the original.
+        There is no update, delete, replace, or repair surface. The supplied
+        policy must be an exact :class:`AdaptivePolicy`, must strictly
+        revalidate against its complete contract with its deterministic
+        identity (ownership, identifier, content hash) independently
+        re-verified, and must cross-check against every stored authority of
+        the campaign (COMPILED status, verified world, stored strategies and
+        trajectory plans, stored observation declarations) - a
+        validator-bypassed, malformed, forged, or corrupted policy is rejected
+        with a safe typed integrity error and nothing is written. The write
+        stores a deep defensive copy; no activity event or sequence is
+        mutated.
+        """
+        key = (tenant_id, campaign_id)
+        if key in self._adaptive_policies:
+            raise AdaptivePolicyAlreadyExistsError(tenant_id, campaign_id)
+        revalidate_stored_adaptive_policy(policy, tenant_id, campaign_id)
+        self._verify_adaptive_policy_authority(policy, tenant_id=tenant_id, campaign_id=campaign_id)
+        self._adaptive_policies[key] = _deep_copy_contract(policy)
+
+    def get_adaptive_policy(self, tenant_id: str, campaign_id: str) -> AdaptivePolicy:
+        """Fetch an adaptive policy; raises AdaptivePolicyNotFoundError.
+
+        The stored record is strictly revalidated against its complete
+        contract, its deterministic identity (ownership, identifier, content
+        hash) is independently re-verified, and its recorded
+        campaign/scenario/world/status, strategy/trajectory-plan, and
+        observation-declaration authority is cross-checked on every read -
+        before any copy crosses the store boundary - so a
+        validator-bypassed, malformed, forged, tampered, or corrupt stored
+        record raises AdaptivePolicyIntegrityError and is never returned. A
+        corruption is rejected, never repaired. After successful revalidation
+        a fresh deep defensive copy is returned. Unknown and foreign policies
+        are indistinguishable: both raise the same typed error, so no tenant
+        can learn about another tenant's policies.
+        """
+        try:
+            stored = self._adaptive_policies[(tenant_id, campaign_id)]
+        except KeyError as exc:
+            raise AdaptivePolicyNotFoundError(tenant_id, campaign_id) from exc
+        revalidate_stored_adaptive_policy(stored, tenant_id, campaign_id)
+        self._verify_adaptive_policy_authority(stored, tenant_id=tenant_id, campaign_id=campaign_id)
+        return _deep_copy_contract(stored)
+
+    def _verify_runtime_observation_declaration_authority(
+        self,
+        declaration: RuntimeObservationDeclaration,
+        *,
+        tenant_id: str,
+        scenario_id: str,
+        world_version_id: str,
+    ) -> None:
+        """Cross-check a declaration's recorded authority against the store.
+
+        Re-verifies, on read, that the stored scenario and compiled-world
+        authority the declaration cites still exist and match exactly:
+        the scenario must be present, the world/manifest must load and
+        pass ``verify_world_snapshot``, the world must belong to the same
+        tenant and scenario, and the declaration's ``world_version_id``
+        and ``world_content_hash`` must equal the exact stored world.
+        For a state-field source, the stored domain-pack manifest and
+        state model must load, the model must be an exact member of the
+        selected compiled world, and the declared state field must exist
+        with exactly the recorded numeric value kind. A corruption or
+        authority mismatch is never repaired and raises the safe typed
+        integrity error.
+        """
+        try:
+            self.get_scenario(tenant_id, scenario_id)
+        except ScenarioNotFoundError:
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration scenario authority missing",
+            ) from None
+        try:
+            world = self.get_world(tenant_id, world_version_id)
+            manifest = self.get_manifest(tenant_id, world_version_id)
+        except WorldNotFoundError:
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration world authority missing",
+            ) from None
+        try:
+            verify_world_snapshot(world, manifest)
+        except WorldSnapshotIntegrityError:
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration world authority corrupt",
+            ) from None
+        if world.tenant_id != tenant_id or world.source_scenario_id != scenario_id:
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration world authority mismatch",
+            )
+        if (
+            world.identifier != declaration.world_version_id
+            or world.content_hash != declaration.world_content_hash
+        ):
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration world authority mismatch",
+            )
+        source = declaration.observation_source
+        if getattr(source, "kind", None) == "state_field":
+            self._verify_state_field_source_authority(
+                declaration,
+                source,
+                world,
+                tenant_id=tenant_id,
+                scenario_id=scenario_id,
+                world_version_id=world_version_id,
+            )
+
+    def _verify_state_field_source_authority(
+        self,
+        declaration: RuntimeObservationDeclaration,
+        source: object,
+        world: WorldVersion,
+        *,
+        tenant_id: str,
+        scenario_id: str,
+        world_version_id: str,
+    ) -> None:
+        """Re-verify one state-field source's stored manifest/model authority."""
+        manifest_id = getattr(source, "manifest_id", None)
+        model_id = getattr(source, "state_model_id", None)
+        model_identifier = getattr(source, "state_model_identifier", None)
+        model_content_hash = getattr(source, "state_model_content_hash", None)
+        field_id = getattr(source, "state_field_id", None)
+        field_kind = getattr(source, "state_field_value_kind", None)
+        if not isinstance(manifest_id, str) or not isinstance(model_id, str):
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration state authority corrupt",
+            )
+        try:
+            manifest = self.get_domain_pack_manifest(tenant_id, manifest_id)
+        except DomainPackNotFoundError:
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration state manifest authority missing",
+            ) from None
+        try:
+            model = self.get_domain_state_model(tenant_id, scenario_id, manifest_id, model_id)
+        except DomainStateModelNotFoundError:
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration state model authority missing",
+            ) from None
+        if model.tenant_id != tenant_id or model.scenario_id != scenario_id:
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration state model authority mismatch",
+            )
+        if (
+            model.identifier != model_identifier
+            or model.content_hash != model_content_hash
+            or model.manifest_id != manifest_id
+        ):
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration state model authority mismatch",
+            )
+        # The manifest and state model must be exact members of the
+        # selected compiled world, not merely store records.
+        catalog = extract_world_catalog(world)
+        embedded_model = next(
+            (
+                member
+                for member in catalog.state_models
+                if member.identifier == model_identifier
+                and member.content_hash == model_content_hash
+            ),
+            None,
+        )
+        if embedded_model is None:
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration state model is not a member of the compiled world",
+            )
+        raw_bindings = world.world.get(_BINDINGS_KEY)
+        if raw_bindings is not None:
+            if not isinstance(raw_bindings, list):
+                raise RuntimeObservationDeclarationIntegrityError(
+                    tenant_id,
+                    scenario_id,
+                    world_version_id,
+                    reason="stored declaration world authority corrupt",
+                )
+            try:
+                embedded_binding = next(
+                    binding
+                    for binding in (
+                        DomainPackBinding.model_validate(entry) for entry in raw_bindings
+                    )
+                    if binding.manifest_id == manifest_id
+                )
+            except (ValidationError, TypeError, ValueError, AttributeError, StopIteration):
+                raise RuntimeObservationDeclarationIntegrityError(
+                    tenant_id,
+                    scenario_id,
+                    world_version_id,
+                    reason=(
+                        "stored declaration state manifest is not a member of the compiled world"
+                    ),
+                ) from None
+            if (
+                manifest.pack_id != embedded_binding.pack_id
+                or manifest.pack_version != embedded_binding.pack_version
+                or manifest.content_hash != embedded_binding.manifest_content_hash
+            ):
+                raise RuntimeObservationDeclarationIntegrityError(
+                    tenant_id,
+                    scenario_id,
+                    world_version_id,
+                    reason="stored declaration state manifest authority mismatch",
+                )
+        field = next((f for f in model.state_fields if f.identifier == field_id), None)
+        if field is None:
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration state field authority missing",
+            )
+        raw_kind = (
+            field.value_kind.value if hasattr(field.value_kind, "value") else field.value_kind
+        )
+        if raw_kind == "integer":
+            mapped: Literal["integer", "number"] = "integer"
+        elif raw_kind == "number":
+            mapped = "number"
+        else:
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration state field authority mismatch",
+            )
+        if mapped != field_kind:
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration state field authority mismatch",
+            )
+
+    def put_runtime_observation_declaration(
+        self,
+        *,
+        tenant_id: str,
+        scenario_id: str,
+        world_version_id: str,
+        observation_id: str,
+        declaration: RuntimeObservationDeclaration,
+    ) -> None:
+        """Store exactly one immutable runtime observation declaration.
+
+        The declaration is strict-exact typed (a subclass is rejected),
+        strictly revalidated against its complete contract, and its
+        deterministic identity is independently re-verified before any
+        field is trusted or any copy is stored. The write is
+        zero-or-one and no-overwrite: a duplicate for the same
+        tenant/scenario/world/observation locality raises the typed
+        already-exists error and never replaces the original. There is
+        no update, delete, replace, or repair surface, and no
+        operational activity or sequence is mutated.
+        """
+        if type(declaration) is not RuntimeObservationDeclaration:
+            raise RuntimeObservationDeclarationIntegrityError(
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                reason="stored declaration violates its contract",
+            )
+        key = (tenant_id, scenario_id, world_version_id, observation_id)
+        if key in self._runtime_observation_declarations:
+            raise RuntimeObservationDeclarationAlreadyExistsError(
+                tenant_id, scenario_id, world_version_id
+            )
+        revalidate_stored_runtime_observation_declaration(
+            declaration, tenant_id, scenario_id, world_version_id, observation_id
+        )
+        self._verify_runtime_observation_declaration_authority(
+            declaration,
+            tenant_id=tenant_id,
+            scenario_id=scenario_id,
+            world_version_id=world_version_id,
+        )
+        self._runtime_observation_declarations[key] = _deep_copy_contract(declaration)
+
+    def get_runtime_observation_declaration(
+        self,
+        tenant_id: str,
+        scenario_id: str,
+        world_version_id: str,
+        observation_id: str,
+    ) -> RuntimeObservationDeclaration:
+        """Fetch a declaration; raises RuntimeObservationDeclarationNotFoundError.
+
+        The stored record is strictly revalidated against its complete
+        contract, its deterministic identity (ownership, identifier,
+        content hash) is independently re-verified, and its recorded
+        scenario/world/compiled-world authority is cross-checked on every
+        read - before any copy crosses the store boundary - so a
+        validator-bypassed, malformed, forged, tampered, or corrupt
+        stored record raises RuntimeObservationDeclarationIntegrityError
+        and is never returned. After successful revalidation a fresh
+        deep defensive copy is returned. Unknown and foreign
+        declarations are indistinguishable: both raise the same typed
+        error, so no tenant can learn about another tenant's
+        declarations.
+        """
+        try:
+            stored = self._runtime_observation_declarations[
+                (tenant_id, scenario_id, world_version_id, observation_id)
+            ]
+        except KeyError as exc:
+            raise RuntimeObservationDeclarationNotFoundError(
+                tenant_id, scenario_id, world_version_id, observation_id
+            ) from exc
+        revalidate_stored_runtime_observation_declaration(
+            stored, tenant_id, scenario_id, world_version_id, observation_id
+        )
+        self._verify_runtime_observation_declaration_authority(
+            stored,
+            tenant_id=tenant_id,
+            scenario_id=scenario_id,
+            world_version_id=world_version_id,
+        )
+        return _deep_copy_contract(stored)
+
+    def list_runtime_observation_declarations(
+        self, tenant_id: str, scenario_id: str, world_version_id: str
+    ) -> tuple[RuntimeObservationDeclaration, ...]:
+        """List a world's declarations, sorted by stable declaration identity.
+
+        Deterministic: every declaration identifier is unique within one
+        ``(tenant, scenario, world)`` locality, so sorting by the
+        declaration identifier is a total order. Every returned record
+        is strictly revalidated, identity-verified, and cross-authority
+        verified exactly as ``get_runtime_observation_declaration``; a
+        corrupt record aborts the whole list with the typed integrity
+        error and is never returned. The returned tuple is immutable.
+        """
+        declarations = [
+            declaration
+            for declaration in self._runtime_observation_declarations.values()
+            if declaration.tenant_id == tenant_id
+            and declaration.scenario_id == scenario_id
+            and declaration.world_version_id == world_version_id
+        ]
+        for declaration in declarations:
+            revalidate_stored_runtime_observation_declaration(
+                declaration,
+                tenant_id,
+                scenario_id,
+                world_version_id,
+                declaration.observation_id,
+            )
+            self._verify_runtime_observation_declaration_authority(
+                declaration,
+                tenant_id=tenant_id,
+                scenario_id=scenario_id,
+                world_version_id=world_version_id,
+            )
+        return tuple(
+            _deep_copy_contract(declaration)
+            for declaration in sorted(declarations, key=lambda declaration: declaration.identifier)
+        )
+
+    def _verify_external_observation_input_bundle_authority(
+        self,
+        bundle: ExternalObservationInputBundle,
+        *,
+        tenant_id: str,
+        campaign_id: str,
+        scenario_seed_id: str,
+    ) -> None:
+        """Cross-check a stored bundle against every stored authority.
+
+        Re-verifies, on write and read, that the bundle's recorded
+        campaign/scenario/world/status, adaptive policy, scenario seed, and
+        per-entry declaration authority still agree exactly with the stored
+        authorities of the same ``(tenant, campaign, seed)`` locality. The
+        campaign must be exactly COMPILED, the world and manifest must pass
+        :func:`verify_world_snapshot`, the campaign/policy/scenario/world
+        identities and hashes must agree, the scenario seed must be an exact
+        member of ``campaign.seed_ensemble`` with a matching recomputed
+        content hash, and every entry must reference a policy-used
+        observation whose stored declaration is runtime ``4.0.0`` with an
+        exact :class:`ExternalObservationSource`, matching declaration
+        identity/content hash, channel, value kind, unit, value-kind
+        exactness, and cadence scheduling. Any mismatch - including a
+        self-consistently rehashed altered seed, world, declaration,
+        channel, kind, or unit provenance - is rejected with
+        :class:`ExternalObservationInputIntegrityError` and never repaired.
+        """
+        try:
+            campaign = self.get_campaign(tenant_id, campaign_id)
+            status = self.get_campaign_status(tenant_id, campaign_id)
+        except CampaignNotFoundError as exc:
+            raise ExternalObservationInputIntegrityError(
+                tenant_id, campaign_id, reason="campaign authority missing"
+            ) from exc
+        if status.state is not CampaignState.COMPILED:
+            raise ExternalObservationInputIntegrityError(
+                tenant_id, campaign_id, reason="campaign must be exactly COMPILED"
+            )
+        scenario_id = campaign.scenario_id
+        world_version_id = campaign.world_version_id
+        if (
+            bundle.campaign_id != campaign_id
+            or bundle.scenario_id != scenario_id
+            or bundle.world_version_id != world_version_id
+        ):
+            raise ExternalObservationInputIntegrityError(
+                tenant_id, campaign_id, reason="bundle campaign/scenario/world mismatch"
+            )
+        try:
+            world = self.get_world(tenant_id, world_version_id)
+            manifest = self.get_manifest(tenant_id, world_version_id)
+        except WorldNotFoundError as exc:
+            raise ExternalObservationInputIntegrityError(
+                tenant_id, campaign_id, reason="world authority missing"
+            ) from exc
+        try:
+            verify_world_snapshot(world, manifest)
+        except WorldSnapshotIntegrityError as exc:
+            raise ExternalObservationInputIntegrityError(
+                tenant_id, campaign_id, reason="world authority corrupt"
+            ) from exc
+        if world.tenant_id != tenant_id or world.source_scenario_id != scenario_id:
+            raise ExternalObservationInputIntegrityError(
+                tenant_id, campaign_id, reason="world authority mismatch"
+            )
+        if bundle.world_content_hash != world.content_hash:
+            raise ExternalObservationInputIntegrityError(
+                tenant_id, campaign_id, reason="bundle world hash mismatch"
+            )
+
+        try:
+            policy = self.get_adaptive_policy(tenant_id, campaign_id)
+        except (AdaptivePolicyNotFoundError, AdaptivePolicyIntegrityError) as exc:
+            raise ExternalObservationInputIntegrityError(
+                tenant_id, campaign_id, reason="adaptive policy authority missing"
+            ) from exc
+        if (
+            policy.tenant_id != tenant_id
+            or policy.campaign_id != campaign_id
+            or policy.scenario_id != scenario_id
+            or policy.world_version_id != world_version_id
+            or policy.world_content_hash != world.content_hash
+        ):
+            raise ExternalObservationInputIntegrityError(
+                tenant_id, campaign_id, reason="adaptive policy authority mismatch"
+            )
+
+        seed = next(
+            (seed for seed in campaign.seed_ensemble if seed.identifier == scenario_seed_id),
+            None,
+        )
+        if seed is None:
+            raise ExternalObservationInputIntegrityError(
+                tenant_id, campaign_id, reason="scenario seed authority missing"
+            )
+        if (
+            bundle.scenario_seed_id != seed.identifier
+            or bundle.seed_content_hash != seed_content_hash(seed)
+        ):
+            raise ExternalObservationInputIntegrityError(
+                tenant_id, campaign_id, reason="bundle scenario seed mismatch"
+            )
+
+        bindings_by_observation = {
+            binding.observation_id: binding for binding in policy.observation_bindings
+        }
+        for entry in bundle.entries:
+            binding = bindings_by_observation.get(entry.observation_id)
+            if binding is None:
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id, campaign_id, reason="entry observation is not policy-used"
+                )
+            if (
+                binding.runtime_observation_declaration_id
+                != entry.runtime_observation_declaration_id
+            ):
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id, campaign_id, reason="entry declaration identity mismatch"
+                )
+            if (
+                binding.runtime_observation_declaration_content_hash
+                != entry.runtime_observation_declaration_content_hash
+            ):
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id, campaign_id, reason="entry declaration hash mismatch"
+                )
+            if binding.observed_value_kind != entry.value_kind or binding.unit != entry.unit:
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id, campaign_id, reason="entry value kind or unit mismatch"
+                )
+            try:
+                declaration = self.get_runtime_observation_declaration(
+                    tenant_id, scenario_id, world_version_id, entry.observation_id
+                )
+            except (
+                RuntimeObservationDeclarationNotFoundError,
+                RuntimeObservationDeclarationIntegrityError,
+            ) as exc:
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id, campaign_id, reason="entry declaration authority missing"
+                ) from exc
+            if declaration.runtime_version != "4.0.0":
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id, campaign_id, reason="entry declaration runtime mismatch"
+                )
+            if declaration.identifier != entry.runtime_observation_declaration_id:
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id, campaign_id, reason="entry declaration identity mismatch"
+                )
+            if declaration.content_hash != entry.runtime_observation_declaration_content_hash:
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id, campaign_id, reason="entry declaration hash mismatch"
+                )
+            source = declaration.observation_source
+            if not isinstance(source, ExternalObservationSource):
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id, campaign_id, reason="state-field observations are rejected"
+                )
+            if source.external_channel_id != entry.external_channel_id:
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id, campaign_id, reason="entry channel mismatch"
+                )
+            if (
+                source.external_value_kind != entry.value_kind
+                or declaration.observed_value_kind != entry.value_kind
+            ):
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id, campaign_id, reason="entry value kind mismatch"
+                )
+            if declaration.unit != entry.unit:
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id, campaign_id, reason="entry unit mismatch"
+                )
+            timing = declaration.timing
+            step = entry.source_step_index
+            if step < timing.start_step or (step - timing.start_step) % timing.every_n_steps != 0:
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id,
+                    campaign_id,
+                    reason="entry source step violates the declaration cadence",
+                )
+            if entry.value_kind == "integer":
+                if type(entry.value) is not int:
+                    raise ExternalObservationInputIntegrityError(
+                        tenant_id, campaign_id, reason="entry value violates its declared kind"
+                    )
+            elif (
+                type(entry.value) is bool
+                or not isinstance(entry.value, (int, float))
+                or (
+                    isinstance(entry.value, float)
+                    and not (
+                        entry.value == entry.value
+                        and entry.value not in (float("inf"), float("-inf"))
+                    )
+                )
+            ):
+                raise ExternalObservationInputIntegrityError(
+                    tenant_id, campaign_id, reason="entry value violates its declared kind"
+                )
+
+    def put_external_observation_input_bundle(
+        self,
+        *,
+        tenant_id: str,
+        campaign_id: str,
+        scenario_seed_id: str,
+        bundle: ExternalObservationInputBundle,
+    ) -> None:
+        """Store exactly one immutable external observation input bundle.
+
+        Bundles are immutable and at most one bundle may exist per
+        ``(tenant_id, campaign_id, scenario_seed_id)``: a second write
+        raises ExternalObservationInputAlreadyExistsError and never
+        overwrites the original. There is no update, delete, replace, or
+        repair surface, and no list method exists. The supplied bundle must
+        be an exact :class:`ExternalObservationInputBundle`, must strictly
+        revalidate against its complete contract with its deterministic
+        identity (ownership, identifier, content hash) and every entry
+        identity independently re-verified, and must cross-check against
+        every stored authority of the locality (campaign COMPILED status,
+        verified world, stored adaptive policy, campaign scenario seed,
+        stored observation declarations with external source kinds, cadence,
+        channels, kinds, units, and policy usage) - a validator-bypassed,
+        malformed, forged, or corrupted bundle is rejected with a safe typed
+        integrity error and nothing is written. The write stores a deep
+        defensive copy; no activity event or sequence is mutated.
+        """
+        if type(bundle) is not ExternalObservationInputBundle:
+            raise ExternalObservationInputIntegrityError(
+                tenant_id, campaign_id, reason="stored bundle violates its contract"
+            )
+        key = (tenant_id, campaign_id, scenario_seed_id)
+        if key in self._external_observation_input_bundles:
+            raise ExternalObservationInputAlreadyExistsError(tenant_id, campaign_id)
+        revalidate_stored_external_observation_input_bundle(bundle, tenant_id, campaign_id)
+        self._verify_external_observation_input_bundle_authority(
+            bundle,
+            tenant_id=tenant_id,
+            campaign_id=campaign_id,
+            scenario_seed_id=scenario_seed_id,
+        )
+        self._external_observation_input_bundles[key] = _deep_copy_contract(bundle)
+
+    def get_external_observation_input_bundle(
+        self,
+        *,
+        tenant_id: str,
+        campaign_id: str,
+        scenario_seed_id: str,
+    ) -> ExternalObservationInputBundle:
+        """Fetch a bundle; raises ExternalObservationInputNotFoundError.
+
+        The stored record is strictly revalidated against its complete
+        contract, its deterministic identity (ownership, identifier, content
+        hash) and every entry identity are independently re-verified, and
+        its recorded campaign/scenario/world/status, adaptive policy,
+        scenario seed, and per-entry declaration authority is cross-checked
+        on every read - before any copy crosses the store boundary - so a
+        validator-bypassed, malformed, forged, tampered, or corrupt stored
+        record raises ExternalObservationInputIntegrityError and is never
+        returned. A corruption is rejected, never repaired. After successful
+        revalidation a fresh deep defensive copy is returned. Unknown and
+        foreign bundles are indistinguishable: both raise the same typed
+        error, so no tenant can learn about another tenant's bundles.
+        """
+        try:
+            stored = self._external_observation_input_bundles[
+                (tenant_id, campaign_id, scenario_seed_id)
+            ]
+        except KeyError as exc:
+            raise ExternalObservationInputNotFoundError(tenant_id, campaign_id) from exc
+        revalidate_stored_external_observation_input_bundle(stored, tenant_id, campaign_id)
+        self._verify_external_observation_input_bundle_authority(
+            stored,
+            tenant_id=tenant_id,
+            campaign_id=campaign_id,
+            scenario_seed_id=scenario_seed_id,
+        )
+        return _deep_copy_contract(stored)
+
     def append_operational_activity(
         self,
         *,
@@ -1828,3 +3176,392 @@ class InMemoryScenarioStore:
         event of the tenant.
         """
         return self._activity_sequences.get(tenant_id, 0) - 1
+
+    def _adaptive_run_plan_authority(
+        self,
+        execution: AdaptiveRunTrajectoryExecution,
+        *,
+        tenant_id: str,
+        run_id: str,
+    ) -> tuple[RunPlan, RunStatus]:
+        """Load and verify the recorded runtime-4 run status and run plan.
+
+        The runtime run-input verifier supports only the historical
+        recorded runtimes, so the runtime-4 authority chain is verified
+        here from the store's own records. The recorded RunStatus must
+        belong to the tenant/run/campaign/run-plan, carry the exact
+        deterministic run-status identifier and the exact ``4.0.0``
+        runtime literal, agree exactly with the authoritative planning
+        input hash, and be exactly RUNNING or COMPLETE while an
+        execution record exists (PLANNED and FAILED never carry one).
+        The scenario seed is resolved through the status's run plan -
+        ``RunStatus`` carries no seed field. The referenced RunPlan must
+        exist in the recorded campaign plan set, match the status runtime
+        and planning input hash, resolve to the deterministic run
+        identifier, and carry exactly the execution's campaign/world/
+        seed provenance; ``RunPlan`` carries ``world_version_id`` but no
+        ``world_content_hash``, so the recorded world anchor is the
+        version identity (the content hash is verified against the
+        stored compiled world elsewhere in the authority chain).
+        ``RunPlan.strategy_candidate_id`` is a historical runtime-1/2/3
+        planning field: runtime-4 execution is policy-driven, and this
+        slice neither reinterprets nor reads it. The exact runtime-4
+        planning/orchestration construction belongs to the later C2
+        slice. Unknown or foreign runs raise the typed validation
+        error; any mismatch raises the typed integrity error.
+        """
+        status = self.get_run_status(tenant_id, run_id)
+        if (
+            status.tenant_id != tenant_id
+            or status.identifier != f"status-{run_id}"
+            or status.runtime_version != "4.0.0"
+        ):
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="recorded run authority missing"
+            )
+        if status.state not in (RunState.RUNNING, RunState.COMPLETE):
+            raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                tenant_id, run_id, reason="recorded run state mismatch"
+            )
+        if (
+            status.run_id != run_id
+            or status.campaign_id != execution.campaign_id
+            or status.run_plan_id != execution.run_plan_id
+        ):
+            raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                tenant_id, run_id, reason="recorded run authority mismatch"
+            )
+        run_plan = next(
+            (
+                plan
+                for plan in self.get_run_plans(tenant_id, status.campaign_id)
+                if plan.identifier == status.run_plan_id
+            ),
+            None,
+        )
+        if (
+            run_plan is None
+            or run_plan.runtime_version != status.runtime_version
+            or run_identifier(run_plan) != run_id
+        ):
+            raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                tenant_id, run_id, reason="recorded run authority mismatch"
+            )
+        # The recorded lifecycle hash anchor is the planning input hash:
+        # RunStatus.input_hash equals RunPlan.input_hash by contract, and
+        # the adaptive execution input hash additionally covers the
+        # runtime-4 authorities, so it is deliberately never compared
+        # against the planning anchor here.
+        if run_plan.input_hash != status.input_hash:
+            raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                tenant_id, run_id, reason="recorded run authority mismatch"
+            )
+        if (
+            run_plan.tenant_id != tenant_id
+            or run_plan.campaign_id != execution.campaign_id
+            or run_plan.world_version_id != execution.world_version_id
+            or run_plan.scenario_seed_id != execution.scenario_seed_id
+        ):
+            raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                tenant_id, run_id, reason="recorded run authority mismatch"
+            )
+        return run_plan, status
+
+    def put_adaptive_run_trajectory_execution(
+        self,
+        *,
+        tenant_id: str,
+        run_id: str,
+        execution: AdaptiveRunTrajectoryExecution,
+    ) -> None:
+        """Store a run's immutable runtime-4 adaptive execution artifact.
+
+        Exactly one adaptive execution may exist per
+        ``(tenant_id, run_id)``: a second write - even an identical
+        artifact - raises
+        :class:`AdaptiveRunTrajectoryExecutionAlreadyExistsError` and
+        never overwrites the original. The supplied record must be an
+        exact :class:`AdaptiveRunTrajectoryExecution` strictly
+        revalidated against its complete contract, carrying exactly the
+        key's ownership; a wrong-type, subclassed, validator-bypassed, or
+        mismatched record raises the typed validation error before any
+        authority is loaded. Every required authority is then loaded from
+        the store (each independently reverified on read), the recorded
+        runtime-4 run status and run plan are matched, and the pure
+        cross-authority integrity verifier must accept the record before
+        the single deep-copy write. Every failure is atomic with zero
+        partial writes and no activity event. There is no update, delete,
+        upsert, or list surface.
+        """
+        from kalhas.application.adaptive_trajectory_execution_integrity import (
+            verify_adaptive_run_trajectory_execution_authority,
+        )
+
+        key = (tenant_id, run_id)
+        if key in self._adaptive_run_trajectory_executions:
+            raise AdaptiveRunTrajectoryExecutionAlreadyExistsError(tenant_id, run_id)
+        if type(execution) is not AdaptiveRunTrajectoryExecution:
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="execution violates its contract"
+            )
+        try:
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+                )
+                serialized = execution.model_dump(mode="python")
+            AdaptiveRunTrajectoryExecution.model_validate(serialized, strict=True)
+        except (ValidationError, TypeError, AttributeError):
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="execution violates its contract"
+            ) from None
+        if execution.tenant_id != tenant_id or execution.run_id != run_id:
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="execution key ownership mismatch"
+            )
+        run_plan, run_status = self._adaptive_run_plan_authority(
+            execution, tenant_id=tenant_id, run_id=run_id
+        )
+        authorities = self._adaptive_run_authorities(
+            execution,
+            tenant_id=tenant_id,
+            run_id=run_id,
+            run_plan=run_plan,
+            run_status=run_status,
+        )
+        try:
+            verify_adaptive_run_trajectory_execution_authority(execution, authorities=authorities)
+        except (TypeError, ValueError, AttributeError):
+            raise AdaptiveRunTrajectoryExecutionValidationError(
+                tenant_id, run_id, reason="execution violates its contract"
+            ) from None
+        self._adaptive_run_trajectory_executions[key] = _deep_copy_contract(execution)
+
+    def get_adaptive_run_trajectory_execution(
+        self, *, tenant_id: str, run_id: str
+    ) -> AdaptiveRunTrajectoryExecution:
+        """Fetch a run's runtime-4 adaptive execution artifact.
+
+        Unknown and foreign executions are indistinguishable: both raise
+        :class:`AdaptiveRunTrajectoryExecutionNotFoundError`, so no tenant
+        can learn about another tenant's executions. The stored record is
+        strictly revalidated and cross-authority verified on every read
+        against the store's current verified authorities - corruption is
+        rejected, never repaired - and a fresh deep defensive copy is
+        returned only after full verification. No activity event or
+        sequence is produced.
+        """
+        from kalhas.application.adaptive_trajectory_execution_integrity import (
+            verify_adaptive_run_trajectory_execution_authority,
+        )
+
+        stored = self._adaptive_run_trajectory_executions.get((tenant_id, run_id))
+        if stored is None:
+            raise AdaptiveRunTrajectoryExecutionNotFoundError(tenant_id, run_id)
+        try:
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+                )
+                serialized = stored.model_dump(mode="python")
+            AdaptiveRunTrajectoryExecution.model_validate(serialized, strict=True)
+        except (ValidationError, TypeError, AttributeError):
+            raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                tenant_id, run_id, reason="stored execution violates its contract"
+            ) from None
+        run_plan, run_status = self._adaptive_run_plan_authority(
+            stored, tenant_id=tenant_id, run_id=run_id
+        )
+        authorities = self._adaptive_run_authorities(
+            stored,
+            tenant_id=tenant_id,
+            run_id=run_id,
+            run_plan=run_plan,
+            run_status=run_status,
+        )
+        try:
+            verify_adaptive_run_trajectory_execution_authority(stored, authorities=authorities)
+        except (TypeError, ValueError, AttributeError):
+            raise AdaptiveRunTrajectoryExecutionIntegrityError(
+                tenant_id, run_id, reason="stored execution violates its contract"
+            ) from None
+        return _deep_copy_contract(stored)
+
+    def _replay_manifest_authority(
+        self,
+        *,
+        tenant_id: str,
+        run_id: str,
+    ) -> tuple[AdaptiveRunTrajectoryExecution, RunPlan]:
+        """Load and reverify the runtime-4 execution and run-plan authorities.
+
+        Every replay-manifest put and get loads the recorded
+        :class:`AdaptiveRunTrajectoryExecution` through the established
+        verified getter (which strictly revalidates and cross-authority
+        verifies the stored record on read) and then reverifies the
+        runtime-4 :class:`RunPlan`/:class:`RunStatus` authority through
+        the established private runtime-4 authority surface, so the
+        caller receives the already-verified execution and the
+        authoritative recorded :class:`RunPlan` whose ``created_at`` is
+        the recorded replay timestamp authority. Missing upstream
+        execution or run authority raises the typed replay validation
+        error; corrupt upstream authority raises the typed replay
+        integrity error - never a raw Pydantic, ``NotFound``, or
+        campaign error, and never repaired. Nothing is written or
+        executed.
+        """
+        try:
+            execution = self.get_adaptive_run_trajectory_execution(
+                tenant_id=tenant_id, run_id=run_id
+            )
+        except (
+            AdaptiveRunTrajectoryExecutionNotFoundError,
+            AdaptiveRunTrajectoryExecutionValidationError,
+            RunNotFoundError,
+            CampaignNotFoundError,
+        ) as exc:
+            raise AdaptiveRunTrajectoryReplayManifestValidationError(
+                tenant_id, run_id, reason="execution or run authority missing"
+            ) from exc
+        except AdaptiveRunTrajectoryExecutionIntegrityError as exc:
+            raise AdaptiveRunTrajectoryReplayManifestIntegrityError(
+                tenant_id, run_id, reason="execution authority corrupt"
+            ) from exc
+        try:
+            run_plan, _run_status = self._adaptive_run_plan_authority(
+                execution, tenant_id=tenant_id, run_id=run_id
+            )
+        except (
+            RunNotFoundError,
+            CampaignNotFoundError,
+            AdaptiveRunTrajectoryExecutionValidationError,
+        ) as exc:
+            raise AdaptiveRunTrajectoryReplayManifestValidationError(
+                tenant_id, run_id, reason="run authority missing"
+            ) from exc
+        except AdaptiveRunTrajectoryExecutionIntegrityError as exc:
+            raise AdaptiveRunTrajectoryReplayManifestIntegrityError(
+                tenant_id, run_id, reason="run authority corrupt"
+            ) from exc
+        return execution, run_plan
+
+    def put_adaptive_run_trajectory_replay_manifest(
+        self,
+        *,
+        tenant_id: str,
+        run_id: str,
+        manifest: AdaptiveRunTrajectoryReplayManifest,
+    ) -> None:
+        """Store a run's immutable runtime-4 adaptive replay manifest.
+
+        Exactly one adaptive replay manifest may exist per
+        ``(tenant_id, run_id)``: a second write - even a byte-identical
+        artifact - raises
+        :class:`AdaptiveRunTrajectoryReplayManifestAlreadyExistsError`
+        and never overwrites the original. The supplied record must be an
+        exact :class:`AdaptiveRunTrajectoryReplayManifest` strictly
+        revalidated against its complete contract, carrying exactly the
+        key's ownership; a wrong-type, subclassed, validator-bypassed, or
+        mismatched record raises the typed validation error before any
+        authority is loaded. The recorded runtime-4 execution and its
+        recorded RunPlan/RunStatus authority are then loaded and
+        reverified, and the pure full-record integrity verifier must
+        accept the manifest with ``replayed_at`` equal to the
+        authoritative recorded RunPlan creation time before the single
+        deep-copy write. Missing upstream authority raises the typed
+        validation error; corrupt upstream authority or a failing
+        full-record verification raises the typed integrity error. Every
+        failure is atomic with zero partial writes and no activity event.
+        There is no update, delete, upsert, or list surface.
+        """
+        from kalhas.application.adaptive_trajectory_replay_integrity import (
+            verify_adaptive_run_trajectory_replay_manifest_record,
+        )
+
+        key = (tenant_id, run_id)
+        if key in self._adaptive_run_trajectory_replay_manifests:
+            raise AdaptiveRunTrajectoryReplayManifestAlreadyExistsError(tenant_id, run_id)
+        if type(manifest) is not AdaptiveRunTrajectoryReplayManifest:
+            raise AdaptiveRunTrajectoryReplayManifestValidationError(
+                tenant_id, run_id, reason="manifest violates its contract"
+            )
+        try:
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+                )
+                serialized = manifest.model_dump(mode="python")
+            AdaptiveRunTrajectoryReplayManifest.model_validate(serialized, strict=True)
+        except (ValidationError, TypeError, AttributeError):
+            raise AdaptiveRunTrajectoryReplayManifestValidationError(
+                tenant_id, run_id, reason="manifest violates its contract"
+            ) from None
+        if manifest.tenant_id != tenant_id or manifest.run_id != run_id:
+            raise AdaptiveRunTrajectoryReplayManifestValidationError(
+                tenant_id, run_id, reason="manifest key ownership mismatch"
+            )
+        execution, run_plan = self._replay_manifest_authority(tenant_id=tenant_id, run_id=run_id)
+        try:
+            verify_adaptive_run_trajectory_replay_manifest_record(
+                manifest,
+                execution=execution,
+                replayed_at=run_plan.created_at,
+            )
+        except (TypeError, ValueError, AttributeError):
+            raise AdaptiveRunTrajectoryReplayManifestIntegrityError(
+                tenant_id, run_id, reason="manifest violates its contract"
+            ) from None
+        self._adaptive_run_trajectory_replay_manifests[key] = _deep_copy_contract(manifest)
+
+    def get_adaptive_run_trajectory_replay_manifest(
+        self, *, tenant_id: str, run_id: str
+    ) -> AdaptiveRunTrajectoryReplayManifest:
+        """Fetch a run's immutable runtime-4 adaptive replay manifest.
+
+        Unknown and foreign manifests are indistinguishable: both raise
+        :class:`AdaptiveRunTrajectoryReplayManifestNotFoundError`, so no
+        tenant can learn about another tenant's replay manifests. The
+        stored record is strictly revalidated and full-record verified on
+        every read against the store's reverified execution and recorded
+        RunPlan/RunStatus authorities, with ``replayed_at`` equal to the
+        authoritative recorded RunPlan creation time - corruption is
+        rejected, never repaired - and a fresh deep defensive copy is
+        returned only after full verification. Missing upstream authority
+        raises the typed validation error; corrupt stored manifest or
+        upstream authority raises the typed integrity error. No activity
+        event or sequence is produced.
+        """
+        from kalhas.application.adaptive_trajectory_replay_integrity import (
+            verify_adaptive_run_trajectory_replay_manifest_record,
+        )
+
+        stored = self._adaptive_run_trajectory_replay_manifests.get((tenant_id, run_id))
+        if stored is None:
+            raise AdaptiveRunTrajectoryReplayManifestNotFoundError(tenant_id, run_id)
+        if type(stored) is not AdaptiveRunTrajectoryReplayManifest:
+            raise AdaptiveRunTrajectoryReplayManifestIntegrityError(
+                tenant_id, run_id, reason="stored manifest violates its contract"
+            )
+        try:
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore", message=r"Pydantic serializer warnings.*", category=UserWarning
+                )
+                serialized = stored.model_dump(mode="python")
+            AdaptiveRunTrajectoryReplayManifest.model_validate(serialized, strict=True)
+        except (ValidationError, TypeError, AttributeError):
+            raise AdaptiveRunTrajectoryReplayManifestIntegrityError(
+                tenant_id, run_id, reason="stored manifest violates its contract"
+            ) from None
+        execution, run_plan = self._replay_manifest_authority(tenant_id=tenant_id, run_id=run_id)
+        try:
+            verify_adaptive_run_trajectory_replay_manifest_record(
+                stored,
+                execution=execution,
+                replayed_at=run_plan.created_at,
+            )
+        except (TypeError, ValueError, AttributeError):
+            raise AdaptiveRunTrajectoryReplayManifestIntegrityError(
+                tenant_id, run_id, reason="stored manifest violates its contract"
+            ) from None
+        return _deep_copy_contract(stored)

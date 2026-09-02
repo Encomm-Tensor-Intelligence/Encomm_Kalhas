@@ -9,6 +9,9 @@ from typing import cast
 import pytest
 from kalhas.contracts.v1 import PUBLIC_CONTRACTS
 from kalhas.contracts.v1.activity import OperationalActivityEvent
+from kalhas.contracts.v1.adaptive_policy import AdaptivePolicy
+from kalhas.contracts.v1.adaptive_trajectory_execution import AdaptiveRunTrajectoryExecution
+from kalhas.contracts.v1.adaptive_trajectory_replay import AdaptiveRunTrajectoryReplayManifest
 from kalhas.contracts.v1.campaign import CampaignSpec, CampaignStatus
 from kalhas.contracts.v1.campaign_decision import (
     CampaignDecisionBrief,
@@ -49,6 +52,10 @@ from kalhas.contracts.v1.realization_trajectory_execution import (
 )
 from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
 from kalhas.contracts.v1.run_plan import RunPlan
+from kalhas.contracts.v1.runtime_observation import (
+    ExternalObservationInputBundle,
+    RuntimeObservationDeclaration,
+)
 from kalhas.contracts.v1.scenario import (
     ClarificationQuestion,
     ContextBundle,
@@ -2257,6 +2264,377 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         "uncertainty_model_id": None,
         "world_content_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
         "world_version_id": "world-1",
+    },
+    RuntimeObservationDeclaration: {
+        "identifier": "runtime-observation-1",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "observation_id": "observation-1",
+        "runtime_version": "4.0.0",
+        "observation_source": {
+            "kind": "state_field",
+            "manifest_id": "manifest-1",
+            "state_model_identifier": "state-model-1",
+            "state_model_id": "sm-1",
+            "state_model_content_hash": (
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+            ),
+            "state_field_id": "level",
+            "state_field_value_kind": "integer",
+        },
+        "observed_value_kind": "integer",
+        "unit": "units",
+        "timing": {"start_step": 0, "every_n_steps": 1, "delay_steps": 0},
+        "noise": {"kind": "none", "draw_count": 0},
+        "missing_behavior": "false",
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "declared_at": NOW,
+        "metadata": {},
+    },
+    ExternalObservationInputBundle: {
+        "identifier": "external-input-bundle-1",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "campaign_id": "campaign-1",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "scenario_seed_id": "seed-1",
+        "seed_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "runtime_version": "4.0.0",
+        "entries": [
+            {
+                "identifier": "entry-1",
+                "runtime_observation_declaration_id": "runtime-observation-1",
+                "runtime_observation_declaration_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "observation_id": "observation-1",
+                "external_channel_id": "channel-1",
+                "source_step_index": 0,
+                "value_kind": "integer",
+                "unit": None,
+                "value": 7,
+                "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            }
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "accepted_at": NOW,
+    },
+    AdaptivePolicy: {
+        "identifier": "adaptive-policy-1",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "campaign_id": "campaign-1",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "runtime_version": "4.0.0",
+        "policy_id": "policy-1",
+        "policy_version": "1.0.0",
+        "observation_bindings": [
+            {
+                "observation_id": "observation-1",
+                "runtime_observation_declaration_id": "runtime-observation-1",
+                "runtime_observation_declaration_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "observed_value_kind": "integer",
+                "unit": None,
+                "missing_behavior": "false",
+            }
+        ],
+        "actions": [
+            {
+                "action_id": "act-a",
+                "strategy_candidate_id": "sc-1",
+                "strategy_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "trajectory_plan_bindings": [
+                    {
+                        "trajectory_plan_id": "trajectory-plan-1",
+                        "trajectory_plan_content_hash": (
+                            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                        ),
+                        "manifest_id": "manifest-1",
+                        "state_model_identifier": "state-model-1",
+                        "state_model_id": "sm-1",
+                        "state_model_content_hash": (
+                            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                        ),
+                    }
+                ],
+            },
+            {
+                "action_id": "act-b",
+                "strategy_candidate_id": "sc-1",
+                "strategy_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "trajectory_plan_bindings": [
+                    {
+                        "trajectory_plan_id": "trajectory-plan-2",
+                        "trajectory_plan_content_hash": (
+                            "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+                        ),
+                        "manifest_id": "manifest-1",
+                        "state_model_identifier": "state-model-1",
+                        "state_model_id": "sm-1",
+                        "state_model_content_hash": (
+                            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                        ),
+                    }
+                ],
+            },
+        ],
+        "initial_action_id": "act-a",
+        "fallback_action_id": "act-b",
+        "rules": [
+            {
+                "rule_id": "rule-1",
+                "priority": 0,
+                "target_action_id": "act-b",
+                "enter_condition": {
+                    "kind": "comparison",
+                    "condition_id": "cond-1",
+                    "observation_id": "observation-1",
+                    "observed_value_kind": "integer",
+                    "unit": None,
+                    "operator": "gte",
+                    "threshold": 5,
+                    "missing_behavior": "false",
+                },
+                "retain_condition": {
+                    "kind": "all",
+                    "condition_id": "cond-root",
+                    "children": [
+                        {
+                            "kind": "comparison",
+                            "condition_id": "cond-1a",
+                            "observation_id": "observation-1",
+                            "observed_value_kind": "integer",
+                            "unit": None,
+                            "operator": "gte",
+                            "threshold": 4,
+                            "missing_behavior": "false",
+                        },
+                        {
+                            "kind": "comparison",
+                            "condition_id": "cond-1b",
+                            "observation_id": "observation-1",
+                            "observed_value_kind": "integer",
+                            "unit": None,
+                            "operator": "lt",
+                            "threshold": 100,
+                            "missing_behavior": "false",
+                        },
+                    ],
+                },
+                "per_rule_switch_budget": 3,
+            }
+        ],
+        "minimum_dwell_steps": 2,
+        "cooldown_steps": 1,
+        "global_switch_budget": 10,
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "bound_at": NOW,
+        "metadata": {},
+    },
+    AdaptiveRunTrajectoryExecution: {
+        "identifier": "adaptive-run-trajectory-execution-1",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "run_id": "run-1",
+        "campaign_id": "campaign-1",
+        "run_plan_id": "run-plan-1",
+        "scenario_id": "scenario-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "scenario_seed_id": "seed-1",
+        "seed_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "world_realization_id": "world-realization-1",
+        "world_realization_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "runtime_version": "4.0.0",
+        "adaptive_policy_identifier": "adaptive-policy-1",
+        "policy_id": "policy-1",
+        "adaptive_policy_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "external_observation_input_bundle_id": None,
+        "external_observation_input_bundle_content_hash": None,
+        "input_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "trajectory_plan_set_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "observation_events": [
+            {
+                "identifier": "observation-event-1",
+                "runtime_version": "4.0.0",
+                "observation_declaration_id": "runtime-observation-1",
+                "observation_declaration_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "observation_id": "observation-1",
+                "source_kind": "state_field",
+                "world_version_id": "world-0123456789abcdef",
+                "world_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "scenario_seed_id": "seed-1",
+                "seed_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "sequence_position": 0,
+                "source_step_index": 0,
+                "delay_steps": 0,
+                "available_decision_step": 0,
+                "terminal": False,
+                "status": "observed",
+                "source_state_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "external_input_bundle_id": None,
+                "external_input_bundle_content_hash": None,
+                "source_value": 7,
+                "applied_noise_value": None,
+                "exposed_observation_value": 7,
+                "observed_value_kind": "integer",
+                "observed_value_unit": None,
+                "noise_domain_literal": "kalhas-observation-noise-v1",
+                "noise_sampler_version": "sha256-counter-v1",
+                "noise_draw_index": None,
+                "content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+            }
+        ],
+        "policy_state_snapshots": [
+            {
+                "runtime_version": "4.0.0",
+                "policy_id": "policy-1",
+                "policy_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "decision_step": 0,
+                "current_action_id": "act-a",
+                "action_installed_at_decision_step": 0,
+                "completed_applications": 0,
+                "last_switch_decision_step": None,
+                "remaining_global_switch_budget": 10,
+                "per_rule_remaining_budgets": [["rule-1", 3]],
+            }
+        ],
+        "decision_events": [
+            {
+                "runtime_version": "4.0.0",
+                "policy_id": "policy-1",
+                "policy_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "decision_step": 0,
+                "current_action_id": "act-a",
+                "rule_evaluation_evidence": [["rule-1", "enter", True, None]],
+                "selected_rule_id": "rule-1",
+                "selected_action_id": "act-b",
+                "decision_kind": "rule",
+                "action_changed": True,
+                "fallback_blocked_reason": None,
+            }
+        ],
+        "switch_events": [
+            {
+                "runtime_version": "4.0.0",
+                "policy_id": "policy-1",
+                "policy_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "decision_step": 0,
+                "old_action_id": "act-a",
+                "new_action_id": "act-b",
+                "trigger_kind": "rule",
+                "triggering_rule_id": "rule-1",
+                "global_switch_budget_before": 10,
+                "global_switch_budget_after": 9,
+                "rule_switch_budget_before": 3,
+                "rule_switch_budget_after": 2,
+            }
+        ],
+        "trajectory_results_by_decision": [
+            [
+                {
+                    "trajectory_plan_id": "trajectory-plan-1",
+                    "trajectory_plan_content_hash": (
+                        "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                    ),
+                    "manifest_id": "manifest-1",
+                    "state_model_identifier": "state-model-1",
+                    "state_model_id": "sm-1",
+                    "state_model_content_hash": (
+                        "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                    ),
+                    "initial_state": {"level": 0},
+                    "initial_state_hash": (
+                        "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                    ),
+                    "attempts": [],
+                    "final_state": {"level": 1},
+                    "final_state_hash": (
+                        "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                    ),
+                    "trace_hash": (
+                        "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                    ),
+                    "content_hash": (
+                        "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                    ),
+                }
+            ]
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "executed_at": NOW,
+    },
+    AdaptiveRunTrajectoryReplayManifest: {
+        "identifier": "adaptive-run-trajectory-replay-manifest-1",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "run_id": "run-1",
+        "campaign_id": "campaign-1",
+        "adaptive_run_trajectory_execution_id": "adaptive-run-trajectory-execution-1",
+        "world_version_id": "world-0123456789abcdef",
+        "world_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "scenario_seed_id": "seed-1",
+        "seed_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "world_realization_id": "world-realization-1",
+        "world_realization_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "adaptive_policy_identifier": "adaptive-policy-1",
+        "policy_id": "policy-1",
+        "adaptive_policy_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "external_observation_input_bundle_id": None,
+        "external_observation_input_bundle_content_hash": None,
+        "runtime_version": "4.0.0",
+        "input_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "trajectory_plan_set_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "expected_execution_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "recomputed_execution_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "replay_classification": "exact",
+        "replayed_at": NOW,
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
     },
 }
 

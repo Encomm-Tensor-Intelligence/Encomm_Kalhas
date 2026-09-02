@@ -31,11 +31,13 @@ generated JSON Schema artifact. Proves:
   header, no request body, no runtime selector, and a 200 $ref to
   CampaignOutcomeDistributionMatrix, while the six Phase 25 paths/seven
   operations remain unchanged;
-- PUBLIC_CONTRACTS is exactly 50 with unchanged indexes 0-46, the
-  matrix at index 46, and the decision contracts at indexes 47-49;
-  the two nested value objects stay unregistered;
-- exactly 50 schema artifacts exist with all 46 historical byte hashes
-  unchanged and the new artifacts matching ``model_json_schema``;
+- PUBLIC_CONTRACTS preserves the accepted Phase 27 50-contract prefix
+  with unchanged indexes 0-46 (matrix at index 46, decision contracts at
+  indexes 47-49), and later additive contracts are allowed; the two
+  nested value objects stay unregistered;
+- schema artifact count follows ``PUBLIC_CONTRACTS`` with all 46
+  historical byte hashes unchanged and the new artifacts matching
+  ``model_json_schema``;
 - route/app/error modules carry no ranking/recommendation, NEXUS/LEGION,
   live-action, nondeterministic, network, filesystem, database, or
   provider surface.
@@ -1074,11 +1076,11 @@ class TestReadOnlyAndWiring:
 class TestContractRegistration:
     """PUBLIC_CONTRACTS indexes 46-49 and the schema artifact set."""
 
-    def test_public_contracts_exactly_50_with_historical_prefix_and_new_tail(
+    def test_public_contracts_preserve_accepted_50_prefix_with_new_tail(
         self,
     ) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
-        assert len(PUBLIC_CONTRACTS) == 50
+        assert len(PUBLIC_CONTRACTS) >= 50
         assert names[:46] == _HISTORICAL_46_NAMES
         assert names[46] == "CampaignOutcomeDistributionMatrix"
         assert names[47] == "CampaignDecisionPolicy"
@@ -1092,9 +1094,9 @@ class TestContractRegistration:
         assert "CampaignOutcomeDistributionMatrix" in names
         assert "ObjectiveMetricBinding" not in names
 
-    def test_exactly_50_schema_artifacts_with_historical_hashes_unchanged(self) -> None:
+    def test_schema_artifacts_follow_the_public_registry(self) -> None:
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
-        assert len(schema_files) == 50
+        assert len(schema_files) == len(PUBLIC_CONTRACTS)
         by_name = {path.name: path for path in schema_files}
         assert len(_HISTORICAL_SCHEMA_HASHES) == 46
         for name, expected in _HISTORICAL_SCHEMA_HASHES.items():

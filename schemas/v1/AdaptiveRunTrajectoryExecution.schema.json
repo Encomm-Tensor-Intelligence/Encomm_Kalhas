@@ -1,0 +1,973 @@
+{
+  "$defs": {
+    "AdaptivePolicyDecisionEvent": {
+      "additionalProperties": false,
+      "description": "Ordered evidence for exactly one policy step.\n\nRecords the current action before the decision, the ordered\nrule-evaluation evidence, the selected rule id (or ``None`` for fallback),\nthe selected action id, the decision kind, whether the action actually\nchanged, and the optional fallback blocked reason.\n\nContract invariants: evaluation ``rule_id`` values are unique; a\nnonmatching rule carries no blocked reason (and a blocked reason decorates\nonly a matched rule); a selected rule must be the last evaluated, matched,\nunblocked rule; ``decision_kind == \"rule\"`` requires an unselected first\nrule early, ``blocked_fallback`` requires a fallback blocked reason that\nretains the current action, other kinds forbid a fallback blocked reason,\nand ``action_changed`` must equal\n``selected_action_id != current_action_id``.",
+      "properties": {
+        "action_changed": {
+          "title": "Action Changed",
+          "type": "boolean"
+        },
+        "current_action_id": {
+          "minLength": 1,
+          "title": "Current Action Id",
+          "type": "string"
+        },
+        "decision_kind": {
+          "enum": [
+            "rule",
+            "fallback",
+            "blocked_fallback"
+          ],
+          "title": "Decision Kind",
+          "type": "string"
+        },
+        "decision_step": {
+          "minimum": 0,
+          "title": "Decision Step",
+          "type": "integer"
+        },
+        "fallback_blocked_reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "minimum_dwell",
+                "cooldown",
+                "global_switch_budget",
+                "per_rule_switch_budget"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fallback Blocked Reason"
+        },
+        "policy_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Policy Content Hash",
+          "type": "string"
+        },
+        "policy_id": {
+          "minLength": 1,
+          "title": "Policy Id",
+          "type": "string"
+        },
+        "rule_evaluation_evidence": {
+          "items": {
+            "maxItems": 4,
+            "minItems": 4,
+            "prefixItems": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "enter",
+                  "retain"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "minimum_dwell",
+                      "cooldown",
+                      "global_switch_budget",
+                      "per_rule_switch_budget"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Rule Evaluation Evidence",
+          "type": "array"
+        },
+        "runtime_version": {
+          "const": "4.0.0",
+          "title": "Runtime Version",
+          "type": "string"
+        },
+        "selected_action_id": {
+          "minLength": 1,
+          "title": "Selected Action Id",
+          "type": "string"
+        },
+        "selected_rule_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Selected Rule Id"
+        }
+      },
+      "required": [
+        "runtime_version",
+        "policy_id",
+        "policy_content_hash",
+        "decision_step",
+        "current_action_id",
+        "rule_evaluation_evidence",
+        "selected_rule_id",
+        "selected_action_id",
+        "decision_kind",
+        "action_changed"
+      ],
+      "title": "AdaptivePolicyDecisionEvent",
+      "type": "object"
+    },
+    "AdaptivePolicyStateSnapshot": {
+      "additionalProperties": false,
+      "description": "Immutable pre-decision policy state for one policy step.\n\nRepresents the policy state *before* a decision at ``decision_step``: the\ncopied runtime/policy identity, the strict non-negative decision step, the\ncurrent action id and the decision step at which that action was installed,\nthe strict non-negative count of completed applications of that action, the\noptional decision step of the last switch, the remaining global switch\nbudget, and the canonical per-rule remaining budgets as an exact tuple of\n``(rule_id, remaining_budget)`` pairs in policy rule order.\n\nContract invariants: the installed step never exceeds the decision step;\ncompleted applications equal ``decision_step - action_installed_at_decision_step``;\na present last-switch step is strictly before this pre-decision step; and\ninitialization is the only non-switch installation (no last switch implies\ninstallation at step 0, and any switch-installed action records that switch\nstep as its last switch); and per-rule ``rule_id`` values are unique.\nBool/float/string/negative/duplicate/malformed budget values fail as\n``StrictNonNegativeInt``. The\n*policy-relative* budget order and catalog agreement are verified by the\napplication state machine against the supplied ``AdaptivePolicy``.",
+      "properties": {
+        "action_installed_at_decision_step": {
+          "minimum": 0,
+          "title": "Action Installed At Decision Step",
+          "type": "integer"
+        },
+        "completed_applications": {
+          "minimum": 0,
+          "title": "Completed Applications",
+          "type": "integer"
+        },
+        "current_action_id": {
+          "minLength": 1,
+          "title": "Current Action Id",
+          "type": "string"
+        },
+        "decision_step": {
+          "minimum": 0,
+          "title": "Decision Step",
+          "type": "integer"
+        },
+        "last_switch_decision_step": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Switch Decision Step"
+        },
+        "per_rule_remaining_budgets": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "minimum": 0,
+                "type": "integer"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Per Rule Remaining Budgets",
+          "type": "array"
+        },
+        "policy_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Policy Content Hash",
+          "type": "string"
+        },
+        "policy_id": {
+          "minLength": 1,
+          "title": "Policy Id",
+          "type": "string"
+        },
+        "remaining_global_switch_budget": {
+          "minimum": 0,
+          "title": "Remaining Global Switch Budget",
+          "type": "integer"
+        },
+        "runtime_version": {
+          "const": "4.0.0",
+          "title": "Runtime Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "runtime_version",
+        "policy_id",
+        "policy_content_hash",
+        "decision_step",
+        "current_action_id",
+        "action_installed_at_decision_step",
+        "completed_applications",
+        "remaining_global_switch_budget",
+        "per_rule_remaining_budgets"
+      ],
+      "title": "AdaptivePolicyStateSnapshot",
+      "type": "object"
+    },
+    "AdaptivePolicySwitchEvent": {
+      "additionalProperties": false,
+      "description": "Evidence for exactly one actual action switch.\n\nEmitted only when the action actually changed: the copied runtime/policy\nidentity, the decision step, the old and new action ids, the trigger kind,\nthe optional triggering rule id, the global switch budget before/after, and\nthe rule switch budget before/after (rule switches only).\n\nContract invariants: the old and new action ids differ; the global budget\ndecrements by exactly one; rule-triggered switches require a rule id and a\nrule-budget decrement of exactly one; fallback switches forbid the rule id\nand rule-budget fields. No switch evidence exists for initialization or\nsame-action selection.",
+      "properties": {
+        "decision_step": {
+          "minimum": 0,
+          "title": "Decision Step",
+          "type": "integer"
+        },
+        "global_switch_budget_after": {
+          "minimum": 0,
+          "title": "Global Switch Budget After",
+          "type": "integer"
+        },
+        "global_switch_budget_before": {
+          "minimum": 0,
+          "title": "Global Switch Budget Before",
+          "type": "integer"
+        },
+        "new_action_id": {
+          "minLength": 1,
+          "title": "New Action Id",
+          "type": "string"
+        },
+        "old_action_id": {
+          "minLength": 1,
+          "title": "Old Action Id",
+          "type": "string"
+        },
+        "policy_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Policy Content Hash",
+          "type": "string"
+        },
+        "policy_id": {
+          "minLength": 1,
+          "title": "Policy Id",
+          "type": "string"
+        },
+        "rule_switch_budget_after": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rule Switch Budget After"
+        },
+        "rule_switch_budget_before": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rule Switch Budget Before"
+        },
+        "runtime_version": {
+          "const": "4.0.0",
+          "title": "Runtime Version",
+          "type": "string"
+        },
+        "trigger_kind": {
+          "enum": [
+            "rule",
+            "fallback"
+          ],
+          "title": "Trigger Kind",
+          "type": "string"
+        },
+        "triggering_rule_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Triggering Rule Id"
+        }
+      },
+      "required": [
+        "runtime_version",
+        "policy_id",
+        "policy_content_hash",
+        "decision_step",
+        "old_action_id",
+        "new_action_id",
+        "trigger_kind",
+        "global_switch_budget_before",
+        "global_switch_budget_after"
+      ],
+      "title": "AdaptivePolicySwitchEvent",
+      "type": "object"
+    },
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "RealizedStateTrajectoryResult": {
+      "additionalProperties": false,
+      "description": "The immutable evaluated result of one state-model plan under a realized initial state.\n\nMirrors the Phase 16 ``RunStateTrajectoryResult`` exactly: binds the\nresult to its exact ``StrategyTrajectoryPlan`` (identifier and content\nhash) and to the exact resolved state model embedded in the verified\ncompiled world (manifest, deterministic model identifier, logical model\nid, and content hash). The initial and final states are fresh plain\nJSON snapshots (never the engine's frozen views and never references\ninto the model, the realization, or the world), with their canonical\nhashes; the initial state is the **realized** initial state supplied\nfrom the Phase 24 world realization, so its hash is the authoritative\nruntime-3 initial-state hash. The ordered attempt records, the engine's\ndeterministic trace hash, and a self-covering ``content_hash`` over the\ncomplete canonical result excluding ``content_hash`` itself complete\nthe record.",
+      "properties": {
+        "attempts": {
+          "items": {
+            "$ref": "#/$defs/RunTrajectoryAttemptRecord"
+          },
+          "title": "Attempts",
+          "type": "array"
+        },
+        "content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "final_state": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Final State",
+          "type": "object"
+        },
+        "final_state_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Final State Hash",
+          "type": "string"
+        },
+        "initial_state": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Initial State",
+          "type": "object"
+        },
+        "initial_state_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Initial State Hash",
+          "type": "string"
+        },
+        "manifest_id": {
+          "title": "Manifest Id",
+          "type": "string"
+        },
+        "state_model_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "State Model Content Hash",
+          "type": "string"
+        },
+        "state_model_id": {
+          "title": "State Model Id",
+          "type": "string"
+        },
+        "state_model_identifier": {
+          "title": "State Model Identifier",
+          "type": "string"
+        },
+        "trace_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Trace Hash",
+          "type": "string"
+        },
+        "trajectory_plan_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Trajectory Plan Content Hash",
+          "type": "string"
+        },
+        "trajectory_plan_id": {
+          "title": "Trajectory Plan Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trajectory_plan_id",
+        "trajectory_plan_content_hash",
+        "manifest_id",
+        "state_model_identifier",
+        "state_model_id",
+        "state_model_content_hash",
+        "initial_state",
+        "initial_state_hash",
+        "attempts",
+        "final_state",
+        "final_state_hash",
+        "trace_hash",
+        "content_hash"
+      ],
+      "title": "RealizedStateTrajectoryResult",
+      "type": "object"
+    },
+    "RunTrajectoryAttemptRecord": {
+      "additionalProperties": false,
+      "description": "One deterministic transition attempt within an evaluated trajectory.\n\nRecords only the attempt's sequence position, the authoritative\nreference to the attempted transition (deterministic identifier,\nlogical transition id, content hash), the deterministic outcome, and\nthe before/after state hashes. It carries no guard or target values,\nno state snapshots, no explanation, no evidence, no recommendation,\nand no hidden reasoning.",
+      "properties": {
+        "after_state_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "After State Hash",
+          "type": "string"
+        },
+        "before_state_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Before State Hash",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "applied",
+            "guard_not_satisfied"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "sequence_position": {
+          "minimum": 0,
+          "title": "Sequence Position",
+          "type": "integer"
+        },
+        "transition_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Transition Content Hash",
+          "type": "string"
+        },
+        "transition_id": {
+          "minLength": 1,
+          "title": "Transition Id",
+          "type": "string"
+        },
+        "transition_identifier": {
+          "title": "Transition Identifier",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sequence_position",
+        "transition_identifier",
+        "transition_id",
+        "transition_content_hash",
+        "outcome",
+        "before_state_hash",
+        "after_state_hash"
+      ],
+      "title": "RunTrajectoryAttemptRecord",
+      "type": "object"
+    },
+    "RuntimeObservationEvent": {
+      "additionalProperties": false,
+      "description": "Nested, non-authoritative causal observation event evidence.\n\nBinds one observation to one declaration (identifier and content\nhash), its world and scenario-seed identities with their content\nhashes, the canonical sequence position and source step, the copied\n``delay_steps`` and ``available_decision_step``, the ``terminal``\nflag and exact ``status`` (``\"observed\"`` or ``\"missing\"``), the\napplicable source/exposed values and observed value kind, and the\nADR-004 observation-noise coordinate provenance. It does not prove\nstored-authority ownership or recompute content hashes; cross-authority\nverification belongs to later runtime services.\n\nContract-level invariants: a non-terminal event requires\n``available_decision_step == source_step_index + delay_steps``; a\nterminal event requires it absent. State-field events require\n``source_state_hash`` and forbid external bundle provenance;\nexternal-input events require the bundle identity/hash and forbid\n``source_state_hash`` and fresh noise. Missing events leave every\nvalue field absent.",
+      "properties": {
+        "applied_noise_value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Applied Noise Value"
+        },
+        "available_decision_step": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Available Decision Step"
+        },
+        "content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "delay_steps": {
+          "minimum": 0,
+          "title": "Delay Steps",
+          "type": "integer"
+        },
+        "exposed_observation_value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exposed Observation Value"
+        },
+        "external_input_bundle_content_hash": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "External Input Bundle Content Hash"
+        },
+        "external_input_bundle_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "External Input Bundle Id"
+        },
+        "identifier": {
+          "minLength": 1,
+          "title": "Identifier",
+          "type": "string"
+        },
+        "noise_domain_literal": {
+          "const": "kalhas-observation-noise-v1",
+          "title": "Noise Domain Literal",
+          "type": "string"
+        },
+        "noise_draw_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Noise Draw Index"
+        },
+        "noise_sampler_version": {
+          "const": "sha256-counter-v1",
+          "title": "Noise Sampler Version",
+          "type": "string"
+        },
+        "observation_declaration_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Observation Declaration Content Hash",
+          "type": "string"
+        },
+        "observation_declaration_id": {
+          "minLength": 1,
+          "title": "Observation Declaration Id",
+          "type": "string"
+        },
+        "observation_id": {
+          "minLength": 1,
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "observed_value_kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "integer",
+                "number"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed Value Kind"
+        },
+        "observed_value_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed Value Unit"
+        },
+        "runtime_version": {
+          "const": "4.0.0",
+          "title": "Runtime Version",
+          "type": "string"
+        },
+        "scenario_seed_id": {
+          "minLength": 1,
+          "title": "Scenario Seed Id",
+          "type": "string"
+        },
+        "seed_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Seed Content Hash",
+          "type": "string"
+        },
+        "sequence_position": {
+          "minimum": 0,
+          "title": "Sequence Position",
+          "type": "integer"
+        },
+        "source_kind": {
+          "enum": [
+            "state_field",
+            "external_input"
+          ],
+          "title": "Source Kind",
+          "type": "string"
+        },
+        "source_state_hash": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source State Hash"
+        },
+        "source_step_index": {
+          "minimum": 0,
+          "title": "Source Step Index",
+          "type": "integer"
+        },
+        "source_value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Value"
+        },
+        "status": {
+          "enum": [
+            "observed",
+            "missing"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "terminal": {
+          "title": "Terminal",
+          "type": "boolean"
+        },
+        "world_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "World Content Hash",
+          "type": "string"
+        },
+        "world_version_id": {
+          "minLength": 1,
+          "title": "World Version Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "identifier",
+        "runtime_version",
+        "observation_declaration_id",
+        "observation_declaration_content_hash",
+        "observation_id",
+        "source_kind",
+        "world_version_id",
+        "world_content_hash",
+        "scenario_seed_id",
+        "seed_content_hash",
+        "sequence_position",
+        "source_step_index",
+        "delay_steps",
+        "terminal",
+        "status",
+        "noise_domain_literal",
+        "noise_sampler_version",
+        "content_hash"
+      ],
+      "title": "RuntimeObservationEvent",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Immutable adaptive-run trajectory execution artifact for runtime 4.0.0.\n\nOne aggregate artifact per completed adaptive run. The outer position of\n``trajectory_results_by_decision`` is the decision step; each inner tuple\nholds that decision's realized state-model trajectory results canonically\nordered by ``(state_model_identifier, trajectory_plan_id)``. The bundle\nidentifier and content hash are both present or both absent (external\nprovenance is optional), and the optional bundle pair never carries a\ndeclaration-style source identity.\n\nStructural invariants enforced here: at least one decision; equal\ncardinality of policy-state snapshots, decision events, and outer\ntrajectory-result tuples; snapshot and decision steps exactly ``0..N-1``;\nevery snapshot and decision carries the aggregate's policy/runtime\nidentity; switch events are strictly ordered, carry unique valid decision\nsteps, exist exactly for ``action_changed`` decisions, and agree with the\ncorresponding decision's current/selected actions; observation\n``sequence_position`` values are contiguous from zero with unique\n``(observation_declaration_id, source_step_index)`` coordinates and\naggregate world/seed provenance agreement; non-terminal observations keep\n``available_decision_step`` inside the decision range; every inner\ntrajectory-result tuple is canonically ordered with unique state-model and\nplan identifiers; and nested realized state values are finite. Cross-\nauthority plan/action and state-chain verification belongs to the later\nexecution service.",
+  "properties": {
+    "adaptive_policy_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Adaptive Policy Content Hash",
+      "type": "string"
+    },
+    "adaptive_policy_identifier": {
+      "minLength": 1,
+      "title": "Adaptive Policy Identifier",
+      "type": "string"
+    },
+    "campaign_id": {
+      "minLength": 1,
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "decision_events": {
+      "items": {
+        "$ref": "#/$defs/AdaptivePolicyDecisionEvent"
+      },
+      "minItems": 1,
+      "title": "Decision Events",
+      "type": "array"
+    },
+    "executed_at": {
+      "format": "date-time",
+      "title": "Executed At",
+      "type": "string"
+    },
+    "external_observation_input_bundle_content_hash": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "External Observation Input Bundle Content Hash"
+    },
+    "external_observation_input_bundle_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "External Observation Input Bundle Id"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "input_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Input Hash",
+      "type": "string"
+    },
+    "observation_events": {
+      "items": {
+        "$ref": "#/$defs/RuntimeObservationEvent"
+      },
+      "title": "Observation Events",
+      "type": "array"
+    },
+    "policy_id": {
+      "minLength": 1,
+      "title": "Policy Id",
+      "type": "string"
+    },
+    "policy_state_snapshots": {
+      "items": {
+        "$ref": "#/$defs/AdaptivePolicyStateSnapshot"
+      },
+      "title": "Policy State Snapshots",
+      "type": "array"
+    },
+    "run_id": {
+      "minLength": 1,
+      "title": "Run Id",
+      "type": "string"
+    },
+    "run_plan_id": {
+      "minLength": 1,
+      "title": "Run Plan Id",
+      "type": "string"
+    },
+    "runtime_version": {
+      "const": "4.0.0",
+      "title": "Runtime Version",
+      "type": "string"
+    },
+    "scenario_id": {
+      "minLength": 1,
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "scenario_seed_id": {
+      "minLength": 1,
+      "title": "Scenario Seed Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seed_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Seed Content Hash",
+      "type": "string"
+    },
+    "switch_events": {
+      "items": {
+        "$ref": "#/$defs/AdaptivePolicySwitchEvent"
+      },
+      "title": "Switch Events",
+      "type": "array"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "trajectory_plan_set_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Trajectory Plan Set Hash",
+      "type": "string"
+    },
+    "trajectory_results_by_decision": {
+      "items": {
+        "items": {
+          "$ref": "#/$defs/RealizedStateTrajectoryResult"
+        },
+        "type": "array"
+      },
+      "title": "Trajectory Results By Decision",
+      "type": "array"
+    },
+    "world_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "World Content Hash",
+      "type": "string"
+    },
+    "world_realization_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "World Realization Content Hash",
+      "type": "string"
+    },
+    "world_realization_id": {
+      "minLength": 1,
+      "title": "World Realization Id",
+      "type": "string"
+    },
+    "world_version_id": {
+      "minLength": 1,
+      "title": "World Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "run_id",
+    "campaign_id",
+    "run_plan_id",
+    "scenario_id",
+    "world_version_id",
+    "world_content_hash",
+    "scenario_seed_id",
+    "seed_content_hash",
+    "world_realization_id",
+    "world_realization_content_hash",
+    "runtime_version",
+    "adaptive_policy_identifier",
+    "policy_id",
+    "adaptive_policy_content_hash",
+    "input_hash",
+    "trajectory_plan_set_hash",
+    "observation_events",
+    "policy_state_snapshots",
+    "decision_events",
+    "switch_events",
+    "trajectory_results_by_decision",
+    "content_hash",
+    "executed_at"
+  ],
+  "title": "AdaptiveRunTrajectoryExecution",
+  "type": "object"
+}

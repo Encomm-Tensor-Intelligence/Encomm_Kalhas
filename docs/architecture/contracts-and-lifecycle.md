@@ -3028,3 +3028,70 @@ outcome. Phase 28 and KALHAS-PAN are not implemented. The Colony UI
 demo is intentional synthetic local visualization work (clearly
 labeled deterministic client-side synthetic data, no network request),
 not decision evidence and not a real forecast.
+
+## Phase 28 status (2026-09-02 closure overlay)
+
+**Adaptive deterministic runtime `4.0.0` (IMPLEMENTED LOCALLY,
+GATE-VERIFIED LOCALLY, UNPUBLISHED - closure candidate, not an accepted
+checkpoint).** This section supersedes the sentence above it and every other
+statement in this document that Phase 28 "is not implemented" (true at their
+checkpoints, preserved as dated history). The local tree implements runtime
+`4.0.0` additively through slices `H28-S01` through `H28-S13` on top of the
+published Gate 27.1 baseline `777a4472ef0d1edc6d30ce61a05851302b981027`.
+Nothing is staged, committed, or pushed.
+
+Contracts and schemas: five new top-level v1 contracts appended at
+`PUBLIC_CONTRACTS` indexes 50-54, in this exact order:
+`RuntimeObservationDeclaration`, `ExternalObservationInputBundle`,
+`AdaptivePolicy`, `AdaptiveRunTrajectoryExecution`,
+`AdaptiveRunTrajectoryReplayManifest` - 55 registered contracts total.
+Indexes 0-49 and all historical schema artifacts are byte-unchanged. The
+nested evidence roles (`AdaptivePolicyDraft`, `RuntimeObservationEvent`,
+`AdaptivePolicyStateSnapshot`, `AdaptivePolicyDecisionEvent`,
+`AdaptivePolicySwitchEvent`) remain unregistered with no standalone schema
+artifacts. `schemas/v1/` holds exactly 55 `*.schema.json` artifacts (56 files
+including README.md). `API_VERSION` `"1"` and `SCHEMA_VERSION` `"1.0.0"` are
+unchanged; runtime `4.0.0` is additive and never reinterprets runtimes
+1.0.0/2.0.0/3.0.0.
+
+Lifecycle and API surface (all tenant-scoped, typed error envelope, zero
+NEXUS/LEGION/provider/network involvement):
+
+- Runtime-observation declarations and external observation input bundles are
+  declared/accepted through validated services and stored as immutable
+  authorities; adaptive-policy drafts are untrusted input that only ever
+  become immutable bound `AdaptivePolicy` authorities through the binding
+  service.
+- The adaptive planner derives and stores the per-seed runtime-4 run plans;
+  execution builds one self-hashing `AdaptiveRunTrajectoryExecution` per run
+  containing the ordered causal observation events, policy-state snapshots,
+  decision events, switch events, and trajectory results; replay independently
+  recomputes and verifies every recorded value, then persists only the
+  `AdaptiveRunTrajectoryReplayManifest`.
+- Verified read-only projections expose observations, decisions, and switches
+  through three additive paths
+  (`/v1/runs/{run_id}/adaptive/{observations,decisions,switches}`), plus the
+  adaptive-versus-static comparison evidence as a derived, never-stored
+  read-only service result.
+- Decisions D28-01 through D28-04 are frozen in ADR 004.
+
+Acceptance and gates: the unpatched production acceptance
+(`tests/test_phase28_exact_five_adaptive_acceptance.py`, 24 focused tests)
+proves the real exact-five campaign (unmodified production
+`EXPECTED_STRATEGY_SET_SIZE == 5`, five causally different declared plans,
+four shared seeds) plus one bound adaptive policy arm: causal switching under
+dwell/cooldown/budgets, paired comparison evidence, exact replay, and
+adversarial rejection of tampering - no cardinality patching, no production
+mutation. The H28-S12 session ran the complete repository suite once,
+normally: 6,850 tests, 0 failures, 0 errors, 0 skipped, 810.94 seconds, with
+Ruff, format check, mypy, schema synchronization, and diff hygiene green.
+H28-S13 adds the final documentation and a bounded, fixture-specific
+performance characterization recorded outside the repository.
+
+Claim boundary: deterministic replay and repository acceptance are not
+scientific validity, calibration, production readiness, certification, or a
+guarantee of any outcome. The system performs no autonomous live action.
+KALHAS-PAN (Phase 29) and the executable real domain mechanism remain **not
+implemented**; Phase 29 is not started and not authorized. Phase 28 remains a
+fully gated local closure candidate pending the independent Codex final
+fingerprint/gate audit, which owns any checkpoint disposition.

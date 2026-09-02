@@ -7,6 +7,9 @@ segment.
 """
 
 from kalhas.contracts.v1.activity import OperationalActivityEvent, OperationalActivityKind
+from kalhas.contracts.v1.adaptive_policy import AdaptivePolicy
+from kalhas.contracts.v1.adaptive_trajectory_execution import AdaptiveRunTrajectoryExecution
+from kalhas.contracts.v1.adaptive_trajectory_replay import AdaptiveRunTrajectoryReplayManifest
 from kalhas.contracts.v1.campaign import (
     CampaignSpec,
     CampaignState,
@@ -56,6 +59,10 @@ from kalhas.contracts.v1.realization_trajectory_execution import (
 )
 from kalhas.contracts.v1.run_metric_observation import RunMetricObservationSet
 from kalhas.contracts.v1.run_plan import RunPlan
+from kalhas.contracts.v1.runtime_observation import (
+    ExternalObservationInputBundle,
+    RuntimeObservationDeclaration,
+)
 from kalhas.contracts.v1.scenario import (
     ClarificationQuestion,
     ContextBundle,
@@ -154,9 +161,17 @@ PUBLIC_CONTRACTS: tuple[type[VersionedContract], ...] = (
     CampaignDecisionPolicy,
     CampaignStrategyComparison,
     CampaignDecisionBrief,
+    RuntimeObservationDeclaration,
+    ExternalObservationInputBundle,
+    AdaptivePolicy,
+    AdaptiveRunTrajectoryExecution,
+    AdaptiveRunTrajectoryReplayManifest,
 )
 __all__ = [
     "API_VERSION",
+    "AdaptivePolicy",
+    "AdaptiveRunTrajectoryExecution",
+    "AdaptiveRunTrajectoryReplayManifest",
     "ApiErrorResponse",
     "CampaignDecisionBrief",
     "CampaignDecisionPolicy",
@@ -183,6 +198,7 @@ __all__ = [
     "ErrorCode",
     "ErrorDetail",
     "EvidenceReference",
+    "ExternalObservationInputBundle",
     "HealthResponse",
     "OperationalActivityEvent",
     "OperationalActivityKind",
@@ -206,6 +222,7 @@ __all__ = [
     "RunTrajectoryReplayManifest",
     "RunMetricObservationSet",
     "RuntimeMode",
+    "RuntimeObservationDeclaration",
     "SCHEMA_VERSION",
     "ScenarioEvaluationProfile",
     "ScenarioSeed",

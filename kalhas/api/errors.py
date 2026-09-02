@@ -14,6 +14,10 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from kalhas.application.adaptive_trajectory_execution_errors import (
+    AdaptiveRunTrajectoryExecutionIntegrityError,
+    AdaptiveRunTrajectoryExecutionNotFoundError,
+)
 from kalhas.application.campaign_decision_errors import (
     CampaignDecisionBriefIntegrityError,
     CampaignDecisionComparisonIntegrityError,
@@ -204,6 +208,7 @@ def register_error_handlers(app: FastAPI) -> None:
                 WorldNotFoundError,
                 CampaignNotFoundError,
                 RunNotFoundError,
+                AdaptiveRunTrajectoryExecutionNotFoundError,
                 RunTrajectoryExecutionNotFoundError,
                 RunTrajectoryReplayManifestNotFoundError,
                 RunMetricObservationNotFoundError,
@@ -292,6 +297,7 @@ def register_error_handlers(app: FastAPI) -> None:
             exc,
             (
                 RunInputIntegrityError,
+                AdaptiveRunTrajectoryExecutionIntegrityError,
                 DomainCapabilityDeclarationIntegrityError,
                 DomainMetricObservationIntegrityError,
                 DomainStateModelIntegrityError,

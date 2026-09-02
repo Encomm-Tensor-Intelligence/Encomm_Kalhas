@@ -396,10 +396,18 @@ class TestObjectiveEvaluationsApi:
         tampered = self_consistent_profile_copy(stored, metadata={"note": "tampered"})
         store._evaluation_profiles[(TENANT, "scenario-1")] = tampered
         _install_store(client, store)
-        response = client.get(EVALUATIONS_PATH, headers=HEADERS)
+        # Pin a deterministic request_id: a UUID request id could randomly
+        # contain forbidden domain-value tokens like "91". Echoing an explicit,
+        # safe X-Request-ID header (the middleware prefers it over a random
+        # UUID) prevents opaque substrings from colliding with those tokens.
+        safe_request_id = "fixed-request-id-0001"
+        headers = {**HEADERS, "X-Request-ID": safe_request_id}
+        response = client.get(EVALUATIONS_PATH, headers=headers)
         assert response.status_code == 409
-        assert response.json()["code"] == ErrorCode.INTEGRITY_ERROR.value
-        message = json.dumps(response.json())
+        body = response.json()
+        assert body["code"] == ErrorCode.INTEGRITY_ERROR.value
+        assert body["request_id"] == safe_request_id
+        message = json.dumps(body)
         # Raw values, targets, tolerances, scales, and hashes never leak.
         assert "91" not in message and "100.0" not in message
         assert "tampered" not in message

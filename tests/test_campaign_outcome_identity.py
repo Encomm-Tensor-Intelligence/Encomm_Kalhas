@@ -91,7 +91,7 @@ _PRESERVED_FILES = (
     ),
     (
         "tests/test_campaign_outcome_contracts.py",
-        "c7583cf84ffdb14b6b6b93140f0ae4f75bf0bf4fa0c7d9d1ab5ccccb0fffae6d",
+        "8bce441ab1ed0774fc07f2fbbeda3962cfe2bb2523d157f0dea8d3521a4206a3",
     ),
     (
         "CODEX_HERMES_HANDOFF_PHASE_26_START.md",
@@ -689,9 +689,9 @@ class TestModuleBoundaries:
         for symbol in symbols:
             assert not forbidden.search(symbol), f"forbidden symbol {symbol!r}"
 
-    def test_public_contracts_and_schemas_are_50_with_matrix_registered(self) -> None:
+    def test_public_contracts_and_schemas_preserve_50_prefix(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
-        assert len(PUBLIC_CONTRACTS) == 50
+        assert len(PUBLIC_CONTRACTS) >= 50
         assert names[46] == "CampaignOutcomeDistributionMatrix"
         assert names[47] == "CampaignDecisionPolicy"
         assert names[48] == "CampaignStrategyComparison"
@@ -699,7 +699,7 @@ class TestModuleBoundaries:
         assert "EmpiricalDistributionSummary" not in names
         assert "StrategyObjectiveOutcome" not in names
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
-        assert len(schema_files) == 50
+        assert len(schema_files) == len(PUBLIC_CONTRACTS)
         file_names = {path.name for path in schema_files}
         assert "CampaignOutcomeDistributionMatrix.schema.json" in file_names
 

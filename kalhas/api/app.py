@@ -5,6 +5,9 @@ from fastapi import FastAPI
 from kalhas.adapters.mocks import MockLegionAdapter, MockNexusAdapter
 from kalhas.api.errors import register_error_handlers, register_request_id_middleware
 from kalhas.api.routes import router
+from kalhas.api.routes_adaptive_run_execution import (
+    router as adaptive_run_execution_router,
+)
 from kalhas.api.routes_campaign_decision import router as campaign_decision_router
 from kalhas.api.routes_campaign_outcome import router as campaign_outcome_router
 from kalhas.api.routes_objective_evaluation import router as objective_evaluation_router
@@ -39,6 +42,7 @@ def create_app() -> FastAPI:
     app.state.mock_nexus = MockNexusAdapter(store)
     app.state.mock_legion = MockLegionAdapter()
     app.include_router(router)
+    app.include_router(adaptive_run_execution_router)
     app.include_router(campaign_decision_router)
     app.include_router(campaign_outcome_router)
     app.include_router(objective_evaluation_router)
