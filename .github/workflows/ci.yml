@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: lint · types · schemas · tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install locked dependencies
+        run: uv sync --locked --python 3.12
+
+      # One Phase 28 acceptance test verifies 90 pinned paths against a
+      # baseline ledger that lives outside the repository on the authoring
+      # machine. The committed fixture is byte-identical (same SHA-256).
+      # On POSIX, the test's Windows-style constant "C:/Users/..." is a
+      # RELATIVE path, resolved from the pytest working directory
+      # ($GITHUB_WORKSPACE), so the fixture must be materialized there
+      # under a literally-named "C:" directory. The test file itself is
+      # CP28-B-pinned and is not modified. See tests/fixtures/baseline_ledger.txt.
+      - name: Materialize pinned baseline-ledger fixture
+        run: |
+          target="$GITHUB_WORKSPACE/C:/Users/xampos/AppData/Local/hermes/profiles/kalhas-project/cache/h28-s08b"
+          mkdir -p "$target"
+          cp tests/fixtures/baseline_ledger.txt "$target/baseline_ledger.txt"
+          echo "a7937bf79d1d45263c372a0f793a0dec5cac2713c2427dbea022fb6c580ee152  $target/baseline_ledger.txt" | sha256sum -c -
+
+      - name: Ruff (lint)
+        run: uv run ruff check .
+
+      - name: Ruff (format check)
+        run: uv run ruff format --check .
+
+      - name: Mypy (strict)
+        run: uv run mypy kalhas tests
+
+      - name: Schema synchronization check
+        run: uv run python scripts/export_schemas.py --check
+        env:
+          PYTHONPATH: ""
+
+      - name: Pytest (full suite)
+        run: uv run pytest
+        env:
+          PYTHONPATH: ""

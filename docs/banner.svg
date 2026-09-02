@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" width="800" height="200" role="img" aria-labelledby="kalhas-title kalhas-desc">
+  <title id="kalhas-title">KALHAS</title>
+  <desc id="kalhas-desc">Deterministic world models, uncertainty-aware simulation campaigns, evidence, and exact replay.</desc>
+
+  <style>
+    .bg   { fill: #0d1117; }
+    .grid { stroke: #1c2431; stroke-width: 1; }
+    .traj { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .node { fill: #0d1117; stroke-width: 2; }
+    .replay { fill: none; stroke: #58a6ff; stroke-width: 2; stroke-dasharray: 4 4; opacity: 0.9; }
+    .wordmark { font: 700 64px ui-monospace, 'Cascadia Code', 'JetBrains Mono', Menlo, Consolas, monospace; fill: #e6edf3; letter-spacing: 8px; }
+    .subtitle { font: 400 15px ui-monospace, 'Cascadia Code', 'JetBrains Mono', Menlo, Consolas, monospace; fill: #9aa7b8; letter-spacing: 1.1px; }
+  </style>
+
+  <rect class="bg" width="800" height="200" rx="10"/>
+
+  <!-- quiet coordinate grid -->
+  <g class="grid" opacity="0.5">
+    <line x1="0" y1="64"  x2="800" y2="64"/>
+    <line x1="200" y1="0" x2="200" y2="200"/>
+    <line x1="400" y1="0" x2="400" y2="200"/>
+    <line x1="600" y1="0" x2="600" y2="200"/>
+  </g>
+
+  <!-- wordmark -->
+  <text class="wordmark"  x="404" y="84"  text-anchor="middle">KALHAS</text>
+  <text class="subtitle"  x="400" y="118" text-anchor="middle">deterministic worlds &#183; uncertainty &#183; evidence &#183; exact replay</text>
+
+  <!-- branching world-model fan: one recorded seed, several deterministic futures -->
+  <g>
+    <!-- uncertainty band around the recorded middle trajectory -->
+    <path d="M260 158 C 380 152, 480 146, 590 142 L 740 137 L 740 165 C 480 172, 380 176, 260 170 Z"
+          fill="#d29922" opacity="0.13"/>
+
+    <!-- green: divergent deterministic trajectory -->
+    <path class="traj" stroke="#3fb950" d="M60 165 C 160 165, 200 164, 260 163 C 360 161, 430 146, 520 138 L 740 124"/>
+    <!-- amber: recorded middle trajectory inside the uncertainty band -->
+    <path class="traj" stroke="#d29922" d="M60 165 C 160 165, 200 164, 260 163 C 380 158, 480 152, 590 148 L 740 143"/>
+    <!-- blue: divergent deterministic trajectory -->
+    <path class="traj" stroke="#58a6ff" d="M60 165 C 160 165, 200 166, 260 167 C 350 172, 430 184, 520 188 L 740 192"/>
+
+    <!-- recorded seed / branch point -->
+    <circle class="node" cx="60"  cy="165" r="6" stroke="#e6edf3"/>
+    <!-- branch / decision points -->
+    <circle class="node" cx="260" cy="163" r="5" stroke="#e6edf3"/>
+    <circle class="node" cx="520" cy="138" r="5" stroke="#3fb950"/>
+    <circle class="node" cx="520" cy="188" r="5" stroke="#58a6ff"/>
+    <circle class="node" cx="740" cy="124" r="5" stroke="#3fb950"/>
+    <circle class="node" cx="740" cy="143" r="5" stroke="#d29922"/>
+    <circle class="node" cx="740" cy="192" r="5" stroke="#58a6ff"/>
+
+    <!-- evidence anchors on the recorded trajectories -->
+    <rect x="360" y="153" width="10" height="10" fill="none" stroke="#d29922" stroke-width="2"/>
+    <rect x="620" y="142" width="10" height="10" fill="none" stroke="#d29922" stroke-width="2"/>
+    <rect x="620" y="129" width="10" height="10" fill="none" stroke="#3fb950" stroke-width="2"/>
+
+    <!-- exact-replay loop over the recorded middle trajectory -->
+    <path class="replay" d="M712 172 C 688 188, 654 184, 658 168 C 661 155, 684 152, 694 162"/>
+    <path d="M694 162 L 694 151 M 694 162 L 705 164" stroke="#58a6ff" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>
