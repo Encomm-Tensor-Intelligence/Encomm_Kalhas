@@ -12,7 +12,5 @@ labels: question
 
 <!-- What are you trying to do, and what have you already tried or read? -->
 
-Useful starting points: the [README](../../README.md),
-[`docs/PHASE_HISTORY.md`](../../docs/PHASE_HISTORY.md) (phase-by-phase
-behavior with worked examples), and
+Useful starting points: the [README](../../README.md) and
 [`docs/architecture/README.md`](../../docs/architecture/README.md).

@@ -129,9 +129,8 @@ curl -s -H "X-Tenant-ID: tenant-1" http://127.0.0.1:8000/v1/system-info
 
 Every API response uses one typed error shape (`code`, `message`, `details`,
 `request_id`), and every endpoint is tenant-scoped and read-only or
-explicitly lifecycle-gated. Full worked scenarios — scenario → world
-compilation → campaign preparation → execution → replay → evidence — are in
-[`docs/PHASE_HISTORY.md`](docs/PHASE_HISTORY.md).
+explicitly lifecycle-gated. The architecture guides describe the complete
+lifecycle, while the test suite provides executable end-to-end examples.
 
 ## Testing and verification
 
@@ -144,14 +143,11 @@ PYTHONPATH= uv run python scripts/export_schemas.py --check   # schema sync
 ```
 
 Latest full-suite result: **6,850 tests, 0 failures, 0 errors, 0 skipped**
-(Codex-owned Phase 28 audit run, 2026-09-02). `make check` runs the same
-gates where GNU make is available.
+(2026-09-02). `make check` runs the same gates where GNU make is available.
 
 ## Release status
 
-Truthful publication state of `main`. Historical phase-by-phase records,
-live API walkthroughs, and per-phase scope statements are preserved in
-[`docs/PHASE_HISTORY.md`](docs/PHASE_HISTORY.md).
+Published milestones on `main`:
 
 ## Phase 26 — published
 
@@ -166,33 +162,27 @@ gate-verified, committed, and published at
 `a905d2af6b155a0f2568037e2b0f410b20be8d91`, followed by the Gate 27.1
 truthful-baseline closure published at
 `777a4472ef0d1edc6d30ce61a05851302b981027` (5,480 tests, 0 failed,
-0 skipped, Codex-owned run).
+0 skipped).
 
 ## Phase 28 — complete and published
 
-Adaptive deterministic runtime `4.0.0`: implementation-complete and
-gate-verified across slices `H28-S01`–`H28-S13`, committed, and published at
-`f001d5f027cf21e8964eac72f122730e98ebdd3d`. Adds five v1 contracts
+Adaptive deterministic runtime `4.0.0`: implementation-complete,
+gate-verified, committed, and published at
+`f001d5f027cf21e8964eac72f122730e98ebdd3d`. It adds five v1 contracts
 (indexes 50–54), five synchronized schema artifacts, three read-only adaptive
 API paths, causal observation/decision/switch evidence, and the unpatched
-exact-five-plus-adaptive acceptance proof (24 focused tests). The independent
-Codex audit accepted checkpoint `CP28-B` on 2026-09-02 with the full suite at
-6,850 tests, 0 failures, 0 errors, 0 skipped.
+exact-five-plus-adaptive acceptance proof (24 focused tests). The publication
+baseline passed 6,850 tests with 0 failures, 0 errors, and 0 skipped.
 
 ### Phase 29 — not started
 
-KALHAS-PAN is not implemented. Phase 29 requires new explicit authorization;
-no Phase 29 design, entry audit, or implementation has begun.
-
-Historical phase-by-phase records, live API walkthroughs, and per-phase scope
-statements are preserved in [`docs/PHASE_HISTORY.md`](docs/PHASE_HISTORY.md).
+KALHAS-PAN is not implemented. Phase 29 is outside the current release.
 
 ## Documentation
 
 | Document | Contents |
 | --- | --- |
 | [`AGENTS.md`](AGENTS.md) | Durable repository rules and gates |
-| [`docs/PHASE_HISTORY.md`](docs/PHASE_HISTORY.md) | Full phase-by-phase history (Phases 0–28) with worked API examples |
 | [`docs/architecture/README.md`](docs/architecture/README.md) | Layer map and dependency rules |
 | [`docs/architecture/contracts-and-lifecycle.md`](docs/architecture/contracts-and-lifecycle.md) | Contract versions, lifecycle, and hash discipline |
 | [`docs/decisions/`](docs/decisions/) | ADR 001–004 (integration boundaries, domain packs, immutable world contracts, adaptive runtime) |

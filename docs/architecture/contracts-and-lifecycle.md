@@ -2519,16 +2519,9 @@ model - new deterministic provenance). **Phase 25 has not started.**
 
 ## Phase 25: realization-aware trajectory runtime 3.0.0
 
-**Status: COMPLETE**, included in one local closure commit (the local
-Phase 25 closure commit containing this documentation; **not pushed** -
-`origin/main` remains at
-`f40e83de468ca14100d011454d15eb3dd561c810` and local `main` is exactly
-one commit ahead; push is intentionally deferred until Phases 26 and 27
-are complete; authoritative facts and gate results are in
-`KALHAS_HANDOFF_PHASE_25.md`). **Phase 26 has not begun** was true at
-the Phase 25 checkpoint and is superseded by the Phase 26 section
-below. This section **explicitly supersedes the historical statements
-above that Phase 25 / runtime 3.0.0 "has not started".**
+**Status: COMPLETE AND PUBLISHED.** Phase 25 closed at commit
+`e6a39e7bd51e7cf60d7eaeea8d710f6cdf4ad9e5`. The Phase 26 and Phase 27
+sections below record the later published contract layers.
 
 ### Contracts
 
@@ -2646,20 +2639,14 @@ checkpoint (neither phase was implemented then); it is superseded for
 Phase 26 by the Phase 26 section below. The "not implemented" portion
 likewise held for Phase 27 at the Phase 26 checkpoint; it is superseded
 by the Phase 27 section below, which records Phase 27 as committed and
-published (its authoritative design already exists in the external
-blueprint and `CODEX_HERMES_HANDOFF_PHASE_26_START.md`).
+published.
 
 ## Phase 26: empirical campaign outcome distributions
 
 **Status: IMPLEMENTATION-COMPLETE, GATE-VERIFIED, COMMITTED AND
-PUBLISHED.** The complete Phase 26 change set (19 created paths plus 21
-modified integration paths; exact inventory in
-`KALHAS_HANDOFF_PHASE_26.md`) is committed and published at commit
-`886f398c288971d612fa57bd1d1e731113a69f72`; the phase handoff remains a
-historical pre-commit checkpoint snapshot and is not rewritten. This
-section supersedes the historical Phase 25-checkpoint statements above
-that Phase 26 "has not begun" / "Phase 26 and Phase 27 are not
-implemented or designed here".
+PUBLISHED.** Phase 26 was published at commit
+`886f398c288971d612fa57bd1d1e731113a69f72`. This section supersedes the
+earlier Phase 25-checkpoint status statements.
 
 ### Purpose and claim boundary
 
@@ -2873,16 +2860,9 @@ implemented** anywhere in the repository.
 ## Phase 27: robust paired comparison and campaign decision brief
 
 **Status: IMPLEMENTATION-COMPLETE, GATE-VERIFIED, COMMITTED AND
-PUBLISHED.** Phase 27 was implemented, gate-verified, committed, and
-published at commit `a905d2af6b155a0f2568037e2b0f410b20be8d91` (the
-Phase 27 closure commit on `main`). At this Gate 27.1 frozen baseline
-`local main` and `origin/main` are both at that commit with divergence
-`0 0` and an empty Git index. The exact change set is recorded in
-`KALHAS_HANDOFF_PHASE_27.md`, which remains a historical pre-publication
-checkpoint snapshot and is not rewritten. This section supersedes the
-historical Phase 26-checkpoint statements above that Phase 27 "has not
-begun" / "is not implemented". Phase 28 and KALHAS-PAN remain **not
-implemented** anywhere in the repository.
+PUBLISHED.** Phase 27 was published at commit
+`a905d2af6b155a0f2568037e2b0f410b20be8d91`, followed by the Gate 27.1
+baseline closure at `777a4472ef0d1edc6d30ce61a05851302b981027`.
 
 ### Contracts
 
@@ -3081,17 +3061,14 @@ proves the real exact-five campaign (unmodified production
 `EXPECTED_STRATEGY_SET_SIZE == 5`, five causally different declared plans,
 four shared seeds) plus one bound adaptive policy arm: causal switching under
 dwell/cooldown/budgets, paired comparison evidence, exact replay, and
-adversarial rejection of tampering - no cardinality patching, no production
-mutation. The H28-S12 session ran the complete repository suite once,
-normally: 6,850 tests, 0 failures, 0 errors, 0 skipped, 810.94 seconds, with
-Ruff, format check, mypy, schema synchronization, and diff hygiene green.
-H28-S13 adds the final documentation and a bounded, fixture-specific
-performance characterization recorded outside the repository.
+adversarial rejection of tampering - no cardinality patching and no production
+mutation. The Phase 28 acceptance baseline passed 6,850 tests with 0 failures,
+0 errors, and 0 skipped, together with Ruff, format, strict mypy, schema
+synchronization, and diff-hygiene gates.
 
 Claim boundary: deterministic replay and repository acceptance are not
 scientific validity, calibration, production readiness, certification, or a
 guarantee of any outcome. The system performs no autonomous live action.
 KALHAS-PAN (Phase 29) and the executable real domain mechanism remain **not
-implemented**; Phase 29 is not started and not authorized. Phase 28 remains a
-fully gated local closure candidate pending the independent Codex final
-fingerprint/gate audit, which owns any checkpoint disposition.
+implemented**. Phase 28 is complete and published at
+`f001d5f027cf21e8964eac72f122730e98ebdd3d`.

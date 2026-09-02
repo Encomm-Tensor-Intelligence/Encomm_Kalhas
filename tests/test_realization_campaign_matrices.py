@@ -1944,7 +1944,7 @@ class TestObservationMatrixPurity:
 class TestObservationMatrixTrustBoundary:
     """Corrective micro-slice: strict trust-boundary verification of the pure builder.
 
-    Codex reproduced three direct-builder fail-open cases (foreign
+    An independent review reproduced three direct-builder fail-open cases (foreign
     trajectory-result provenance, validator-bypassed raw values, and a
     shifted observed_at), each self-consistently rehashed. The corrected
     builder strictly revalidates every supplied artifact against its

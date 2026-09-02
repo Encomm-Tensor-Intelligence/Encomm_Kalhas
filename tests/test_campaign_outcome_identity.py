@@ -93,10 +93,6 @@ _PRESERVED_FILES = (
         "tests/test_campaign_outcome_contracts.py",
         "8bce441ab1ed0774fc07f2fbbeda3962cfe2bb2523d157f0dea8d3521a4206a3",
     ),
-    (
-        "CODEX_HERMES_HANDOFF_PHASE_26_START.md",
-        "0ce6a46915666fb29ef7e4fe2b49d324e8e094187d78404f0b733db1fcda1f22",
-    ),
 )
 
 _IDENTITY_INPUTS = {

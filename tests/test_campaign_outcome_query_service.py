@@ -154,10 +154,6 @@ SCHEMA_DIR = Path(__file__).resolve().parents[1] / "schemas" / "v1"
 #: The accepted earlier-slice files with their preservation hashes.
 _PRESERVED_FILES = (
     (
-        "CODEX_HERMES_HANDOFF_PHASE_26_START.md",
-        "0ce6a46915666fb29ef7e4fe2b49d324e8e094187d78404f0b733db1fcda1f22",
-    ),
-    (
         "kalhas/application/campaign_outcome_errors.py",
         "573e43376d794dae38f617007898a304da61e37ecd7da565ea02b90504f8a656",
     ),
@@ -187,11 +183,11 @@ _PRESERVED_FILES = (
     ),
     (
         "tests/test_campaign_outcome_identity.py",
-        "a8c181fe268479d5b1fab36cee4a7ffa8029d99c7d4cc4a76d4fb2995a657481",
+        "6c4649d1150f70674b89b8edbdde5b0e4043f146b46a92412362490c2e344d40",
     ),
     (
         "tests/test_campaign_outcome_matrix_runtime.py",
-        "7f7742dbad1e01e59771897f581f9f871f6532658cf91426e8acc60baf81cb37",
+        "3e572deb5e82914f1c9da87fa39ab8e5b6a8a0c61ac6ee8555d031417acda0a2",
     ),
     (
         "tests/test_campaign_outcome_runtime.py",

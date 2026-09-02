@@ -31,21 +31,6 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --locked --python 3.12
 
-      # One Phase 28 acceptance test verifies 90 pinned paths against a
-      # baseline ledger that lives outside the repository on the authoring
-      # machine. The committed fixture is byte-identical (same SHA-256).
-      # On POSIX, the test's Windows-style constant "C:/Users/..." is a
-      # RELATIVE path, resolved from the pytest working directory
-      # ($GITHUB_WORKSPACE), so the fixture must be materialized there
-      # under a literally-named "C:" directory. The test file itself is
-      # CP28-B-pinned and is not modified. See tests/fixtures/baseline_ledger.txt.
-      - name: Materialize pinned baseline-ledger fixture
-        run: |
-          target="$GITHUB_WORKSPACE/C:/Users/xampos/AppData/Local/hermes/profiles/kalhas-project/cache/h28-s08b"
-          mkdir -p "$target"
-          cp tests/fixtures/baseline_ledger.txt "$target/baseline_ledger.txt"
-          echo "a7937bf79d1d45263c372a0f793a0dec5cac2713c2427dbea022fb6c580ee152  $target/baseline_ledger.txt" | sha256sum -c -
-
       - name: Ruff (lint)
         run: uv run ruff check .
 

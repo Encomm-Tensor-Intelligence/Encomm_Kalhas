@@ -58,7 +58,6 @@ from __future__ import annotations
 
 import ast
 import inspect
-import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -104,10 +103,6 @@ from tests.phase25_helpers import level_binding
 from tests.test_adaptive_run_execution_builder import _new_store_with_world
 
 SERVICE_PATH = Path(service_module.__file__).resolve()
-REPO_ROOT = SERVICE_PATH.parents[2]
-BASELINE_LEDGER = Path(
-    "C:/Users/xampos/AppData/Local/hermes/profiles/kalhas-project/cache/h28-s08b/baseline_ledger.txt"
-)
 OTHER_TENANT = "tenant-99"
 CAMPAIGN_ID = "campaign-1"
 
@@ -1206,25 +1201,8 @@ class TestPurityAndBoundaries:
         assert '"2.0.0"' not in source
         assert '"3.0.0"' not in source
 
-    def test_protected_baseline_remains_byte_identical(self) -> None:
-        """All 90 pre-existing dirty paths (both H28-S08A files included)
-        keep their preflight git hash-object values."""
-        entries = [
-            line.split(" ", 2) for line in BASELINE_LEDGER.read_text(encoding="utf-8").splitlines()
-        ]
-        assert len(entries) == 90
-        mismatched: list[str] = []
-        for expected_hash, _size, relative in entries:
-            actual = (
-                subprocess.run(
-                    ["git", "hash-object", relative],
-                    cwd=REPO_ROOT,
-                    capture_output=True,
-                    check=True,
-                )
-                .stdout.decode("ascii")
-                .strip()
-            )
-            if actual != expected_hash:
-                mismatched.append(relative)
-        assert mismatched == []
+    def test_service_source_has_no_machine_specific_paths(self) -> None:
+        """Production code stays independent of authoring-machine paths."""
+        source = SERVICE_PATH.read_text(encoding="utf-8")
+        for marker in ("C:/Users/", "AppData/", "profile/cache"):
+            assert marker not in source

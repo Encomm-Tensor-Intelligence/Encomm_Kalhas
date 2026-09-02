@@ -163,15 +163,11 @@ _PRESERVED_FILES = (
     ),
     (
         "tests/test_campaign_outcome_identity.py",
-        "a8c181fe268479d5b1fab36cee4a7ffa8029d99c7d4cc4a76d4fb2995a657481",
+        "6c4649d1150f70674b89b8edbdde5b0e4043f146b46a92412362490c2e344d40",
     ),
     (
         "tests/test_campaign_outcome_contracts.py",
         "8bce441ab1ed0774fc07f2fbbeda3962cfe2bb2523d157f0dea8d3521a4206a3",
-    ),
-    (
-        "CODEX_HERMES_HANDOFF_PHASE_26_START.md",
-        "0ce6a46915666fb29ef7e4fe2b49d324e8e094187d78404f0b733db1fcda1f22",
     ),
 )
 

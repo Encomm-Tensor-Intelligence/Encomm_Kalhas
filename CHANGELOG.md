@@ -8,8 +8,8 @@ independent audit before it is committed to `main`.
 
 ### Added
 
-- Adaptive deterministic runtime `4.0.0` on top of runtime `3.0.0`
-  (`H28-S01`–`H28-S13`): causal mid-run observation events under the frozen
+- Adaptive deterministic runtime `4.0.0` on top of runtime `3.0.0`: causal
+  mid-run observation events under the frozen
   `kalhas-observation-noise-v1` coordinate, a closed bounded policy AST (no
   expressions, callbacks, imports, or LLM calls), immutable bound adaptive
   policies, policy decision/switch evidence with dwell/cooldown/budget
@@ -32,11 +32,9 @@ independent audit before it is committed to `main`.
 
 ### Verified
 
-- Full suite: 6,850 tests, 0 failures, 0 errors, 0 skipped (Codex-owned
-  `CP28-B` audit run, 2026-09-02).
+- Full suite: 6,850 tests, 0 failures, 0 errors, 0 skipped.
 - Ruff check, Ruff format check, strict mypy (340 source files), and
   schema-export `--check` all green.
-- `CP28-B` accepted by the independent Codex audit on 2026-09-02.
 
 ### Committed
 
@@ -54,7 +52,7 @@ independent audit before it is committed to `main`.
 
 ### Verified
 
-- Full suite: 5,480 tests, 0 failed, 0 skipped (Codex-owned run).
+- Full suite: 5,480 tests, 0 failed, 0 skipped.
 
 ### Committed
 
@@ -117,10 +115,8 @@ transitions, pure transition kernel, snapshot isolation, trajectory plans and
 execution, verified inspection, trajectory matrices, observation bindings and
 extraction, metric-observation matrices, deterministic metric statistics,
 objective-to-metric evaluation semantics, world uncertainty realizations) are
-documented in [`docs/PHASE_HISTORY.md`](docs/PHASE_HISTORY.md) and the phase
-handoffs at the repository root.
+preserved in Git history and described by the architecture documentation.
 
 ## [Unreleased]
 
-Phase 29 (Model Pack foundation and KALHAS-PAN v0.1) is **not started** and
-**not authorized**. Nothing is in development.
+No unreleased changes.

@@ -1215,7 +1215,6 @@ class TestRegistrySchemaAndPrefix:
             "schemas/v1/ExternalObservationInputBundle.schema.json": (
                 "4211cf4480b2e04691ec12d7527371076eff184f"
             ),
-            "tests/test_phase27_boundaries.py": ("ac8b7a5f32b5a9475d59acb69b88d8407d80625a"),
         }
 
         def git_hash(relative: str) -> str:

@@ -1264,5 +1264,7 @@ class TestScopeInventory:
         ):
             assert (SCHEMA_DIR / name).is_file(), name
 
-    def test_phase27_handoff_exists(self) -> None:
-        assert (REPO_ROOT / "KALHAS_HANDOFF_PHASE_27.md").is_file()
+    def test_phase27_release_is_documented(self) -> None:
+        release_commit = "a905d2af6b155a0f2568037e2b0f410b20be8d91"
+        for relative in ("README.md", "CHANGELOG.md"):
+            assert release_commit in (REPO_ROOT / relative).read_text(encoding="utf-8")
