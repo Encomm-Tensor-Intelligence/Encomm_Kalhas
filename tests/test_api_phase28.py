@@ -6,8 +6,10 @@ switches) - their registration in ``create_app``, the additive API
 error mapping of ``AdaptiveRunTrajectoryExecutionNotFoundError`` (404
 ``not_found``) and ``AdaptiveRunTrajectoryExecutionIntegrityError``
 (409 ``integrity_error``), and the untouched additive public-contract
-registration (``PUBLIC_CONTRACTS`` stays at 55 with 55 JSON schema
-artifacts). Proves:
+registration (``PUBLIC_CONTRACTS`` carries the immutable 55-contract
+Phase 28 prefix and grows only additively, with the JSON schema
+artifact set following the registry), and the untouched additive
+public-contract registration surface. Proves:
 
 - real executed adaptive runs through the real FastAPI app: every 200
   response body equals the canonical stored observation/decision/
@@ -934,10 +936,20 @@ class TestRegistrationAndProtectedSurfaces:
             assert blob == expected_blob, path
 
     def test_public_contracts_and_schema_artifacts_are_unchanged(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 55
+        """Phase 28 stays an immutable 55-contract prefix; growth is additive.
+
+        Phase 29 appends new contracts at later indexes, so the registry
+        must only ever be >= 55, the schema artifact set must follow the
+        registry exactly, and the total schemas/v1 file count must equal
+        ``len(PUBLIC_CONTRACTS) + 1`` for ``README.md``. The Phase 28
+        schema/content/blob hashes below remain exact byte assertions.
+        """
+        assert len(PUBLIC_CONTRACTS) >= 55
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
-        assert len(schema_files) == 55
-        assert len([path for path in SCHEMA_DIR.iterdir() if path.is_file()]) == 56
+        assert len(schema_files) == len(PUBLIC_CONTRACTS)
+        assert len([path for path in SCHEMA_DIR.iterdir() if path.is_file()]) == (
+            len(PUBLIC_CONTRACTS) + 1
+        )
         by_name = {path.name: path for path in schema_files}
         expected = {
             "AdaptivePolicy.schema.json": (

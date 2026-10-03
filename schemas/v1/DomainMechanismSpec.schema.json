@@ -1,0 +1,506 @@
+{
+  "$defs": {
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "MechanismDataIdentity": {
+      "additionalProperties": false,
+      "description": "One behavior-affecting data identity bound into the mechanism.\n\nA declared dataset or derived data layer that can affect mechanism\nbehavior, carried as its stable identifier and content hash.",
+      "properties": {
+        "data_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Data Content Hash",
+          "type": "string"
+        },
+        "data_id": {
+          "minLength": 1,
+          "title": "Data Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data_id",
+        "data_content_hash"
+      ],
+      "title": "MechanismDataIdentity",
+      "type": "object"
+    },
+    "MechanismParameterBinding": {
+      "additionalProperties": false,
+      "description": "One parameter/unit binding of the mechanism configuration.\n\nBinds one declared parameter to its unit and, optionally, to the\nbehavior-affecting data identity it derives from (both the data\nidentifier and its content hash, or neither).",
+      "properties": {
+        "data_content_hash": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Data Content Hash"
+        },
+        "data_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Data Id"
+        },
+        "parameter_id": {
+          "minLength": 1,
+          "title": "Parameter Id",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "parameter_id"
+      ],
+      "title": "MechanismParameterBinding",
+      "type": "object"
+    },
+    "MechanismPlatformIdentity": {
+      "additionalProperties": false,
+      "description": "The recorded platform identity of one mechanism (D34-01).\n\nBinds the operating system, architecture, Python implementation and\nversion, the dependency-lock hash, the mechanism implementation\nidentity, the solver identity, and the frozen numeric-profile\nidentifier. Exact replay is claimed only under this recorded\nidentity; a mismatch rejects exact replay or comparison.",
+      "properties": {
+        "architecture": {
+          "minLength": 1,
+          "title": "Architecture",
+          "type": "string"
+        },
+        "dependency_lock_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Dependency Lock Hash",
+          "type": "string"
+        },
+        "implementation_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Implementation Hash",
+          "type": "string"
+        },
+        "implementation_id": {
+          "minLength": 1,
+          "title": "Implementation Id",
+          "type": "string"
+        },
+        "implementation_version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Implementation Version",
+          "type": "string"
+        },
+        "numeric_profile": {
+          "const": "kalhas-platform-bound-binary64-v1",
+          "title": "Numeric Profile",
+          "type": "string"
+        },
+        "os_name": {
+          "minLength": 1,
+          "title": "Os Name",
+          "type": "string"
+        },
+        "python_implementation": {
+          "minLength": 1,
+          "title": "Python Implementation",
+          "type": "string"
+        },
+        "python_version": {
+          "minLength": 1,
+          "title": "Python Version",
+          "type": "string"
+        },
+        "solver_id": {
+          "minLength": 1,
+          "title": "Solver Id",
+          "type": "string"
+        },
+        "solver_version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Solver Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "os_name",
+        "architecture",
+        "python_implementation",
+        "python_version",
+        "dependency_lock_hash",
+        "implementation_id",
+        "implementation_version",
+        "implementation_hash",
+        "solver_id",
+        "solver_version",
+        "numeric_profile"
+      ],
+      "title": "MechanismPlatformIdentity",
+      "type": "object"
+    },
+    "MechanismQuantizationBoundary": {
+      "additionalProperties": false,
+      "description": "One explicitly named quantization boundary (D34-01).\n\n``quantum`` is the exact positive numeric step of this boundary;\nzero, negatives, booleans, strings, ``Decimal``, NaN, and infinities\nfail closed. Quantization happens only at these declared boundaries,\nwith the spec's round-to-nearest ties-to-even semantics. There is no\nhidden rounding, clipping, tolerance, or default quantization\nanywhere.",
+      "properties": {
+        "boundary_id": {
+          "minLength": 1,
+          "title": "Boundary Id",
+          "type": "string"
+        },
+        "quantum": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          ],
+          "title": "Quantum"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "boundary_id",
+        "quantum"
+      ],
+      "title": "MechanismQuantizationBoundary",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Immutable declarative identity of one domain mechanism.\n\nBinds the pack/manifest identity, the mechanism identity and\nmechanism protocol version ``1.0.0``, the five schema identities and\nhashes, the immutable configuration and its hash, the implementation,\ndependency-lock, solver, and data identities, the parameter/unit\nbindings, the positive exact timestep with explicit unit, the\nnon-empty unique explicitly ordered event and reduction orders, the\nfrozen numeric profile (``kalhas-platform-bound-binary64-v1``, IEEE-\n754 binary64, round-to-nearest ties-to-even), the explicitly named\nunique quantization boundaries, the recorded platform identity, the\nself-covering content hash, the timezone-aware caller-supplied\ndeclaration time, and finite metadata.\n\nThe platform identity must agree exactly with the spec-level\nimplementation, dependency-lock, solver, and numeric-profile\nidentities; any disagreement fails closed. Every behavior-affecting\nidentity change requires a new appropriate identity/version; an\nin-place change is never expressible.",
+  "properties": {
+    "action_schema_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Action Schema Hash",
+      "type": "string"
+    },
+    "action_schema_id": {
+      "minLength": 1,
+      "title": "Action Schema Id",
+      "type": "string"
+    },
+    "configuration": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Configuration",
+      "type": "object"
+    },
+    "configuration_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Configuration Hash",
+      "type": "string"
+    },
+    "configuration_schema_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Configuration Schema Hash",
+      "type": "string"
+    },
+    "configuration_schema_id": {
+      "minLength": 1,
+      "title": "Configuration Schema Id",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "data_identities": {
+      "items": {
+        "$ref": "#/$defs/MechanismDataIdentity"
+      },
+      "title": "Data Identities",
+      "type": "array"
+    },
+    "declared_at": {
+      "format": "date-time",
+      "title": "Declared At",
+      "type": "string"
+    },
+    "dependency_lock_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Dependency Lock Hash",
+      "type": "string"
+    },
+    "emission_schema_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Emission Schema Hash",
+      "type": "string"
+    },
+    "emission_schema_id": {
+      "minLength": 1,
+      "title": "Emission Schema Id",
+      "type": "string"
+    },
+    "event_order": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Event Order",
+      "type": "array"
+    },
+    "evidence_schema_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Evidence Schema Hash",
+      "type": "string"
+    },
+    "evidence_schema_id": {
+      "minLength": 1,
+      "title": "Evidence Schema Id",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "implementation_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Implementation Hash",
+      "type": "string"
+    },
+    "implementation_id": {
+      "minLength": 1,
+      "title": "Implementation Id",
+      "type": "string"
+    },
+    "implementation_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Implementation Version",
+      "type": "string"
+    },
+    "manifest_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Manifest Content Hash",
+      "type": "string"
+    },
+    "manifest_id": {
+      "minLength": 1,
+      "title": "Manifest Id",
+      "type": "string"
+    },
+    "mechanism_id": {
+      "minLength": 1,
+      "title": "Mechanism Id",
+      "type": "string"
+    },
+    "mechanism_protocol_version": {
+      "const": "1.0.0",
+      "title": "Mechanism Protocol Version",
+      "type": "string"
+    },
+    "mechanism_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Mechanism Version",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "numeric_profile": {
+      "const": "kalhas-platform-bound-binary64-v1",
+      "title": "Numeric Profile",
+      "type": "string"
+    },
+    "pack_id": {
+      "minLength": 1,
+      "title": "Pack Id",
+      "type": "string"
+    },
+    "pack_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Pack Version",
+      "type": "string"
+    },
+    "parameter_bindings": {
+      "items": {
+        "$ref": "#/$defs/MechanismParameterBinding"
+      },
+      "title": "Parameter Bindings",
+      "type": "array"
+    },
+    "platform_identity": {
+      "$ref": "#/$defs/MechanismPlatformIdentity"
+    },
+    "precision": {
+      "const": "ieee-754-binary64",
+      "title": "Precision",
+      "type": "string"
+    },
+    "quantization_boundaries": {
+      "items": {
+        "$ref": "#/$defs/MechanismQuantizationBoundary"
+      },
+      "title": "Quantization Boundaries",
+      "type": "array"
+    },
+    "reduction_order": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Reduction Order",
+      "type": "array"
+    },
+    "rounding_mode": {
+      "const": "round-to-nearest-ties-to-even",
+      "title": "Rounding Mode",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "solver_id": {
+      "minLength": 1,
+      "title": "Solver Id",
+      "type": "string"
+    },
+    "solver_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Solver Version",
+      "type": "string"
+    },
+    "state_schema_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "State Schema Hash",
+      "type": "string"
+    },
+    "state_schema_id": {
+      "minLength": 1,
+      "title": "State Schema Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "timestep": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        }
+      ],
+      "title": "Timestep"
+    },
+    "timestep_unit": {
+      "minLength": 1,
+      "title": "Timestep Unit",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "pack_id",
+    "pack_version",
+    "manifest_id",
+    "manifest_content_hash",
+    "mechanism_id",
+    "mechanism_version",
+    "mechanism_protocol_version",
+    "state_schema_id",
+    "action_schema_id",
+    "configuration_schema_id",
+    "emission_schema_id",
+    "evidence_schema_id",
+    "state_schema_hash",
+    "action_schema_hash",
+    "configuration_schema_hash",
+    "emission_schema_hash",
+    "evidence_schema_hash",
+    "configuration_hash",
+    "implementation_id",
+    "implementation_version",
+    "implementation_hash",
+    "dependency_lock_hash",
+    "solver_id",
+    "solver_version",
+    "timestep",
+    "timestep_unit",
+    "event_order",
+    "reduction_order",
+    "numeric_profile",
+    "precision",
+    "rounding_mode",
+    "platform_identity",
+    "content_hash",
+    "declared_at"
+  ],
+  "title": "DomainMechanismSpec",
+  "type": "object"
+}

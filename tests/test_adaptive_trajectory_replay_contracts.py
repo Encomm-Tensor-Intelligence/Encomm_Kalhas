@@ -501,11 +501,12 @@ class TestRegistryBoundary:
         )
         assert names[54] == "AdaptiveRunTrajectoryReplayManifest"
 
-    def test_only_the_manifest_is_newly_registered(self) -> None:
+    def test_only_the_manifest_was_newly_registered_in_phase28(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
         prefix = set(names[:54])
-        assert names[-1] == "AdaptiveRunTrajectoryReplayManifest"
-        assert set(names) - prefix == {"AdaptiveRunTrajectoryReplayManifest"}
+        phase28_names = names[:55]
+        assert phase28_names[-1] == "AdaptiveRunTrajectoryReplayManifest"
+        assert set(phase28_names) - prefix == {"AdaptiveRunTrajectoryReplayManifest"}
         for nested in (
             "RuntimeObservationEvent",
             "AdaptivePolicyStateSnapshot",

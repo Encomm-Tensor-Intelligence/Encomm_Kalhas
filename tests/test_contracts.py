@@ -22,6 +22,11 @@ from kalhas.contracts.v1.campaign_metric_observation import CampaignMetricObserv
 from kalhas.contracts.v1.campaign_metric_statistics import CampaignMetricStatisticsMatrix
 from kalhas.contracts.v1.campaign_outcome import CampaignOutcomeDistributionMatrix
 from kalhas.contracts.v1.campaign_trajectory import CampaignTrajectoryMatrix
+from kalhas.contracts.v1.domain_mechanism import (
+    DomainMechanismSpec,
+    DomainMechanismStepRequest,
+    DomainMechanismStepResult,
+)
 from kalhas.contracts.v1.domain_pack import (
     DomainCapabilityDeclaration,
     DomainPackBinding,
@@ -30,6 +35,11 @@ from kalhas.contracts.v1.domain_pack import (
 from kalhas.contracts.v1.execution import ReplayManifest, RunStatus
 from kalhas.contracts.v1.integrity import RunInputIntegrityManifest
 from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
+from kalhas.contracts.v1.model_pack import (
+    ModelPackAssuranceProfile,
+    ModelPackCatalogueEntry,
+    ModelPackReleaseProfile,
+)
 from kalhas.contracts.v1.objective_evaluation import (
     CampaignObjectiveEvaluationMatrix,
     ScenarioEvaluationProfile,
@@ -94,6 +104,119 @@ SEED_PAYLOAD: dict[str, object] = {
     "algorithm": "deterministic",
     "seed_value": "a1b2c3d4e5f6",
     "metadata": {"derived": False},
+}
+
+#: A fully consistent synthetic manifest payload embedded in the Model
+#: Pack release profile below; its identity fields must agree with the
+#: copied identity fields of that payload.
+_MODEL_PACK_MANIFEST_PAYLOAD: dict[str, object] = {
+    "identifier": "manifest-1",
+    "tenant_id": "tenant-1",
+    "schema_version": "1.0.0",
+    "pack_id": "pack-1",
+    "name": "Reference domain pack",
+    "pack_version": "1.2.3",
+    "description": "Declarative pack metadata only",
+    "supported_api_versions": ["1"],
+    "capabilities": [
+        {
+            "identifier": "cap-1",
+            "description": "Declared capability",
+            "input_ids": ["in-1"],
+            "output_ids": ["out-1"],
+            "metadata": {},
+        }
+    ],
+    "schema_metadata": {"declarative": True},
+    "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "created_at": NOW,
+    "metadata": {"owner": "foundation"},
+}
+
+#: A fully consistent synthetic mechanism-spec payload embedded in the
+#: Model Pack release profile below; its identity fields must agree with
+#: the copied identity fields of that payload.
+_MODEL_PACK_MECHANISM_SPEC_PAYLOAD: dict[str, object] = {
+    "identifier": "mechanism-spec-1",
+    "tenant_id": "tenant-1",
+    "schema_version": "1.0.0",
+    "pack_id": "pack-1",
+    "pack_version": "1.2.3",
+    "manifest_id": "manifest-1",
+    "manifest_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "mechanism_id": "mechanism-1",
+    "mechanism_version": "1.0.0",
+    "mechanism_protocol_version": "1.0.0",
+    "state_schema_id": "state-schema-1",
+    "action_schema_id": "action-schema-1",
+    "configuration_schema_id": "configuration-schema-1",
+    "emission_schema_id": "emission-schema-1",
+    "evidence_schema_id": "evidence-schema-1",
+    "state_schema_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "action_schema_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "configuration_schema_hash": (
+        "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    ),
+    "emission_schema_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "evidence_schema_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "configuration": {"alpha": 1, "beta": "on", "gamma": [1.5, None]},
+    "configuration_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "implementation_id": "implementation-1",
+    "implementation_version": "2.0.0",
+    "implementation_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "dependency_lock_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "solver_id": "solver-1",
+    "solver_version": "3.0.0",
+    "data_identities": [
+        {
+            "data_id": "data-1",
+            "data_content_hash": (
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+            ),
+        }
+    ],
+    "parameter_bindings": [
+        {
+            "parameter_id": "parameter-1",
+            "unit": "units",
+            "data_id": "data-1",
+            "data_content_hash": (
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+            ),
+        }
+    ],
+    "timestep": 0.5,
+    "timestep_unit": "hour",
+    "event_order": ["event-a", "event-b"],
+    "reduction_order": ["reduction-a"],
+    "numeric_profile": "kalhas-platform-bound-binary64-v1",
+    "precision": "ieee-754-binary64",
+    "rounding_mode": "round-to-nearest-ties-to-even",
+    "quantization_boundaries": [
+        {
+            "boundary_id": "boundary-1",
+            "quantum": 0.25,
+            "unit": "units",
+        }
+    ],
+    "platform_identity": {
+        "os_name": "os-generic",
+        "architecture": "arch-generic",
+        "python_implementation": "cpython",
+        "python_version": "3.12.0",
+        "dependency_lock_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "implementation_id": "implementation-1",
+        "implementation_version": "2.0.0",
+        "implementation_hash": ("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "solver_id": "solver-1",
+        "solver_version": "3.0.0",
+        "numeric_profile": "kalhas-platform-bound-binary64-v1",
+    },
+    "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "declared_at": NOW,
+    "metadata": {"owner": "foundation"},
 }
 
 VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
@@ -2635,6 +2758,318 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         "replay_classification": "exact",
         "replayed_at": NOW,
         "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    },
+    DomainMechanismSpec: {
+        "identifier": "mechanism-spec-1",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "pack_id": "pack-1",
+        "pack_version": "1.2.3",
+        "manifest_id": "manifest-1",
+        "manifest_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "mechanism_id": "mechanism-1",
+        "mechanism_version": "1.0.0",
+        "mechanism_protocol_version": "1.0.0",
+        "state_schema_id": "state-schema-1",
+        "action_schema_id": "action-schema-1",
+        "configuration_schema_id": "configuration-schema-1",
+        "emission_schema_id": "emission-schema-1",
+        "evidence_schema_id": "evidence-schema-1",
+        "state_schema_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "action_schema_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "configuration_schema_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "emission_schema_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "evidence_schema_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "configuration": {"alpha": 1, "beta": "on", "gamma": [1.5, None]},
+        "configuration_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "implementation_id": "implementation-1",
+        "implementation_version": "2.0.0",
+        "implementation_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "dependency_lock_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "solver_id": "solver-1",
+        "solver_version": "3.0.0",
+        "data_identities": [
+            {
+                "data_id": "data-1",
+                "data_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+            }
+        ],
+        "parameter_bindings": [
+            {
+                "parameter_id": "parameter-1",
+                "unit": "units",
+                "data_id": "data-1",
+                "data_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+            }
+        ],
+        "timestep": 0.5,
+        "timestep_unit": "hour",
+        "event_order": ["event-a", "event-b"],
+        "reduction_order": ["reduction-a"],
+        "numeric_profile": "kalhas-platform-bound-binary64-v1",
+        "precision": "ieee-754-binary64",
+        "rounding_mode": "round-to-nearest-ties-to-even",
+        "quantization_boundaries": [
+            {
+                "boundary_id": "boundary-1",
+                "quantum": 0.25,
+                "unit": "units",
+            }
+        ],
+        "platform_identity": {
+            "os_name": "os-generic",
+            "architecture": "arch-generic",
+            "python_implementation": "cpython",
+            "python_version": "3.12.0",
+            "dependency_lock_hash": (
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+            ),
+            "implementation_id": "implementation-1",
+            "implementation_version": "2.0.0",
+            "implementation_hash": (
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+            ),
+            "solver_id": "solver-1",
+            "solver_version": "3.0.0",
+            "numeric_profile": "kalhas-platform-bound-binary64-v1",
+        },
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "declared_at": NOW,
+        "metadata": {"owner": "foundation"},
+    },
+    DomainMechanismStepRequest: {
+        "identifier": "mechanism-step-request-1",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "mechanism_spec_id": "mechanism-spec-1",
+        "mechanism_spec_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "release_profile_id": "release-profile-1",
+        "release_profile_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "scenario_id": "scenario-1",
+        "scenario_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "world_version_id": "world-v2",
+        "world_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "seed_id": "seed-1",
+        "seed_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "run_id": "run-1",
+        "step_index": 0,
+        "state_schema_id": "state-schema-1",
+        "action_schema_id": "action-schema-1",
+        "configuration_schema_id": "configuration-schema-1",
+        "state_schema_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "action_schema_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "configuration_schema_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "state_payload": {"level": 0},
+        "action_payload": {"kind": "advance"},
+        "configuration_payload": {"alpha": 1},
+        "state_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "action_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "configuration_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "exogenous_inputs": [
+            {
+                "identifier": "exogenous-1",
+                "stream": "stream-1",
+                "variable": "variable-1",
+                "entity_id": "entity-1",
+                "draw_index": 0,
+                "value_kind": "number",
+                "value": 1.5,
+                "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                "world_version_id": "world-v2",
+                "world_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "seed_id": "seed-1",
+                "seed_content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "run_id": "run-1",
+                "step_index": 0,
+            }
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    },
+    DomainMechanismStepResult: {
+        "identifier": "mechanism-step-result-1",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "request_id": "mechanism-step-request-1",
+        "request_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "mechanism_spec_id": "mechanism-spec-1",
+        "mechanism_spec_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "release_profile_id": "release-profile-1",
+        "release_profile_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "world_version_id": "world-v2",
+        "world_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "seed_id": "seed-1",
+        "seed_content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "run_id": "run-1",
+        "step_index": 0,
+        "next_state_schema_id": "state-schema-1",
+        "next_state_schema_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "next_state_payload": {"level": 1},
+        "next_state_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "emissions": [
+            {
+                "identifier": "emission-1",
+                "sequence_position": 0,
+                "emission_schema_id": "emission-schema-1",
+                "emission_schema_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                "payload": {"amount": 2.5},
+                "unit": "units",
+            }
+        ],
+        "evidence": [
+            {
+                "identifier": "evidence-1",
+                "sequence_position": 0,
+                "evidence_schema_id": "evidence-schema-1",
+                "evidence_schema_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                "payload": {"observed": True},
+            }
+        ],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    },
+    # The generic matrix below requires every public contract to accept a
+    # fully consistent synthetic payload. The release profile embeds
+    # manifest and mechanism-spec payloads whose identity fields agree
+    # with every copied identity field of the profile.
+    ModelPackReleaseProfile: {
+        "identifier": "release-profile-1",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "pack_id": "pack-1",
+        "pack_version": "1.2.3",
+        "manifest_id": "manifest-1",
+        "manifest_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "manifest": dict(_MODEL_PACK_MANIFEST_PAYLOAD),
+        "mechanism_id": "mechanism-1",
+        "mechanism_version": "1.0.0",
+        "mechanism_protocol_version": "1.0.0",
+        "configuration_identity": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "mechanism_spec": dict(_MODEL_PACK_MECHANISM_SPEC_PAYLOAD),
+        "decision_scope": "decision_support_only",
+        "accountability": "accountable_human_authority_required",
+        "output_labeling": "conditional_modeled_outcomes",
+        "scope": {
+            "decision_questions": ["question-1"],
+            "intended_users": ["user-role-1"],
+            "horizon": "horizon-1",
+            "resolution": "resolution-1",
+            "validity_envelope": "envelope-1",
+        },
+        "units": [{"quantity_id": "quantity-1", "unit": "units"}],
+        "provenance": {
+            "author_id": "author-1",
+            "method": "method-1",
+            "statement": "Declared synthetic provenance",
+        },
+        "datasets": [
+            {
+                "dataset_id": "dataset-1",
+                "vintage": "vintage-1",
+                "content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+                "license_id": "license-1",
+                "license_statement": "Declared synthetic license",
+            }
+        ],
+        "resource_envelope": {
+            "max_memory_megabytes": 512,
+            "max_cpu_seconds": 60,
+            "memory_unit": "MiB",
+            "cpu_unit": "seconds",
+        },
+        "intended_uses": [{"use_id": "use-1", "statement": "Declared intended use"}],
+        "prohibited_uses": [
+            "autonomous_public_decisions",
+            "eligibility_or_benefit_decisions",
+            "enforcement_recommendations",
+            "predictive_policing_judgments",
+            "individual_or_social_scoring",
+            "political_persuasion",
+            "voter_targeting",
+            "biometric_or_surveillance_assessment",
+            "offensive_cyber_action",
+            "live_effects",
+        ],
+        "assumptions": [{"assumption_id": "assumption-1", "statement": "Declared assumption"}],
+        "limitations": [{"limitation_id": "limitation-1", "statement": "Declared limitation"}],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "declared_at": NOW,
+        "metadata": {"owner": "foundation"},
+    },
+    ModelPackAssuranceProfile: {
+        "identifier": "assurance-profile-1",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "release_profile_id": "release-profile-1",
+        "release_profile_content_hash": (
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ),
+        "maturity": "catalogued",
+        "evidence": [
+            {
+                "evidence_id": "evidence-1",
+                "kind": "synthetic_conformance",
+                "reference": "retained-artifact-1",
+                "content_hash": (
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ),
+            }
+        ],
+        "retained_failures": [
+            {
+                "failure_id": "failure-1",
+                "statement": "Declared retained failure",
+                "observed_in": "context-1",
+            }
+        ],
+        "supported_claims": [],
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "declared_at": NOW,
+        "metadata": {"owner": "foundation"},
+    },
+    ModelPackCatalogueEntry: {
+        "identifier": "catalogue-entry-1",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "pack_id": "pack-1",
+        "pack_version": "1.2.3",
+        "title": "Synthetic catalogue title",
+        "summary": "Synthetic catalogue summary",
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "declared_at": NOW,
+        "metadata": {"owner": "foundation"},
     },
 }
 

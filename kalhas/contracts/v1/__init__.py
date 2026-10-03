@@ -28,6 +28,11 @@ from kalhas.contracts.v1.campaign_trajectory import (
     CampaignTrajectoryRunCell,
 )
 from kalhas.contracts.v1.common import ApiErrorResponse, ErrorCode, ErrorDetail, RuntimeMode
+from kalhas.contracts.v1.domain_mechanism import (
+    DomainMechanismSpec,
+    DomainMechanismStepRequest,
+    DomainMechanismStepResult,
+)
 from kalhas.contracts.v1.domain_pack import (
     DomainCapabilityDeclaration,
     DomainPackBinding,
@@ -37,6 +42,11 @@ from kalhas.contracts.v1.execution import ReplayManifest, RunState, RunStatus
 from kalhas.contracts.v1.health import HealthResponse
 from kalhas.contracts.v1.integrity import RunInputIntegrityManifest
 from kalhas.contracts.v1.metric_observation import DomainMetricObservationBinding
+from kalhas.contracts.v1.model_pack import (
+    ModelPackAssuranceProfile,
+    ModelPackCatalogueEntry,
+    ModelPackReleaseProfile,
+)
 from kalhas.contracts.v1.objective_evaluation import (
     CampaignObjectiveEvaluationMatrix,
     ScenarioEvaluationProfile,
@@ -166,6 +176,12 @@ PUBLIC_CONTRACTS: tuple[type[VersionedContract], ...] = (
     AdaptivePolicy,
     AdaptiveRunTrajectoryExecution,
     AdaptiveRunTrajectoryReplayManifest,
+    DomainMechanismSpec,
+    DomainMechanismStepRequest,
+    DomainMechanismStepResult,
+    ModelPackReleaseProfile,
+    ModelPackAssuranceProfile,
+    ModelPackCatalogueEntry,
 )
 __all__ = [
     "API_VERSION",
@@ -189,6 +205,9 @@ __all__ = [
     "ContextBundle",
     "DecisionBrief",
     "DomainCapabilityDeclaration",
+    "DomainMechanismSpec",
+    "DomainMechanismStepRequest",
+    "DomainMechanismStepResult",
     "DomainMetricObservationBinding",
     "DomainPackBinding",
     "DomainPackManifest",
@@ -200,6 +219,9 @@ __all__ = [
     "EvidenceReference",
     "ExternalObservationInputBundle",
     "HealthResponse",
+    "ModelPackAssuranceProfile",
+    "ModelPackCatalogueEntry",
+    "ModelPackReleaseProfile",
     "OperationalActivityEvent",
     "OperationalActivityKind",
     "OutcomeVector",

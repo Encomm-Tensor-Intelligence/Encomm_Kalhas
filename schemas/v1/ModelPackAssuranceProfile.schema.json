@@ -1,0 +1,298 @@
+{
+  "$defs": {
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ModelPackEvidenceRecord": {
+      "additionalProperties": false,
+      "description": "One immutable evidence reference (declarative identity only).\n\n``reference`` is an opaque declared identifier of the retained\nevidence artifact together with its content hash; nothing here opens,\nloads, fetches, or interprets evidence. Kind-specific binding fields\nare strictly partitioned: benchmark evidence must bind a data vintage,\ngeography, horizon, and at least one supported claim; external review\nevidence must declare its review state and may cover supported\nclaims; every other kind must carry none of these fields.",
+      "properties": {
+        "bound_claim_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Bound Claim Ids",
+          "type": "array"
+        },
+        "content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "covered_claim_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Covered Claim Ids",
+          "type": "array"
+        },
+        "data_vintage": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Data Vintage"
+        },
+        "evidence_id": {
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "geography": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Geography"
+        },
+        "horizon": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Horizon"
+        },
+        "kind": {
+          "enum": [
+            "synthetic_conformance",
+            "deterministic_execution",
+            "benchmark",
+            "external_review",
+            "packaging",
+            "replay",
+            "security",
+            "governance"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "reference": {
+          "minLength": 1,
+          "title": "Reference",
+          "type": "string"
+        },
+        "review_state": {
+          "anyOf": [
+            {
+              "enum": [
+                "open",
+                "closed"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Review State"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "kind",
+        "reference",
+        "content_hash"
+      ],
+      "title": "ModelPackEvidenceRecord",
+      "type": "object"
+    },
+    "ModelPackRetainedFailure": {
+      "additionalProperties": false,
+      "description": "One retained, visible failure of the assured release.\n\nRetained failures are immutable declared records; no positive\nevidence, maturity level, or claim can overwrite, resolve, or remove\nthem, and no such field is expressible anywhere in this module.",
+      "properties": {
+        "failure_id": {
+          "minLength": 1,
+          "title": "Failure Id",
+          "type": "string"
+        },
+        "observed_in": {
+          "minLength": 1,
+          "title": "Observed In",
+          "type": "string"
+        },
+        "statement": {
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "failure_id",
+        "statement",
+        "observed_in"
+      ],
+      "title": "ModelPackRetainedFailure",
+      "type": "object"
+    },
+    "ModelPackSupportedClaim": {
+      "additionalProperties": false,
+      "description": "One explicitly bounded supported claim.\n\nA claim is bounded by the evidence it cites: it must cite at least\none evidence record, every cited record must exist in the same\nassurance profile, and a claim never transfers beyond the bound\nrelease identity.",
+      "properties": {
+        "claim_id": {
+          "minLength": 1,
+          "title": "Claim Id",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "statement": {
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claim_id",
+        "statement",
+        "evidence_ids"
+      ],
+      "title": "ModelPackSupportedClaim",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Evidence-derived assurance bound to one exact release identity.\n\nBinds the release-profile identifier and content hash to immutable\nevidence references, retained failures, explicitly bounded supported\nclaims, review state, and evidence-derived maturity. Maturity uses\nexactly the closed D29-03 vocabulary and is never a disconnected\nself-assigned label: every level above ``catalogued`` cumulatively\nrequires its evidence categories; ``benchmarked`` requires benchmark\nevidence bound to an exact data vintage, geography, horizon, and\nsupported claims; ``externally_reviewed`` and\n``partner_evaluation_ready`` additionally require a closed external\nreview whose coverage includes every supported claim;\n``partner_evaluation_ready`` additionally requires packaging, replay,\nsecurity, and governance evidence and still does not mean production\napproval. Retained failures remain visible and can never be\noverwritten or cleared by positive evidence.",
+  "properties": {
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "declared_at": {
+      "format": "date-time",
+      "title": "Declared At",
+      "type": "string"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/ModelPackEvidenceRecord"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "maturity": {
+      "enum": [
+        "catalogued",
+        "conformance_only",
+        "experimental",
+        "benchmarked",
+        "externally_reviewed",
+        "partner_evaluation_ready"
+      ],
+      "title": "Maturity",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "release_profile_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Release Profile Content Hash",
+      "type": "string"
+    },
+    "release_profile_id": {
+      "minLength": 1,
+      "title": "Release Profile Id",
+      "type": "string"
+    },
+    "retained_failures": {
+      "items": {
+        "$ref": "#/$defs/ModelPackRetainedFailure"
+      },
+      "title": "Retained Failures",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "supported_claims": {
+      "items": {
+        "$ref": "#/$defs/ModelPackSupportedClaim"
+      },
+      "title": "Supported Claims",
+      "type": "array"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "release_profile_id",
+    "release_profile_content_hash",
+    "maturity",
+    "content_hash",
+    "declared_at"
+  ],
+  "title": "ModelPackAssuranceProfile",
+  "type": "object"
+}

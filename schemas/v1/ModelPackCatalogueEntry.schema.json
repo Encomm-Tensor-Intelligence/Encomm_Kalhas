@@ -1,0 +1,167 @@
+{
+  "$defs": {
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "description": "Versioned declarative catalogue metadata (never a capability).\n\nDescribes one pack release identity and may reference a release or\nassurance profile by exact identity only. It cannot resolve, load,\nimport, instantiate, execute, or call code, cannot establish\nimplemented capability, and is not a second source of truth for\nexecution or evidence. Any displayed maturity above ``catalogued``\nmust be bound to an exact assurance profile identifier and content\nhash; an unbound roadmap entry remains ``catalogued``. An\nassurance-profile reference is additionally accepted only when the\nentry also carries the exact release-profile identifier and content\nhash; release-only references remain valid. There is no\nstep method, callable, provider, executable reference, dynamic\ndiscovery field, or runtime authority anywhere on this contract.",
+  "properties": {
+    "assurance_profile_content_hash": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Assurance Profile Content Hash"
+    },
+    "assurance_profile_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Assurance Profile Id"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "declared_at": {
+      "format": "date-time",
+      "title": "Declared At",
+      "type": "string"
+    },
+    "displayed_maturity": {
+      "default": "catalogued",
+      "enum": [
+        "catalogued",
+        "conformance_only",
+        "experimental",
+        "benchmarked",
+        "externally_reviewed",
+        "partner_evaluation_ready"
+      ],
+      "title": "Displayed Maturity",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "pack_id": {
+      "minLength": 1,
+      "title": "Pack Id",
+      "type": "string"
+    },
+    "pack_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Pack Version",
+      "type": "string"
+    },
+    "release_profile_content_hash": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Release Profile Content Hash"
+    },
+    "release_profile_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Release Profile Id"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "summary": {
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "pack_id",
+    "pack_version",
+    "title",
+    "summary",
+    "content_hash",
+    "declared_at"
+  ],
+  "title": "ModelPackCatalogueEntry",
+  "type": "object"
+}

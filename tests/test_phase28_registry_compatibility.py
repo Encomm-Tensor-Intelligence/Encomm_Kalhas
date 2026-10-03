@@ -1,18 +1,25 @@
 """Phase 28 additive registry/schema compatibility boundary test.
 
 After the accepted Phase 28 appends grew ``PUBLIC_CONTRACTS`` from 50 to
-55, this suite owns the current exact registry/schema cardinality and
-guards the additive-compatibility contract for all historical slices:
+55, this suite owned the exact registry/schema cardinality. The accepted
+Phase 29 H29-S02A appends grew it again from 55 to 58, and the accepted
+H29-S02B appends grew it once more from 58 to 61. This suite guards the
+additive-compatibility contract for all historical slices:
 
 - API and schema versions stay unchanged (``"1"`` / ``"1.0.0"``);
 - the accepted first 50 contracts remain the immutable Phase 27 prefix:
   indexes 0-46 equal ``_HISTORICAL_47_NAMES`` and indexes 47-49 are
   exactly ``CampaignDecisionPolicy`` / ``CampaignStrategyComparison`` /
   ``CampaignDecisionBrief``;
-- the current registry is exactly 55 with a frozen Phase 28 tail
-  (indexes 50-54 ``RuntimeObservationDeclaration`` /
+- indexes 50-54 remain exactly the immutable Phase 28 tail
+  (``RuntimeObservationDeclaration`` /
   ``ExternalObservationInputBundle`` / ``AdaptivePolicy`` /
   ``AdaptiveRunTrajectoryExecution`` / ``AdaptiveRunTrajectoryReplayManifest``);
+- the current registry is exactly 61 with a frozen Phase 29 tail
+  (indexes 55-57 ``DomainMechanismSpec`` /
+  ``DomainMechanismStepRequest`` / ``DomainMechanismStepResult`` and
+  indexes 58-60 ``ModelPackReleaseProfile`` /
+  ``ModelPackAssuranceProfile`` / ``ModelPackCatalogueEntry``);
 - the schema artifact set follows the public registry (count, titles);
 - all 47 frozen historical schema byte hashes remain exact;
 - the three Phase 27 decision schemas and all five Phase 28 schemas still
@@ -21,13 +28,14 @@ guards the additive-compatibility contract for all historical slices:
   input-entry model remains unregistered and has no standalone schema
   artifact;
 - a precise AST scan over ``tests/`` fails if any historical test ever
-  reintroduces an obsolete *current-global-count* assertion of exactly 50
-  for ``PUBLIC_CONTRACTS`` or ``schema_files``.
+  reintroduces an obsolete *current-global-count* assertion of exactly 50,
+  exactly 55, or exactly 58 for ``PUBLIC_CONTRACTS`` or ``schema_files``,
+  in either equality orientation.
 
-Only this Phase 28 suite may assert the exact current cardinality (55).
-Historical phase suites must stay additive-safe (``>= 50`` for the
-registry, ``== len(PUBLIC_CONTRACTS)`` for schema artifacts), which the
-AST scan is the durable guard for.
+Only this Phase 28 suite may assert the exact current cardinality (61).
+Historical phase suites must stay additive-safe (``>= 50``, ``>= 55``, or
+``>= 58`` for the registry, ``== len(PUBLIC_CONTRACTS)`` for schema
+artifacts), which the AST scan is the durable guard for.
 """
 
 from __future__ import annotations
@@ -71,7 +79,7 @@ _PHASE27_TAIL = (
     "CampaignDecisionBrief",
 )
 
-#: The exact Phase 28 contract tail (indexes 50-54).
+#: The exact immutable Phase 28 contract tail (indexes 50-54).
 _PHASE28_TAIL = (
     "RuntimeObservationDeclaration",
     "ExternalObservationInputBundle",
@@ -79,6 +87,25 @@ _PHASE28_TAIL = (
     "AdaptiveRunTrajectoryExecution",
     "AdaptiveRunTrajectoryReplayManifest",
 )
+
+#: The exact Phase 29 contract tail (indexes 55-57): mechanism contracts.
+_PHASE29_MECHANISM_TAIL = (
+    "DomainMechanismSpec",
+    "DomainMechanismStepRequest",
+    "DomainMechanismStepResult",
+)
+
+#: The exact Phase 29 contract tail (indexes 58-60): Model Pack contracts.
+_PHASE29_MODEL_PACK_TAIL = (
+    "ModelPackReleaseProfile",
+    "ModelPackAssuranceProfile",
+    "ModelPackCatalogueEntry",
+)
+
+#: Obsolete *current-global-count* literals the AST detector rejects, in
+#: either equality orientation. The current exact count (61) and additive
+#: facts (``>=``) are never stale.
+_OBSOLETE_GLOBAL_COUNTS = (50, 55, 58)
 
 #: Phase 27 nested models that must never be registered or schematized.
 _NESTED_PHASE27 = (
@@ -128,8 +155,8 @@ class TestVersionBoundary:
 
 
 class TestPublicContractRegistry:
-    def test_current_public_contract_count_is_exactly_55(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 55
+    def test_current_public_contract_count_is_exactly_61(self) -> None:
+        assert len(PUBLIC_CONTRACTS) == 61
 
     def test_immutable_accepted_50_phase27_prefix_is_unchanged(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
@@ -140,6 +167,10 @@ class TestPublicContractRegistry:
         assert names[47:50] == _PHASE27_TAIL
         assert names[50:55] == _PHASE28_TAIL
         assert names[54] == "AdaptiveRunTrajectoryReplayManifest"
+        assert names[55:58] == _PHASE29_MECHANISM_TAIL
+        assert names[57] == "DomainMechanismStepResult"
+        assert names[58:61] == _PHASE29_MODEL_PACK_TAIL
+        assert names[60] == "ModelPackCatalogueEntry"
 
 
 class TestSchemaCompatibility:
@@ -152,7 +183,7 @@ class TestSchemaCompatibility:
     def test_schema_artifact_count_follows_the_public_registry(self) -> None:
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
         assert len(schema_files) == len(PUBLIC_CONTRACTS)
-        assert len(schema_files) == 55
+        assert len(schema_files) == 61
 
     def test_schema_titles_equal_public_contract_names(self) -> None:
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
@@ -230,13 +261,16 @@ class TestNestedModelExclusion:
 
 
 class TestStaleAssertionDetector:
-    """AST scan: no historical test may reintroduce an obsolete == 50 count.
+    """AST scan: no historical test may reintroduce an obsolete count.
 
-    Only the current-global forms ``len(PUBLIC_CONTRACTS) == 50`` and
-    ``len(schema_files) == 50`` are flagged. Legitimate historical facts
-    (``len(frozen_names) == 50``, or prose describing the accepted Phase 27
-    prefix) are deliberately not matched, so a plain substring scan cannot
-    be used: this detector parses real equality expressions.
+    Only the current-global forms ``len(PUBLIC_CONTRACTS) == 50`` /
+    ``== 55`` / ``== 58`` and ``len(schema_files) == 50`` / ``== 55`` /
+    ``== 58`` are flagged (the literal accepted on either side of the
+    equality). Legitimate historical facts (``len(frozen_names) == 50``,
+    or prose describing an accepted prefix) are deliberately not matched,
+    so a plain substring scan cannot be used: this detector parses real
+    equality expressions. The current exact cardinality (61) and additive
+    facts (``>= 50``, ``>= 55``, ``>= 58``) are never flagged.
     """
 
     def test_no_historical_test_reintroduces_obsolete_50_global_count(self) -> None:
@@ -248,7 +282,7 @@ class TestStaleAssertionDetector:
             ):
                 offenders.append((module_path.name, lineno, expression))
         assert not offenders, (
-            f"obsolete current-global-count == 50 assertions reintroduced: {offenders}"
+            f"obsolete current-global-count ==50/==55/==58 assertions reintroduced: {offenders}"
         )
 
     def test_detects_len_public_contracts_eq_50(self) -> None:
@@ -259,6 +293,22 @@ class TestStaleAssertionDetector:
         hits = _stale_equality_nodes("if 50 == len(PUBLIC_CONTRACTS):\n    pass\n")
         assert len(hits) == 1 and "PUBLIC_CONTRACTS" in hits[0][1]
 
+    def test_detects_len_public_contracts_eq_55(self) -> None:
+        hits = _stale_equality_nodes("x = len(PUBLIC_CONTRACTS) == 55\n")
+        assert len(hits) == 1 and "PUBLIC_CONTRACTS" in hits[0][1]
+
+    def test_detects_55_eq_len_public_contracts(self) -> None:
+        hits = _stale_equality_nodes("if 55 == len(PUBLIC_CONTRACTS):\n    pass\n")
+        assert len(hits) == 1 and "PUBLIC_CONTRACTS" in hits[0][1]
+
+    def test_detects_len_public_contracts_eq_58(self) -> None:
+        hits = _stale_equality_nodes("x = len(PUBLIC_CONTRACTS) == 58\n")
+        assert len(hits) == 1 and "PUBLIC_CONTRACTS" in hits[0][1]
+
+    def test_detects_58_eq_len_public_contracts(self) -> None:
+        hits = _stale_equality_nodes("if 58 == len(PUBLIC_CONTRACTS):\n    pass\n")
+        assert len(hits) == 1 and "PUBLIC_CONTRACTS" in hits[0][1]
+
     def test_detects_len_schema_files_eq_50(self) -> None:
         hits = _stale_equality_nodes("assert len(schema_files) == 50\n")
         assert len(hits) == 1 and "schema_files" in hits[0][1]
@@ -267,8 +317,35 @@ class TestStaleAssertionDetector:
         hits = _stale_equality_nodes("assert 50 == len(schema_files)\n")
         assert len(hits) == 1 and "schema_files" in hits[0][1]
 
+    def test_detects_len_schema_files_eq_55(self) -> None:
+        hits = _stale_equality_nodes("assert len(schema_files) == 55\n")
+        assert len(hits) == 1 and "schema_files" in hits[0][1]
+
+    def test_detects_55_eq_len_schema_files(self) -> None:
+        hits = _stale_equality_nodes("assert 55 == len(schema_files)\n")
+        assert len(hits) == 1 and "schema_files" in hits[0][1]
+
+    def test_detects_len_schema_files_eq_58(self) -> None:
+        hits = _stale_equality_nodes("assert len(schema_files) == 58\n")
+        assert len(hits) == 1 and "schema_files" in hits[0][1]
+
+    def test_detects_58_eq_len_schema_files(self) -> None:
+        hits = _stale_equality_nodes("assert 58 == len(schema_files)\n")
+        assert len(hits) == 1 and "schema_files" in hits[0][1]
+
     def test_unrelated_len_equals_fifty_is_ignored(self) -> None:
         src = "assert len(frozen_historical_names) == 50\nassert len(other) == 50\n"
+        assert _stale_equality_nodes(src) == []
+
+    def test_current_61_and_additive_facts_are_ignored(self) -> None:
+        src = (
+            "assert len(PUBLIC_CONTRACTS) == 61\n"
+            "assert len(schema_files) == 61\n"
+            "assert len(PUBLIC_CONTRACTS) >= 50\n"
+            "assert len(PUBLIC_CONTRACTS) >= 55\n"
+            "assert len(PUBLIC_CONTRACTS) >= 58\n"
+            "if len(schema_files) >= 58:\n    pass\n"
+        )
         assert _stale_equality_nodes(src) == []
 
     def test_docstring_and_comments_are_ignored(self) -> None:
@@ -295,23 +372,26 @@ class TestStaleAssertionDetector:
 def _stale_equality_nodes(text: str, module_path: str = "<string>") -> list[tuple[int, str]]:
     """AST equality scan of one test file's source text.
 
-    Flags the symmetric ``len(X) == 50`` **or** ``50 == len(X)`` forms
-    where ``X`` is the ``PUBLIC_CONTRACTS`` module symbol or a variable
+    Flags the symmetric ``len(X) == 50`` / ``len(X) == 55`` /
+    ``len(X) == 58`` (or the mirrored ``50/55/58 == len(X)``) forms where
+    ``X`` is the ``PUBLIC_CONTRACTS`` module symbol or a variable
     literally named ``schema_files``. Returns ``(lineno, unparsed
     expression)``.
 
-    The detector is symmetric (literal 50 accepted on either side of the
-    equality) and fail-closed: comments/docstrings are ignored naturally
-    through AST parsing and an unrelated ``len(other) == 50`` is never
-    matched, but a source that is not valid Python raises ``SyntaxError``
-    (never a silent ``[]``) so a broken historical test cannot masquerade
-    as a clean scan. ``module_path`` names the affected file in that error.
+    The detector is symmetric (a stale literal is accepted on either side
+    of the equality) and fail-closed: comments/docstrings are ignored
+    naturally through AST parsing, an unrelated ``len(other) == 50`` is
+    never matched, and the current exact count (61) plus additive facts
+    (``>=``) are never flagged, but a source that is not valid Python
+    raises ``SyntaxError`` (never a silent ``[]``) so a broken historical
+    test cannot masquerade as a clean scan. ``module_path`` names the
+    affected file in that error.
     """
     try:
         tree = ast.parse(text)
     except SyntaxError as exc:
         raise SyntaxError(
-            f"failed to parse {module_path} during obsolete ==50 scan: "
+            f"failed to parse {module_path} during obsolete ==50/==55 scan: "
             f"{exc.msg} (line {exc.lineno})"
         ) from exc
     hits: list[tuple[int, str]] = []
@@ -326,8 +406,12 @@ def _stale_equality_nodes(text: str, module_path: str = "<string>") -> list[tupl
             and node.args[0].id in ("PUBLIC_CONTRACTS", "schema_files")
         )
 
-    def _is_literal_fifty(node: ast.AST) -> bool:
-        return isinstance(node, ast.Constant) and isinstance(node.value, int) and node.value == 50
+    def _is_stale_literal(node: ast.AST) -> bool:
+        return (
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, int)
+            and node.value in _OBSOLETE_GLOBAL_COUNTS
+        )
 
     for node in ast.walk(tree):
         if not isinstance(node, ast.Compare) or len(node.ops) != 1:
@@ -335,8 +419,8 @@ def _stale_equality_nodes(text: str, module_path: str = "<string>") -> list[tupl
         if not isinstance(node.ops[0], ast.Eq):
             continue
         left, right = node.left, node.comparators[0]
-        stale = (_is_stale_len(left) and _is_literal_fifty(right)) or (
-            _is_literal_fifty(left) and _is_stale_len(right)
+        stale = (_is_stale_len(left) and _is_stale_literal(right)) or (
+            _is_stale_literal(left) and _is_stale_len(right)
         )
         if stale:
             hits.append((node.lineno, " ".join(ast.unparse(node).split())))

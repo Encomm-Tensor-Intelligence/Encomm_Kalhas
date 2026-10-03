@@ -3,6 +3,16 @@
 These tests encode the durable rule: KALHAS core never imports NEXUS or
 LEGION internals. The only allowed coupling is the placeholder protocols
 in ``kalhas/adapters/``.
+
+Since ADR-005 (Phase 29, D29-01) the ``DomainPack`` boundary is no longer
+permanently manifest-only: an executable pack surface becomes possible
+additively while legacy manifest records stay valid and inert. This module
+keeps the protocol/annotation checks and the durable isolation rule
+(concrete packs live only below ``kalhas/domain_packs/``, are never
+dynamically discovered, and generic kernel code may import only the public
+``DomainPack`` protocol from the pack package - never a concrete pack);
+the accepted Phase 29 mechanism/assurance architecture is proven in
+``tests/test_phase29_boundaries.py``.
 """
 
 import ast
@@ -142,33 +152,97 @@ def test_agents_md_contains_corrected_architecture_guidance() -> None:
     assert "LegionAdapter" in normalized
 
 
-def test_domain_pack_protocol_is_declarative_identity_only() -> None:
-    """The future DomainPack protocol exposes only a DomainPackManifest.
+def test_domain_pack_protocol_manifest_annotation_is_preserved() -> None:
+    """The protocol keeps its manifest annotation of the frozen v1 type.
 
-    No executable surface: no methods, no callbacks, nothing to import,
-    instantiate, or run.
+    ADR-005 (D29-01) preserves every existing manifest meaning: the
+    ``manifest`` attribute remains part of the protocol surface and its
+    annotation stays exactly the shipped v1 ``DomainPackManifest``.
     """
     hints = get_type_hints(DomainPack)
-    assert set(hints) == {"manifest"}
     assert hints["manifest"] is DomainPackManifest
-    members = [
-        name
-        for name in dir(DomainPack)
-        if not name.startswith("_") and callable(getattr(DomainPack, name, None))
-    ]
-    assert members == []
 
 
 def test_domain_pack_protocol_no_longer_exposes_placeholder_surface() -> None:
+    """The historical Phase 0 placeholder stays forbidden (ADR-002)."""
     assert not hasattr(DomainPack, "build_world_model")
     assert not hasattr(DomainPack, "name")
     assert not hasattr(DomainPack, "version")
 
 
-def test_no_domain_pack_implementation_ships() -> None:
-    """No real pack exists: the pack directory holds only the boundary."""
-    pack_files = sorted(path.name for path in (KALHAS_ROOT / "domain_packs").glob("*.py"))
-    assert pack_files == ["__init__.py", "base.py"]
+def test_top_level_domain_pack_infrastructure_exposes_protocol_only() -> None:
+    """Durable ADR-005 isolation rule for top-level pack infrastructure.
+
+    ``kalhas/domain_packs/`` top-level infrastructure exposes the
+    ``DomainPack`` protocol only: no concrete pack implementation lives at
+    the top level. Concrete packs, once introduced by later Phase 29
+    slices, must live isolated below ``kalhas/domain_packs/`` (for example
+    in dedicated subpackages) and never at the top level next to the
+    protocol itself.
+    """
+    top_level = sorted(path.name for path in (KALHAS_ROOT / "domain_packs").glob("*.py"))
+    assert top_level == ["__init__.py", "base.py"]
+    source = (KALHAS_ROOT / "domain_packs" / "__init__.py").read_text(encoding="utf-8")
+    assert "DomainPack" in source
+
+
+def test_kernel_code_never_imports_concrete_packs_or_discovers_them() -> None:
+    """Concrete packs are never dynamically discovered or kernel-imported.
+
+    Generic kernel code (everything outside ``kalhas/domain_packs/``) may
+    import only the public ``DomainPack`` protocol, and only from
+    ``kalhas.domain_packs`` or ``kalhas.domain_packs.base`` (ADR-005,
+    D29-01). Imports of concrete pack subpackages/modules and of any
+    concrete pack symbol stay forbidden, as is dynamic discovery/import
+    machinery that could load a pack by name. Packs reach the kernel only
+    as explicitly supplied conforming objects.
+
+    The import rule is enforced by AST inspection of import statements,
+    not by a broad substring ban.
+    """
+    import_offenders: list[str] = []
+    machinery_offenders: list[str] = []
+    for path in _kalhas_source_files():
+        relative = path.relative_to(KALHAS_ROOT).as_posix()
+        if relative.startswith("domain_packs/"):
+            continue
+        source = path.read_text(encoding="utf-8")
+        if _DYNAMIC_LOADING.search(source):
+            machinery_offenders.append(relative)
+        tree = ast.parse(source)
+        package_parts = path.relative_to(KALHAS_ROOT).parent.parts
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name == "kalhas.domain_packs" or alias.name.startswith(
+                        "kalhas.domain_packs."
+                    ):
+                        import_offenders.append(f"{relative}:{node.lineno}: import {alias.name}")
+            elif isinstance(node, ast.ImportFrom):
+                if node.level:
+                    # Resolve a relative import against the file's package.
+                    base_parts = package_parts[: len(package_parts) - (node.level - 1)]
+                    resolved = ".".join(base_parts)
+                    if node.module:
+                        resolved = f"{resolved}.{node.module}"
+                else:
+                    resolved = node.module or ""
+                # Any import resolving into a ``domain_packs`` package is in
+                # scope (including sibling subpackage-relative imports); the
+                # only permitted form is the public protocol from the
+                # canonical top-level locations.
+                if "domain_packs" not in resolved.split("."):
+                    continue
+                for alias in node.names:
+                    allowed = (
+                        resolved == "kalhas.domain_packs" or resolved == "kalhas.domain_packs.base"
+                    ) and alias.name == "DomainPack"
+                    if not allowed:
+                        import_offenders.append(
+                            f"{relative}:{node.lineno}: from {resolved} import {alias.name}"
+                        )
+    assert not import_offenders, f"kernel pack-import offenders: {import_offenders}"
+    assert not machinery_offenders, f"kernel pack-discovery offenders: {machinery_offenders}"
 
 
 def test_binding_and_compiler_never_load_or_execute_pack_code() -> None:
@@ -195,18 +269,27 @@ def test_binding_and_compiler_never_load_or_execute_pack_code() -> None:
         assert "kalhas.domain_packs" not in source, f"{relative} imports the pack package"
 
 
-class _GenericTestPack:
-    """Test-only generic fake proving DomainPack protocol conformance.
+class _LegacyManifestCarrier:
+    """Test-only inert legacy manifest carrier, not a DomainPack implementation.
 
     Lives only inside tests; generic identifiers only, no industry example.
+    It carries a manifest as inert metadata and deliberately has no
+    executable surface: it does not conform to the executable DomainPack
+    protocol surface (no ``step``) and never will be executed.
     """
 
     def __init__(self, manifest: DomainPackManifest) -> None:
         self.manifest = manifest
 
 
-def test_generic_test_fake_conforms_to_domain_pack_protocol() -> None:
-    """A plain object exposing a manifest satisfies the protocol surface."""
+def test_legacy_manifest_carrier_stays_valid_inert_metadata_not_executable() -> None:
+    """A manifest-only object is valid inert metadata, not an executable pack.
+
+    This legacy manifest-only carrier stays valid as inert metadata
+    (ADR-005, D29-01): it proves manifest compatibility only. It is NOT an
+    executable DomainPack - it has no ``step`` operation, and nothing here
+    loads or executes domain behavior.
+    """
     from datetime import UTC, datetime
 
     from kalhas.contracts.v1.domain_pack import DomainPackCapability
@@ -229,10 +312,11 @@ def test_generic_test_fake_conforms_to_domain_pack_protocol() -> None:
         content_hash="0" * 64,
         created_at=datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC),
     )
-    fake = _GenericTestPack(manifest)
+    fake = _LegacyManifestCarrier(manifest)
     assert fake.manifest is manifest
     assert fake.manifest.pack_id == "pack-1"
-    assert list(get_type_hints(DomainPack)) == ["manifest"]
+    # The carrier stays inert: a manifest-only object is not executable.
+    assert not hasattr(fake, "step")
 
 
 def test_strategy_trajectory_service_never_calls_the_evaluation_kernel() -> None:

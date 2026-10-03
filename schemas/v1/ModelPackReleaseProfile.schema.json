@@ -1,0 +1,1098 @@
+{
+  "$defs": {
+    "DomainMechanismSpec": {
+      "additionalProperties": false,
+      "description": "Immutable declarative identity of one domain mechanism.\n\nBinds the pack/manifest identity, the mechanism identity and\nmechanism protocol version ``1.0.0``, the five schema identities and\nhashes, the immutable configuration and its hash, the implementation,\ndependency-lock, solver, and data identities, the parameter/unit\nbindings, the positive exact timestep with explicit unit, the\nnon-empty unique explicitly ordered event and reduction orders, the\nfrozen numeric profile (``kalhas-platform-bound-binary64-v1``, IEEE-\n754 binary64, round-to-nearest ties-to-even), the explicitly named\nunique quantization boundaries, the recorded platform identity, the\nself-covering content hash, the timezone-aware caller-supplied\ndeclaration time, and finite metadata.\n\nThe platform identity must agree exactly with the spec-level\nimplementation, dependency-lock, solver, and numeric-profile\nidentities; any disagreement fails closed. Every behavior-affecting\nidentity change requires a new appropriate identity/version; an\nin-place change is never expressible.",
+      "properties": {
+        "action_schema_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Action Schema Hash",
+          "type": "string"
+        },
+        "action_schema_id": {
+          "minLength": 1,
+          "title": "Action Schema Id",
+          "type": "string"
+        },
+        "configuration": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Configuration",
+          "type": "object"
+        },
+        "configuration_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Configuration Hash",
+          "type": "string"
+        },
+        "configuration_schema_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Configuration Schema Hash",
+          "type": "string"
+        },
+        "configuration_schema_id": {
+          "minLength": 1,
+          "title": "Configuration Schema Id",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "data_identities": {
+          "items": {
+            "$ref": "#/$defs/MechanismDataIdentity"
+          },
+          "title": "Data Identities",
+          "type": "array"
+        },
+        "declared_at": {
+          "format": "date-time",
+          "title": "Declared At",
+          "type": "string"
+        },
+        "dependency_lock_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Dependency Lock Hash",
+          "type": "string"
+        },
+        "emission_schema_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Emission Schema Hash",
+          "type": "string"
+        },
+        "emission_schema_id": {
+          "minLength": 1,
+          "title": "Emission Schema Id",
+          "type": "string"
+        },
+        "event_order": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Event Order",
+          "type": "array"
+        },
+        "evidence_schema_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Evidence Schema Hash",
+          "type": "string"
+        },
+        "evidence_schema_id": {
+          "minLength": 1,
+          "title": "Evidence Schema Id",
+          "type": "string"
+        },
+        "identifier": {
+          "title": "Identifier",
+          "type": "string"
+        },
+        "implementation_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Implementation Hash",
+          "type": "string"
+        },
+        "implementation_id": {
+          "minLength": 1,
+          "title": "Implementation Id",
+          "type": "string"
+        },
+        "implementation_version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Implementation Version",
+          "type": "string"
+        },
+        "manifest_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Manifest Content Hash",
+          "type": "string"
+        },
+        "manifest_id": {
+          "minLength": 1,
+          "title": "Manifest Id",
+          "type": "string"
+        },
+        "mechanism_id": {
+          "minLength": 1,
+          "title": "Mechanism Id",
+          "type": "string"
+        },
+        "mechanism_protocol_version": {
+          "const": "1.0.0",
+          "title": "Mechanism Protocol Version",
+          "type": "string"
+        },
+        "mechanism_version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Mechanism Version",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Metadata",
+          "type": "object"
+        },
+        "numeric_profile": {
+          "const": "kalhas-platform-bound-binary64-v1",
+          "title": "Numeric Profile",
+          "type": "string"
+        },
+        "pack_id": {
+          "minLength": 1,
+          "title": "Pack Id",
+          "type": "string"
+        },
+        "pack_version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Pack Version",
+          "type": "string"
+        },
+        "parameter_bindings": {
+          "items": {
+            "$ref": "#/$defs/MechanismParameterBinding"
+          },
+          "title": "Parameter Bindings",
+          "type": "array"
+        },
+        "platform_identity": {
+          "$ref": "#/$defs/MechanismPlatformIdentity"
+        },
+        "precision": {
+          "const": "ieee-754-binary64",
+          "title": "Precision",
+          "type": "string"
+        },
+        "quantization_boundaries": {
+          "items": {
+            "$ref": "#/$defs/MechanismQuantizationBoundary"
+          },
+          "title": "Quantization Boundaries",
+          "type": "array"
+        },
+        "reduction_order": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Reduction Order",
+          "type": "array"
+        },
+        "rounding_mode": {
+          "const": "round-to-nearest-ties-to-even",
+          "title": "Rounding Mode",
+          "type": "string"
+        },
+        "schema_version": {
+          "default": "1.0.0",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "solver_id": {
+          "minLength": 1,
+          "title": "Solver Id",
+          "type": "string"
+        },
+        "solver_version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Solver Version",
+          "type": "string"
+        },
+        "state_schema_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "State Schema Hash",
+          "type": "string"
+        },
+        "state_schema_id": {
+          "minLength": 1,
+          "title": "State Schema Id",
+          "type": "string"
+        },
+        "tenant_id": {
+          "title": "Tenant Id",
+          "type": "string"
+        },
+        "timestep": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          ],
+          "title": "Timestep"
+        },
+        "timestep_unit": {
+          "minLength": 1,
+          "title": "Timestep Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "identifier",
+        "tenant_id",
+        "pack_id",
+        "pack_version",
+        "manifest_id",
+        "manifest_content_hash",
+        "mechanism_id",
+        "mechanism_version",
+        "mechanism_protocol_version",
+        "state_schema_id",
+        "action_schema_id",
+        "configuration_schema_id",
+        "emission_schema_id",
+        "evidence_schema_id",
+        "state_schema_hash",
+        "action_schema_hash",
+        "configuration_schema_hash",
+        "emission_schema_hash",
+        "evidence_schema_hash",
+        "configuration_hash",
+        "implementation_id",
+        "implementation_version",
+        "implementation_hash",
+        "dependency_lock_hash",
+        "solver_id",
+        "solver_version",
+        "timestep",
+        "timestep_unit",
+        "event_order",
+        "reduction_order",
+        "numeric_profile",
+        "precision",
+        "rounding_mode",
+        "platform_identity",
+        "content_hash",
+        "declared_at"
+      ],
+      "title": "DomainMechanismSpec",
+      "type": "object"
+    },
+    "DomainPackCapability": {
+      "additionalProperties": false,
+      "description": "A declarative capability of a domain pack.\n\nDescriptive only: the capability declares its identifier, a concise\ndescription, and the ordered identifiers of its declared inputs and\noutputs. There are no callbacks, imports, executable expressions,\nprovider references, or runtime behavior - the fields are plain strings,\nordered tuples of strings, and JSON-compatible metadata.\n\n``input_ids`` and ``output_ids`` are ordered identifiers and each must\nbe unique within its tuple: duplicate input identifiers would make the\nexact key matching of declared ``input_values`` ambiguous, and\nduplicate output identifiers would make declared outputs ambiguous.\nThe declared tuple order is preserved exactly as given.",
+      "properties": {
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "identifier": {
+          "title": "Identifier",
+          "type": "string"
+        },
+        "input_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Input Ids",
+          "type": "array"
+        },
+        "metadata": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Metadata",
+          "type": "object"
+        },
+        "output_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Output Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "identifier",
+        "description"
+      ],
+      "title": "DomainPackCapability",
+      "type": "object"
+    },
+    "DomainPackManifest": {
+      "additionalProperties": false,
+      "description": "The declarative identity of a future domain pack.\n\nA registered manifest is immutable: the contract is frozen and the\nregistry rejects duplicate manifest identifiers per tenant. The manifest\ncarries the logical ``pack_id``, a human-readable ``name``, a strict\nsemantic ``pack_version`` (``major.minor.patch``), the supported KALHAS\nAPI versions (API version ``1`` is required), a non-empty ordered list of\ndeclarative capabilities, JSON-compatible schema metadata, a\ndeterministic ``content_hash``, a deterministic ``created_at``, and\noptional JSON-compatible metadata.\n\nThe content hash is computed over the canonical serialized manifest\ncontent excluding ``content_hash`` itself; it is never accepted from a\nclient. Capability identifiers must be unique within the manifest.",
+      "properties": {
+        "capabilities": {
+          "items": {
+            "$ref": "#/$defs/DomainPackCapability"
+          },
+          "minItems": 1,
+          "title": "Capabilities",
+          "type": "array"
+        },
+        "content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "identifier": {
+          "title": "Identifier",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Metadata",
+          "type": "object"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "pack_id": {
+          "title": "Pack Id",
+          "type": "string"
+        },
+        "pack_version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Pack Version",
+          "type": "string"
+        },
+        "schema_metadata": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Schema Metadata",
+          "type": "object"
+        },
+        "schema_version": {
+          "default": "1.0.0",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "supported_api_versions": {
+          "items": {
+            "pattern": "^\\d+$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Supported Api Versions",
+          "type": "array"
+        },
+        "tenant_id": {
+          "title": "Tenant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "identifier",
+        "tenant_id",
+        "pack_id",
+        "name",
+        "pack_version",
+        "supported_api_versions",
+        "capabilities",
+        "content_hash",
+        "created_at"
+      ],
+      "title": "DomainPackManifest",
+      "type": "object"
+    },
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "MechanismDataIdentity": {
+      "additionalProperties": false,
+      "description": "One behavior-affecting data identity bound into the mechanism.\n\nA declared dataset or derived data layer that can affect mechanism\nbehavior, carried as its stable identifier and content hash.",
+      "properties": {
+        "data_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Data Content Hash",
+          "type": "string"
+        },
+        "data_id": {
+          "minLength": 1,
+          "title": "Data Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data_id",
+        "data_content_hash"
+      ],
+      "title": "MechanismDataIdentity",
+      "type": "object"
+    },
+    "MechanismParameterBinding": {
+      "additionalProperties": false,
+      "description": "One parameter/unit binding of the mechanism configuration.\n\nBinds one declared parameter to its unit and, optionally, to the\nbehavior-affecting data identity it derives from (both the data\nidentifier and its content hash, or neither).",
+      "properties": {
+        "data_content_hash": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Data Content Hash"
+        },
+        "data_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Data Id"
+        },
+        "parameter_id": {
+          "minLength": 1,
+          "title": "Parameter Id",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "parameter_id"
+      ],
+      "title": "MechanismParameterBinding",
+      "type": "object"
+    },
+    "MechanismPlatformIdentity": {
+      "additionalProperties": false,
+      "description": "The recorded platform identity of one mechanism (D34-01).\n\nBinds the operating system, architecture, Python implementation and\nversion, the dependency-lock hash, the mechanism implementation\nidentity, the solver identity, and the frozen numeric-profile\nidentifier. Exact replay is claimed only under this recorded\nidentity; a mismatch rejects exact replay or comparison.",
+      "properties": {
+        "architecture": {
+          "minLength": 1,
+          "title": "Architecture",
+          "type": "string"
+        },
+        "dependency_lock_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Dependency Lock Hash",
+          "type": "string"
+        },
+        "implementation_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Implementation Hash",
+          "type": "string"
+        },
+        "implementation_id": {
+          "minLength": 1,
+          "title": "Implementation Id",
+          "type": "string"
+        },
+        "implementation_version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Implementation Version",
+          "type": "string"
+        },
+        "numeric_profile": {
+          "const": "kalhas-platform-bound-binary64-v1",
+          "title": "Numeric Profile",
+          "type": "string"
+        },
+        "os_name": {
+          "minLength": 1,
+          "title": "Os Name",
+          "type": "string"
+        },
+        "python_implementation": {
+          "minLength": 1,
+          "title": "Python Implementation",
+          "type": "string"
+        },
+        "python_version": {
+          "minLength": 1,
+          "title": "Python Version",
+          "type": "string"
+        },
+        "solver_id": {
+          "minLength": 1,
+          "title": "Solver Id",
+          "type": "string"
+        },
+        "solver_version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Solver Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "os_name",
+        "architecture",
+        "python_implementation",
+        "python_version",
+        "dependency_lock_hash",
+        "implementation_id",
+        "implementation_version",
+        "implementation_hash",
+        "solver_id",
+        "solver_version",
+        "numeric_profile"
+      ],
+      "title": "MechanismPlatformIdentity",
+      "type": "object"
+    },
+    "MechanismQuantizationBoundary": {
+      "additionalProperties": false,
+      "description": "One explicitly named quantization boundary (D34-01).\n\n``quantum`` is the exact positive numeric step of this boundary;\nzero, negatives, booleans, strings, ``Decimal``, NaN, and infinities\nfail closed. Quantization happens only at these declared boundaries,\nwith the spec's round-to-nearest ties-to-even semantics. There is no\nhidden rounding, clipping, tolerance, or default quantization\nanywhere.",
+      "properties": {
+        "boundary_id": {
+          "minLength": 1,
+          "title": "Boundary Id",
+          "type": "string"
+        },
+        "quantum": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          ],
+          "title": "Quantum"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "boundary_id",
+        "quantum"
+      ],
+      "title": "MechanismQuantizationBoundary",
+      "type": "object"
+    },
+    "ModelPackAssumption": {
+      "additionalProperties": false,
+      "description": "One declared assumption (declarative only).",
+      "properties": {
+        "assumption_id": {
+          "minLength": 1,
+          "title": "Assumption Id",
+          "type": "string"
+        },
+        "statement": {
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "assumption_id",
+        "statement"
+      ],
+      "title": "ModelPackAssumption",
+      "type": "object"
+    },
+    "ModelPackDatasetIdentity": {
+      "additionalProperties": false,
+      "description": "One dataset identity bound into a release (declarative only).\n\nBinds the stable dataset identifier, its vintage, its content hash,\nand its declared license identity and statement. Nothing here loads,\nfetches, or verifies a dataset.",
+      "properties": {
+        "content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "dataset_id": {
+          "minLength": 1,
+          "title": "Dataset Id",
+          "type": "string"
+        },
+        "license_id": {
+          "minLength": 1,
+          "title": "License Id",
+          "type": "string"
+        },
+        "license_statement": {
+          "minLength": 1,
+          "title": "License Statement",
+          "type": "string"
+        },
+        "vintage": {
+          "minLength": 1,
+          "title": "Vintage",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dataset_id",
+        "vintage",
+        "content_hash",
+        "license_id",
+        "license_statement"
+      ],
+      "title": "ModelPackDatasetIdentity",
+      "type": "object"
+    },
+    "ModelPackIntendedUse": {
+      "additionalProperties": false,
+      "description": "One declared intended use (declarative only).",
+      "properties": {
+        "horizon": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Horizon"
+        },
+        "statement": {
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        },
+        "use_id": {
+          "minLength": 1,
+          "title": "Use Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "use_id",
+        "statement"
+      ],
+      "title": "ModelPackIntendedUse",
+      "type": "object"
+    },
+    "ModelPackLimitation": {
+      "additionalProperties": false,
+      "description": "One declared limitation (declarative only).",
+      "properties": {
+        "limitation_id": {
+          "minLength": 1,
+          "title": "Limitation Id",
+          "type": "string"
+        },
+        "statement": {
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "limitation_id",
+        "statement"
+      ],
+      "title": "ModelPackLimitation",
+      "type": "object"
+    },
+    "ModelPackProvenance": {
+      "additionalProperties": false,
+      "description": "Declared provenance of one release (declarative only).\n\nCarries the declared author identity, the declared construction\nmethod, and a non-empty statement. No execution, tool, network, or\ncode identity is expressible.",
+      "properties": {
+        "author_id": {
+          "minLength": 1,
+          "title": "Author Id",
+          "type": "string"
+        },
+        "method": {
+          "minLength": 1,
+          "title": "Method",
+          "type": "string"
+        },
+        "statement": {
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "author_id",
+        "method",
+        "statement"
+      ],
+      "title": "ModelPackProvenance",
+      "type": "object"
+    },
+    "ModelPackResourceEnvelope": {
+      "additionalProperties": false,
+      "description": "Declared resource envelope of one release (declarative only).\n\nPositive exact numeric ceilings with explicit declared units. No\nenforcement, measurement, or scheduler exists here.",
+      "properties": {
+        "cpu_unit": {
+          "minLength": 1,
+          "title": "Cpu Unit",
+          "type": "string"
+        },
+        "max_cpu_seconds": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "gt": 0,
+          "title": "Max Cpu Seconds"
+        },
+        "max_memory_megabytes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "gt": 0,
+          "title": "Max Memory Megabytes"
+        },
+        "memory_unit": {
+          "minLength": 1,
+          "title": "Memory Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "max_memory_megabytes",
+        "max_cpu_seconds",
+        "memory_unit",
+        "cpu_unit"
+      ],
+      "title": "ModelPackResourceEnvelope",
+      "type": "object"
+    },
+    "ModelPackScope": {
+      "additionalProperties": false,
+      "description": "Declared decision scope of one release (declarative only).\n\nNames the supported decision questions, intended users, horizon,\nresolution, and validity envelope as opaque declared identifiers.\nNothing here interprets, evaluates, or scopes anything at runtime.",
+      "properties": {
+        "decision_questions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Decision Questions",
+          "type": "array"
+        },
+        "horizon": {
+          "minLength": 1,
+          "title": "Horizon",
+          "type": "string"
+        },
+        "intended_users": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Intended Users",
+          "type": "array"
+        },
+        "resolution": {
+          "minLength": 1,
+          "title": "Resolution",
+          "type": "string"
+        },
+        "validity_envelope": {
+          "minLength": 1,
+          "title": "Validity Envelope",
+          "type": "string"
+        }
+      },
+      "required": [
+        "decision_questions",
+        "intended_users",
+        "horizon",
+        "resolution",
+        "validity_envelope"
+      ],
+      "title": "ModelPackScope",
+      "type": "object"
+    },
+    "ModelPackUnitDeclaration": {
+      "additionalProperties": false,
+      "description": "One declared unit of one quantity (declarative only).",
+      "properties": {
+        "quantity_id": {
+          "minLength": 1,
+          "title": "Quantity Id",
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "quantity_id",
+        "unit"
+      ],
+      "title": "ModelPackUnitDeclaration",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Immutable declarative identity of one exact versioned pack release.\n\nEmbeds the accepted ``DomainPackManifest`` and ``DomainMechanismSpec``\ndirectly so the pack, mechanism, configuration, implementation,\ndependency-lock, solver, numeric-profile, precision, rounding,\nquantization, platform, time-basis/timestep, and KALHAS API\ncompatibility identities each have exactly one source of truth, and\ncopies the pack/version/manifest/mechanism/configuration identity\nfields for fail-closed cross-checking. Adds the release-level scope,\nunits, provenance, dataset identities with vintages, content hashes\nand licenses, resource envelope, intended uses, the mandatory\nprohibited-use floor, assumptions, and limitations.\n\nEvery identity disagreement between the copied fields, the embedded\nmanifest, the embedded mechanism spec, and the tenant fails closed.\nThe public-sector floor is mandatory closed declarative data: decision\nsupport only, conditional modeled outcomes, accountable human\nauthority required, and the complete prohibited-use set in canonical\norder. No executable identity, import path, callable, provider, URL\nloader, command, network endpoint, dynamic resolver, or registry\nlookup is expressible.",
+  "properties": {
+    "accountability": {
+      "const": "accountable_human_authority_required",
+      "title": "Accountability",
+      "type": "string"
+    },
+    "assumptions": {
+      "items": {
+        "$ref": "#/$defs/ModelPackAssumption"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "configuration_identity": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Configuration Identity",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "datasets": {
+      "items": {
+        "$ref": "#/$defs/ModelPackDatasetIdentity"
+      },
+      "title": "Datasets",
+      "type": "array"
+    },
+    "decision_scope": {
+      "const": "decision_support_only",
+      "title": "Decision Scope",
+      "type": "string"
+    },
+    "declared_at": {
+      "format": "date-time",
+      "title": "Declared At",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "intended_uses": {
+      "items": {
+        "$ref": "#/$defs/ModelPackIntendedUse"
+      },
+      "minItems": 1,
+      "title": "Intended Uses",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "$ref": "#/$defs/ModelPackLimitation"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "manifest": {
+      "$ref": "#/$defs/DomainPackManifest"
+    },
+    "manifest_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Manifest Content Hash",
+      "type": "string"
+    },
+    "manifest_id": {
+      "minLength": 1,
+      "title": "Manifest Id",
+      "type": "string"
+    },
+    "mechanism_id": {
+      "minLength": 1,
+      "title": "Mechanism Id",
+      "type": "string"
+    },
+    "mechanism_protocol_version": {
+      "const": "1.0.0",
+      "title": "Mechanism Protocol Version",
+      "type": "string"
+    },
+    "mechanism_spec": {
+      "$ref": "#/$defs/DomainMechanismSpec"
+    },
+    "mechanism_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Mechanism Version",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "output_labeling": {
+      "const": "conditional_modeled_outcomes",
+      "title": "Output Labeling",
+      "type": "string"
+    },
+    "pack_id": {
+      "minLength": 1,
+      "title": "Pack Id",
+      "type": "string"
+    },
+    "pack_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Pack Version",
+      "type": "string"
+    },
+    "prohibited_uses": {
+      "items": {
+        "enum": [
+          "autonomous_public_decisions",
+          "eligibility_or_benefit_decisions",
+          "enforcement_recommendations",
+          "predictive_policing_judgments",
+          "individual_or_social_scoring",
+          "political_persuasion",
+          "voter_targeting",
+          "biometric_or_surveillance_assessment",
+          "offensive_cyber_action",
+          "live_effects"
+        ],
+        "type": "string"
+      },
+      "title": "Prohibited Uses",
+      "type": "array"
+    },
+    "provenance": {
+      "$ref": "#/$defs/ModelPackProvenance"
+    },
+    "resource_envelope": {
+      "$ref": "#/$defs/ModelPackResourceEnvelope"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope": {
+      "$ref": "#/$defs/ModelPackScope"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "units": {
+      "items": {
+        "$ref": "#/$defs/ModelPackUnitDeclaration"
+      },
+      "title": "Units",
+      "type": "array"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "pack_id",
+    "pack_version",
+    "manifest_id",
+    "manifest_content_hash",
+    "manifest",
+    "mechanism_id",
+    "mechanism_version",
+    "mechanism_protocol_version",
+    "configuration_identity",
+    "mechanism_spec",
+    "decision_scope",
+    "accountability",
+    "output_labeling",
+    "scope",
+    "provenance",
+    "resource_envelope",
+    "intended_uses",
+    "prohibited_uses",
+    "content_hash",
+    "declared_at"
+  ],
+  "title": "ModelPackReleaseProfile",
+  "type": "object"
+}

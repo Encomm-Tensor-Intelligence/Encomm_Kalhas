@@ -1,0 +1,308 @@
+{
+  "$defs": {
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "MechanismEmissionRecord": {
+      "additionalProperties": false,
+      "description": "One typed, ordered emission of a mechanism step result.\n\nCarries a unique identifier, a contiguous sequence position, the\nreferenced emission schema identity and hash, a required self-covering\n``content_hash``, an optional unit, and a finite exact-JSON payload.\nEmissions are declarative evidence records; nothing here interprets,\nevaluates, or persists them.",
+      "properties": {
+        "content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "emission_schema_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Emission Schema Hash",
+          "type": "string"
+        },
+        "emission_schema_id": {
+          "minLength": 1,
+          "title": "Emission Schema Id",
+          "type": "string"
+        },
+        "identifier": {
+          "minLength": 1,
+          "title": "Identifier",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Payload",
+          "type": "object"
+        },
+        "sequence_position": {
+          "minimum": 0,
+          "title": "Sequence Position",
+          "type": "integer"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "identifier",
+        "sequence_position",
+        "emission_schema_id",
+        "emission_schema_hash",
+        "content_hash"
+      ],
+      "title": "MechanismEmissionRecord",
+      "type": "object"
+    },
+    "MechanismEvidenceRecord": {
+      "additionalProperties": false,
+      "description": "One deterministic, ordered mechanism-evidence record.\n\nCarries a unique identifier, a contiguous sequence position, the\nreferenced evidence schema identity and hash, a required self-covering\n``content_hash``, and a finite exact-JSON payload. Evidence is\nimmutable declarative data; no analyzer or projection may mutate\nmechanism state through it.",
+      "properties": {
+        "content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "evidence_schema_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Evidence Schema Hash",
+          "type": "string"
+        },
+        "evidence_schema_id": {
+          "minLength": 1,
+          "title": "Evidence Schema Id",
+          "type": "string"
+        },
+        "identifier": {
+          "minLength": 1,
+          "title": "Identifier",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Payload",
+          "type": "object"
+        },
+        "sequence_position": {
+          "minimum": 0,
+          "title": "Sequence Position",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "identifier",
+        "sequence_position",
+        "evidence_schema_id",
+        "evidence_schema_hash",
+        "content_hash"
+      ],
+      "title": "MechanismEvidenceRecord",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Immutable step result: verified next state, emissions, evidence.\n\nRepresents exactly ``verified next state + ordered typed emissions +\nordered deterministic mechanism evidence``. Binds the request,\nmechanism-spec, and required release-profile identity references, the\nsame world/seed/optional-realization/run/step identity, the verified\nnext state with its schema identity, schema hash, and state hash,\nordered emission and evidence records with unique identifiers and\ncontiguous sequence positions from zero, and the self-covering\ncontent hash. No time, persistence receipt, recommendation, winner,\nscheduler, or external effect is expressible. Foreign identities,\ngaps, duplicates, reordered positions, invalid schemas, and\nnon-finite payloads fail closed.",
+  "properties": {
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "emissions": {
+      "items": {
+        "$ref": "#/$defs/MechanismEmissionRecord"
+      },
+      "title": "Emissions",
+      "type": "array"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/MechanismEvidenceRecord"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "mechanism_spec_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Mechanism Spec Content Hash",
+      "type": "string"
+    },
+    "mechanism_spec_id": {
+      "minLength": 1,
+      "title": "Mechanism Spec Id",
+      "type": "string"
+    },
+    "next_state_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Next State Hash",
+      "type": "string"
+    },
+    "next_state_payload": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Next State Payload",
+      "type": "object"
+    },
+    "next_state_schema_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Next State Schema Hash",
+      "type": "string"
+    },
+    "next_state_schema_id": {
+      "minLength": 1,
+      "title": "Next State Schema Id",
+      "type": "string"
+    },
+    "realization_content_hash": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Realization Content Hash"
+    },
+    "realization_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Realization Id"
+    },
+    "release_profile_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Release Profile Content Hash",
+      "type": "string"
+    },
+    "release_profile_id": {
+      "minLength": 1,
+      "title": "Release Profile Id",
+      "type": "string"
+    },
+    "request_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Request Content Hash",
+      "type": "string"
+    },
+    "request_id": {
+      "minLength": 1,
+      "title": "Request Id",
+      "type": "string"
+    },
+    "run_id": {
+      "minLength": 1,
+      "title": "Run Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seed_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Seed Content Hash",
+      "type": "string"
+    },
+    "seed_id": {
+      "minLength": 1,
+      "title": "Seed Id",
+      "type": "string"
+    },
+    "step_index": {
+      "minimum": 0,
+      "title": "Step Index",
+      "type": "integer"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "world_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "World Content Hash",
+      "type": "string"
+    },
+    "world_version_id": {
+      "minLength": 1,
+      "title": "World Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "request_id",
+    "request_content_hash",
+    "mechanism_spec_id",
+    "mechanism_spec_content_hash",
+    "release_profile_id",
+    "release_profile_content_hash",
+    "world_version_id",
+    "world_content_hash",
+    "seed_id",
+    "seed_content_hash",
+    "run_id",
+    "step_index",
+    "next_state_schema_id",
+    "next_state_schema_hash",
+    "next_state_hash",
+    "content_hash"
+  ],
+  "title": "DomainMechanismStepResult",
+  "type": "object"
+}
