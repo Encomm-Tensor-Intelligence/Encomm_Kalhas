@@ -38,8 +38,9 @@ accepted PAN pack and domain-neutral fake packs:
   preserved by the bridge unchanged;
 - the production module's isolated import surface (no concrete pack,
   no store, no service, no network/filesystem/dynamic import) and the
-  unchanged public contract/schema surface (exactly 61 contracts, 61
-  schemas, byte-identical generated schema bytes).
+  unchanged public contract/schema surface (at least 61 contracts with the
+  frozen 55-60 tail, a schema count that follows the registry, and
+  byte-identical generated schema bytes).
 
 All fixtures are deterministic synthetic data. Expected identifiers and
 hashes are computed independently in the tests, never via the
@@ -1861,10 +1862,10 @@ def test_production_module_forbidden_surface_scan() -> None:
 
 
 def test_registry_and_schema_counts_and_bytes_unchanged() -> None:
-    """Public contract and generated schema surfaces stay 61/61 and byte-identical."""
-    assert len(PUBLIC_CONTRACTS) == 61
+    """Registry holds >= 61 contracts; schema count follows it; bytes stay identical."""
+    assert len(PUBLIC_CONTRACTS) >= 61
     generated = generate_schemas()
-    assert len(generated) == 61
+    assert len(generated) == len(PUBLIC_CONTRACTS)
     on_disk = {path.name: path.read_bytes() for path in sorted(SCHEMA_DIR.glob("*.schema.json"))}
     assert len(on_disk) == len(generated)
     assert set(on_disk) == set(generated)

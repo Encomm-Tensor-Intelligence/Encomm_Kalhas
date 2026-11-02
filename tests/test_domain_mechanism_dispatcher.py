@@ -36,8 +36,9 @@ generic synthetic fake packs only:
   registry, dynamic discovery, import machinery, or concrete pack, and
   no policy selection, strategy comparison, LEGION/NEXUS call,
   scheduler, retry, persistence, or API behavior;
-- the public contract registry remains exactly 61 with the accepted
-  Phase 29 tail and every schema artifact remains byte-unchanged.
+- the public contract registry holds at least 61 contracts with the frozen
+  55-60 Phase 29 tail, the schema count follows the registry, and every
+  generated schema artifact remains byte-unchanged.
 
 Only generic synthetic names and data are used. Nothing here loads,
 executes, imports, or persists anything.
@@ -2059,8 +2060,8 @@ def test_every_pre_dispatch_failure_calls_step_zero_times_contract() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_public_contract_registry_remains_exactly_61() -> None:
-    assert len(PUBLIC_CONTRACTS) == 61
+def test_public_contract_registry_keeps_the_accepted_61_prefix() -> None:
+    assert len(PUBLIC_CONTRACTS) >= 61
 
 
 def test_phase29_registry_tail_remains_the_accepted_mechanism_modelpack_tail() -> None:
@@ -2079,7 +2080,7 @@ def test_all_schema_artifacts_remain_byte_unchanged() -> None:
     schemas = generate_schemas()
     on_disk = {path.name: path for path in SCHEMA_DIR.glob("*.schema.json")}
     assert set(schemas) == set(on_disk)
-    assert len(on_disk) == 61
+    assert len(on_disk) == len(PUBLIC_CONTRACTS)
     for name, content in schemas.items():
         assert on_disk[name].read_text(encoding="utf-8") == content
 

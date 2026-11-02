@@ -27,15 +27,16 @@ additive-compatibility contract for all historical slices:
 - every nested Phase 27 / Phase 28 helper, draft, event, state, and
   input-entry model remains unregistered and has no standalone schema
   artifact;
-- a precise AST scan over ``tests/`` fails if any historical test ever
-  reintroduces an obsolete *current-global-count* assertion of exactly 50,
-  exactly 55, or exactly 58 for ``PUBLIC_CONTRACTS`` or ``schema_files``,
-  in either equality orientation.
+- a precise AST scan over ``tests/`` fails if any other test module
+  asserts an exact integer count for ``len(PUBLIC_CONTRACTS)`` or
+  ``len(schema_files)``, in either equality orientation; in this owner
+  module the scan still rejects the obsolete literals 50, 55 and 58.
 
-Only this Phase 28 suite may assert the exact current cardinality (61).
-Historical phase suites must stay additive-safe (``>= 50``, ``>= 55``, or
-``>= 58`` for the registry, ``== len(PUBLIC_CONTRACTS)`` for schema
-artifacts), which the AST scan is the durable guard for.
+Only this module (the single owner) may assert the exact current
+cardinality (61). Every other suite must stay additive-safe: ``>= N`` for
+the registry and ``== len(PUBLIC_CONTRACTS)`` for schema artifacts, so a
+later additive contract never breaks an unrelated suite. The AST scan is
+the durable guard for that rule.
 """
 
 from __future__ import annotations
@@ -102,10 +103,14 @@ _PHASE29_MODEL_PACK_TAIL = (
     "ModelPackCatalogueEntry",
 )
 
-#: Obsolete *current-global-count* literals the AST detector rejects, in
-#: either equality orientation. The current exact count (61) and additive
-#: facts (``>=``) are never stale.
+#: Obsolete *current-global-count* literals the AST detector rejects in this
+#: owner module, in either equality orientation. The owner may still assert
+#: the current exact count (61); every other module may assert no exact
+#: integer count at all.
 _OBSOLETE_GLOBAL_COUNTS = (50, 55, 58)
+
+#: The single module allowed to assert the exact current cardinality.
+_OWNER_MODULE_NAME = Path(__file__).name
 
 #: Phase 27 nested models that must never be registered or schematized.
 _NESTED_PHASE27 = (
@@ -261,29 +266,29 @@ class TestNestedModelExclusion:
 
 
 class TestStaleAssertionDetector:
-    """AST scan: no historical test may reintroduce an obsolete count.
+    """AST scan: this module is the single owner of the exact count.
 
-    Only the current-global forms ``len(PUBLIC_CONTRACTS) == 50`` /
-    ``== 55`` / ``== 58`` and ``len(schema_files) == 50`` / ``== 55`` /
-    ``== 58`` are flagged (the literal accepted on either side of the
-    equality). Legitimate historical facts (``len(frozen_names) == 50``,
-    or prose describing an accepted prefix) are deliberately not matched,
-    so a plain substring scan cannot be used: this detector parses real
-    equality expressions. The current exact cardinality (61) and additive
-    facts (``>= 50``, ``>= 55``, ``>= 58``) are never flagged.
+    In every ``tests/*.py`` module except this owner, any exact equality
+    between ``len(PUBLIC_CONTRACTS)`` or ``len(schema_files)`` and any
+    integer literal is flagged, in either orientation. In this owner
+    module the current exact count (61) is allowed and only the obsolete
+    literals 50, 55 and 58 are flagged. Legitimate unrelated facts
+    (``len(frozen_names) == 50``) are deliberately not matched, so a plain
+    substring scan cannot be used: this detector parses real equality
+    expressions. Additive facts (``>= N``, ``== len(PUBLIC_CONTRACTS)``)
+    are never flagged.
     """
 
-    def test_no_historical_test_reintroduces_obsolete_50_global_count(self) -> None:
+    def test_only_the_owner_module_asserts_an_exact_global_count(self) -> None:
         offenders: list[tuple[str, int, str]] = []
         for module_path in sorted(TESTS_DIR.glob("*.py")):
             for lineno, expression in _stale_equality_nodes(
                 module_path.read_text(encoding="utf-8"),
                 module_path=str(module_path),
+                owner=module_path.name == _OWNER_MODULE_NAME,
             ):
                 offenders.append((module_path.name, lineno, expression))
-        assert not offenders, (
-            f"obsolete current-global-count ==50/==55/==58 assertions reintroduced: {offenders}"
-        )
+        assert not offenders, f"exact global-count assertions outside the owner: {offenders}"
 
     def test_detects_len_public_contracts_eq_50(self) -> None:
         hits = _stale_equality_nodes("x = len(PUBLIC_CONTRACTS) == 50\n")
@@ -337,16 +342,38 @@ class TestStaleAssertionDetector:
         src = "assert len(frozen_historical_names) == 50\nassert len(other) == 50\n"
         assert _stale_equality_nodes(src) == []
 
-    def test_current_61_and_additive_facts_are_ignored(self) -> None:
+    def test_current_exact_count_is_flagged_in_a_non_owner_module(self) -> None:
+        hits = _stale_equality_nodes("assert len(PUBLIC_CONTRACTS) == 61\n")
+        assert len(hits) == 1 and "PUBLIC_CONTRACTS" in hits[0][1]
+        hits = _stale_equality_nodes("assert 61 == len(schema_files)\n")
+        assert len(hits) == 1 and "schema_files" in hits[0][1]
+
+    def test_any_integer_literal_is_flagged_in_a_non_owner_module(self) -> None:
+        hits = _stale_equality_nodes("assert len(PUBLIC_CONTRACTS) == 62\n")
+        assert len(hits) == 1 and "PUBLIC_CONTRACTS" in hits[0][1]
+        hits = _stale_equality_nodes("assert 62 == len(schema_files)\n")
+        assert len(hits) == 1 and "schema_files" in hits[0][1]
+
+    def test_additive_facts_and_unrelated_names_are_not_flagged(self) -> None:
         src = (
-            "assert len(PUBLIC_CONTRACTS) == 61\n"
-            "assert len(schema_files) == 61\n"
-            "assert len(PUBLIC_CONTRACTS) >= 50\n"
-            "assert len(PUBLIC_CONTRACTS) >= 55\n"
-            "assert len(PUBLIC_CONTRACTS) >= 58\n"
+            "assert len(PUBLIC_CONTRACTS) >= 61\n"
+            "assert len(schema_files) == len(PUBLIC_CONTRACTS)\n"
+            "assert len(other) == 61\n"
             "if len(schema_files) >= 58:\n    pass\n"
         )
         assert _stale_equality_nodes(src) == []
+
+    def test_owner_module_may_assert_the_current_exact_count(self) -> None:
+        src = "assert len(PUBLIC_CONTRACTS) == 61\nassert len(schema_files) == 61\n"
+        assert _stale_equality_nodes(src, owner=True) == []
+
+    def test_owner_module_still_flags_obsolete_counts(self) -> None:
+        for literal in _OBSOLETE_GLOBAL_COUNTS:
+            for src in (
+                f"assert len(PUBLIC_CONTRACTS) == {literal}\n",
+                f"assert {literal} == len(schema_files)\n",
+            ):
+                assert len(_stale_equality_nodes(src, owner=True)) == 1, src
 
     def test_docstring_and_comments_are_ignored(self) -> None:
         src = (
@@ -369,29 +396,32 @@ class TestStaleAssertionDetector:
         assert "test_phase99_boundaries.py" in str(excinfo.value)
 
 
-def _stale_equality_nodes(text: str, module_path: str = "<string>") -> list[tuple[int, str]]:
+def _stale_equality_nodes(
+    text: str, module_path: str = "<string>", *, owner: bool = False
+) -> list[tuple[int, str]]:
     """AST equality scan of one test file's source text.
 
-    Flags the symmetric ``len(X) == 50`` / ``len(X) == 55`` /
-    ``len(X) == 58`` (or the mirrored ``50/55/58 == len(X)``) forms where
-    ``X`` is the ``PUBLIC_CONTRACTS`` module symbol or a variable
-    literally named ``schema_files``. Returns ``(lineno, unparsed
-    expression)``.
+    Flags the symmetric ``len(X) == N`` (or the mirrored ``N == len(X)``)
+    forms where ``X`` is the ``PUBLIC_CONTRACTS`` module symbol or a
+    variable literally named ``schema_files``. For a non-owner module
+    ``N`` is any integer literal; for the owner module (``owner=True``)
+    only the obsolete literals 50, 55 and 58 are flagged. Returns
+    ``(lineno, unparsed expression)``.
 
-    The detector is symmetric (a stale literal is accepted on either side
-    of the equality) and fail-closed: comments/docstrings are ignored
-    naturally through AST parsing, an unrelated ``len(other) == 50`` is
-    never matched, and the current exact count (61) plus additive facts
-    (``>=``) are never flagged, but a source that is not valid Python
-    raises ``SyntaxError`` (never a silent ``[]``) so a broken historical
-    test cannot masquerade as a clean scan. ``module_path`` names the
-    affected file in that error.
+    The detector is symmetric (the literal is accepted on either side of
+    the equality) and fail-closed: comments/docstrings are ignored
+    naturally through AST parsing, an unrelated ``len(other) == 61`` is
+    never matched, and additive facts (``>=``, ``== len(PUBLIC_CONTRACTS)``)
+    are never flagged, but a source that is not valid Python raises
+    ``SyntaxError`` (never a silent ``[]``) so a broken test cannot
+    masquerade as a clean scan. ``module_path`` names the affected file in
+    that error.
     """
     try:
         tree = ast.parse(text)
     except SyntaxError as exc:
         raise SyntaxError(
-            f"failed to parse {module_path} during obsolete ==50/==55 scan: "
+            f"failed to parse {module_path} during exact global-count scan: "
             f"{exc.msg} (line {exc.lineno})"
         ) from exc
     hits: list[tuple[int, str]] = []
@@ -407,11 +437,9 @@ def _stale_equality_nodes(text: str, module_path: str = "<string>") -> list[tupl
         )
 
     def _is_stale_literal(node: ast.AST) -> bool:
-        return (
-            isinstance(node, ast.Constant)
-            and isinstance(node.value, int)
-            and node.value in _OBSOLETE_GLOBAL_COUNTS
-        )
+        if not isinstance(node, ast.Constant) or type(node.value) is not int:
+            return False
+        return node.value in _OBSOLETE_GLOBAL_COUNTS if owner else True
 
     for node in ast.walk(tree):
         if not isinstance(node, ast.Compare) or len(node.ops) != 1:

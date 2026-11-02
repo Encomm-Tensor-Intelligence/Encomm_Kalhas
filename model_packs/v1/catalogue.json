@@ -1,8 +1,8 @@
 [
   {
-    "assurance_profile_content_hash": "96c0bdfeb2bf0596a6228478fb950bda0fc19da6f312c74c522eed1eb79746ee",
+    "assurance_profile_content_hash": "c6ac6f7d078c3588186f9b3a7484616f56195cdf4467a35706acea4167390e96",
     "assurance_profile_id": "assurance-profile-kalhas-pan-0-1-0",
-    "content_hash": "8817080ec194dc50aa2872fed07c6961e594ad6a076ba5d69c2c48c71795f5b8",
+    "content_hash": "a1b00c3dd5b5962746fd4a186f475ec42598c9274bc85303edbe847ff85c6c82",
     "declared_at": "2026-10-28T12:00:00Z",
     "displayed_maturity": "experimental",
     "identifier": "catalogue-entry-kalhas-pan-0-1-0",

@@ -346,7 +346,7 @@ def _catalogue_payload(**overrides: object) -> dict[str, object]:
 class TestRegistryAndSchemas:
     def test_model_pack_contracts_occupy_indexes_58_to_60_in_order(self) -> None:
         names = [contract.__name__ for contract in PUBLIC_CONTRACTS]
-        assert len(names) == 61
+        assert len(names) >= 61
         assert names[58:61] == [
             "ModelPackReleaseProfile",
             "ModelPackAssuranceProfile",

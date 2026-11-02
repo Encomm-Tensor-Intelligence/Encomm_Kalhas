@@ -43,7 +43,8 @@ F. Static purity and truthful scope - AST scans proving the production
    exact import allowlist, no forbidden symbols, no mutable
    module-level container authority, no assurance/catalogue artifact or
    maturity value, the public-contract registry and the schema
-   directory at exactly 61, and byte-equal generated schema artifacts.
+   directory following it (at least 61 contracts, frozen 55-60 tail), and
+   byte-equal generated schema artifacts.
 
 All fixtures are synthetic; every pinned expectation below was
 hand-calculated from the declared PAN v0.1 equations in
@@ -2108,17 +2109,17 @@ def test_pan_tests_never_create_assurance_or_catalogue_artifacts() -> None:
         assert maturity not in code
 
 
-def test_registry_and_schema_cardinality_remain_exactly_61() -> None:
-    """The public registry and the schema directory both stay at 61."""
-    assert len(PUBLIC_CONTRACTS) == 61
+def test_registry_and_schema_cardinality_follow_the_registry() -> None:
+    """The registry holds at least 61 contracts; the schema directory follows it."""
+    assert len(PUBLIC_CONTRACTS) >= 61
     schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
-    assert len(schema_files) == 61
+    assert len(schema_files) == len(PUBLIC_CONTRACTS)
 
 
 def test_generated_schemas_remain_byte_equal_to_checked_in_files() -> None:
     """Generated schema bytes equal the checked-in artifacts."""
     generated = generate_schemas()
-    assert len(generated) == 61
+    assert len(generated) == len(PUBLIC_CONTRACTS)
     for name, rendered in generated.items():
         on_disk = (SCHEMA_DIR / name).read_text(encoding="utf-8")
         assert on_disk == rendered, f"{name} drifted from the generated schema"
