@@ -217,7 +217,7 @@ See [`docs/model-packs/README.md`](docs/model-packs/README.md) for the catalogue
 | [`AGENTS.md`](AGENTS.md) | Durable repository rules and gates |
 | [`docs/architecture/README.md`](docs/architecture/README.md) | Layer map and dependency rules |
 | [`docs/architecture/contracts-and-lifecycle.md`](docs/architecture/contracts-and-lifecycle.md) | Contract versions, lifecycle, and hash discipline |
-| [`docs/decisions/`](docs/decisions/) | ADR 001–005 (integration boundaries, domain packs, immutable world contracts, adaptive runtime, Model Pack mechanism/assurance) |
+| [`docs/decisions/`](docs/decisions/) | ADR 001–006 (integration boundaries, domain packs, immutable world contracts, adaptive runtime, Model Pack mechanism/assurance, offline dataset intake) |
 | [`docs/model-packs/README.md`](docs/model-packs/README.md) | Model Pack maturity levels, the 13-entry catalogue, and the regeneration workflow |
 | [`CHANGELOG.md`](CHANGELOG.md) | Release and checkpoint timeline |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Workflow, gates, and acceptance rules |
