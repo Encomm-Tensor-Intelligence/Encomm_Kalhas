@@ -1,0 +1,419 @@
+{
+  "$defs": {
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "RawDatasetColumn": {
+      "additionalProperties": false,
+      "description": "One declared column of one raw file (declared, never inferred).",
+      "properties": {
+        "missing_tokens": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Tokens",
+          "type": "array"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "unit": {
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value_type": {
+          "enum": [
+            "string",
+            "integer",
+            "decimal",
+            "date",
+            "iso_week",
+            "boolean"
+          ],
+          "title": "Value Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "value_type",
+        "unit"
+      ],
+      "title": "RawDatasetColumn",
+      "type": "object"
+    },
+    "RawDatasetFile": {
+      "additionalProperties": false,
+      "description": "One declared raw file: relative path, size, SHA-256, type, columns.",
+      "properties": {
+        "byte_size": {
+          "exclusiveMinimum": 0,
+          "title": "Byte Size",
+          "type": "integer"
+        },
+        "columns": {
+          "items": {
+            "$ref": "#/$defs/RawDatasetColumn"
+          },
+          "minItems": 1,
+          "title": "Columns",
+          "type": "array"
+        },
+        "media_type": {
+          "enum": [
+            "text/csv",
+            "application/json",
+            "application/xml"
+          ],
+          "title": "Media Type",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "byte_size",
+        "sha256",
+        "media_type",
+        "columns"
+      ],
+      "title": "RawDatasetFile",
+      "type": "object"
+    },
+    "RawDatasetGeographyBasis": {
+      "additionalProperties": false,
+      "description": "Declared geography basis of a bundle (declared, never inferred).",
+      "properties": {
+        "geography_columns": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Geography Columns",
+          "type": "array"
+        },
+        "scheme": {
+          "minLength": 1,
+          "title": "Scheme",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scheme",
+        "geography_columns"
+      ],
+      "title": "RawDatasetGeographyBasis",
+      "type": "object"
+    },
+    "RawDatasetLicense": {
+      "additionalProperties": false,
+      "description": "Declared license terms of one raw dataset (declarative only).\n\nExactly two license classes are representable. ``terms_locator`` is\nopaque text that is recorded and never dereferenced.",
+      "properties": {
+        "attribution_statement": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attribution Statement"
+        },
+        "license_class": {
+          "enum": [
+            "public_domain",
+            "attribution_commercial"
+          ],
+          "title": "License Class",
+          "type": "string"
+        },
+        "license_id": {
+          "minLength": 1,
+          "title": "License Id",
+          "type": "string"
+        },
+        "modifications_must_be_disclosed": {
+          "title": "Modifications Must Be Disclosed",
+          "type": "boolean"
+        },
+        "scope_restrictions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Scope Restrictions",
+          "type": "array"
+        },
+        "terms_locator": {
+          "minLength": 1,
+          "title": "Terms Locator",
+          "type": "string"
+        },
+        "terms_read_at": {
+          "format": "date-time",
+          "title": "Terms Read At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "license_class",
+        "license_id",
+        "terms_locator",
+        "terms_read_at",
+        "modifications_must_be_disclosed"
+      ],
+      "title": "RawDatasetLicense",
+      "type": "object"
+    },
+    "RawDatasetSource": {
+      "additionalProperties": false,
+      "description": "Recorded source of one raw dataset (declarative only).\n\n``source_locator`` is opaque text that is recorded and never\ndereferenced.",
+      "properties": {
+        "publisher": {
+          "minLength": 1,
+          "title": "Publisher",
+          "type": "string"
+        },
+        "publisher_release_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publisher Release Id"
+        },
+        "source_locator": {
+          "minLength": 1,
+          "title": "Source Locator",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "publisher",
+        "title",
+        "source_locator"
+      ],
+      "title": "RawDatasetSource",
+      "type": "object"
+    },
+    "RawDatasetTimeBasis": {
+      "additionalProperties": false,
+      "description": "Declared time basis of a bundle (declared, never inferred).",
+      "properties": {
+        "calendar": {
+          "enum": [
+            "iso_date",
+            "iso_week",
+            "year",
+            "year_month"
+          ],
+          "title": "Calendar",
+          "type": "string"
+        },
+        "granularity": {
+          "enum": [
+            "day",
+            "week",
+            "month",
+            "year"
+          ],
+          "title": "Granularity",
+          "type": "string"
+        },
+        "time_columns": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Time Columns",
+          "type": "array"
+        },
+        "time_semantics": {
+          "enum": [
+            "observation_date",
+            "reporting_date",
+            "reference_period"
+          ],
+          "title": "Time Semantics",
+          "type": "string"
+        }
+      },
+      "required": [
+        "calendar",
+        "granularity",
+        "time_columns",
+        "time_semantics"
+      ],
+      "title": "RawDatasetTimeBasis",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Immutable declarative identity of one exact raw dataset bundle.\n\n``identifier`` must equal ``raw-dataset-<dataset_id>-<vintage>`` and the\nUTC calendar date of ``retrieved_at`` must equal the vintage date. The\nfile list is non-empty, unique and sorted ascending by path, and the\ndeclared byte sizes sum to at most 25 MiB. Time and geography columns\nmust name columns declared by some file. The contract checks shape\nonly: ``bundle_hash`` and ``content_hash`` are declared identity fields\nthat the pure verifier recomputes.",
+  "properties": {
+    "bundle_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Bundle Hash",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "data_subject_level": {
+      "const": "aggregate",
+      "title": "Data Subject Level",
+      "type": "string"
+    },
+    "dataset_id": {
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "title": "Dataset Id",
+      "type": "string"
+    },
+    "declared_at": {
+      "format": "date-time",
+      "title": "Declared At",
+      "type": "string"
+    },
+    "files": {
+      "items": {
+        "$ref": "#/$defs/RawDatasetFile"
+      },
+      "minItems": 1,
+      "title": "Files",
+      "type": "array"
+    },
+    "geography_basis": {
+      "$ref": "#/$defs/RawDatasetGeographyBasis"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "license": {
+      "$ref": "#/$defs/RawDatasetLicense"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "retrieved_at": {
+      "format": "date-time",
+      "title": "Retrieved At",
+      "type": "string"
+    },
+    "revision_notes": {
+      "title": "Revision Notes",
+      "type": "string"
+    },
+    "revision_policy": {
+      "enum": [
+        "closed_series",
+        "revised_in_place",
+        "versioned_releases",
+        "unknown"
+      ],
+      "title": "Revision Policy",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/RawDatasetSource"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "time_basis": {
+      "$ref": "#/$defs/RawDatasetTimeBasis"
+    },
+    "vintage": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}(\\.[1-9]\\d*)?$",
+      "title": "Vintage",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "dataset_id",
+    "vintage",
+    "retrieved_at",
+    "source",
+    "license",
+    "data_subject_level",
+    "files",
+    "bundle_hash",
+    "time_basis",
+    "geography_basis",
+    "revision_policy",
+    "revision_notes",
+    "content_hash",
+    "declared_at"
+  ],
+  "title": "RawDatasetManifest",
+  "type": "object"
+}

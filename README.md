@@ -16,7 +16,7 @@ the decision-world engine in a strict three-role architecture alongside NEXUS
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?logo=ruff)](#testing-and-verification)
 [![Formatting](https://img.shields.io/badge/format-ruff%20format-261230?logo=ruff)](#testing-and-verification)
 [![Types](https://img.shields.io/badge/types-mypy%20strict-1F6FEB)](#testing-and-verification)
-[![Schemas](https://img.shields.io/badge/schemas-61%20synchronized-F7C744)](#testing-and-verification)
+[![Schemas](https://img.shields.io/badge/schemas-62%20synchronized-F7C744)](#testing-and-verification)
 [![Replay](https://img.shields.io/badge/replay-deterministic-2ea44f)](#core-guarantees)
 
 </div>
@@ -37,7 +37,7 @@ protocol, and the kernel never imports NEXUS or LEGION internals.
 
 ## Core guarantees
 
-- **Versioned public contracts.** All 61 public v1 contracts are frozen once
+- **Versioned public contracts.** All 62 public v1 contracts are frozen once
   shipped, with synchronized JSON Schema artifacts; breaking changes require a
   new version module and API segment, never in-place mutation.
 - **Deterministic replay.** Completed runs replay exactly, verified against
@@ -57,7 +57,7 @@ protocol, and the kernel never imports NEXUS or LEGION internals.
 
 | Area | What it provides |
 | --- | --- |
-| Contracts & lifecycle | 61 versioned v1 contracts, canonical serialization, content hashes, campaign lifecycle state machine |
+| Contracts & lifecycle | 62 versioned v1 contracts, canonical serialization, content hashes, campaign lifecycle state machine |
 | World models | Immutable world versions, domain-pack bindings, capability-input declarations, uncertainty declarations, deterministic realizations |
 | Campaign runtime | Structural, realization-aware (`3.0.0`), and adaptive (`4.0.0`) deterministic runtimes with exact replay |
 | Evidence | Run/campaign metric observations, empirical outcome distributions (Type-7 quantiles, fixed-alpha tails), objective evaluations |
@@ -88,7 +88,7 @@ flowchart LR
         direction TB
         API["FastAPI v1 surface<br/>46 paths · typed errors"]
         APP["application services<br/>runtimes 1.0.0 – 4.0.0"]
-        CON["versioned v1 contracts<br/>61 contracts · 61 JSON schemas"]
+        CON["versioned v1 contracts<br/>62 contracts · 62 JSON schemas"]
         STORE["in-memory store<br/>snapshots · evidence · replay"]
         API --> APP --> CON
         APP --> STORE

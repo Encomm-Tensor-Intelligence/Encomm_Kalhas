@@ -22,6 +22,7 @@ from kalhas.contracts.v1.campaign_metric_observation import CampaignMetricObserv
 from kalhas.contracts.v1.campaign_metric_statistics import CampaignMetricStatisticsMatrix
 from kalhas.contracts.v1.campaign_outcome import CampaignOutcomeDistributionMatrix
 from kalhas.contracts.v1.campaign_trajectory import CampaignTrajectoryMatrix
+from kalhas.contracts.v1.dataset import RawDatasetManifest
 from kalhas.contracts.v1.domain_mechanism import (
     DomainMechanismSpec,
     DomainMechanismStepRequest,
@@ -3067,6 +3068,52 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         "pack_version": "1.2.3",
         "title": "Synthetic catalogue title",
         "summary": "Synthetic catalogue summary",
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "declared_at": NOW,
+        "metadata": {"owner": "foundation"},
+    },
+    RawDatasetManifest: {
+        "identifier": "raw-dataset-synthetic-counts-2026-01-01",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "dataset_id": "synthetic-counts",
+        "vintage": "2026-01-01",
+        "retrieved_at": NOW,
+        "source": {
+            "publisher": "Synthetic publisher",
+            "title": "Synthetic aggregate counts",
+            "source_locator": "synthetic://opaque-locator",
+        },
+        "license": {
+            "license_class": "public_domain",
+            "license_id": "synthetic-public-domain",
+            "terms_locator": "synthetic://opaque-terms",
+            "terms_read_at": NOW,
+            "modifications_must_be_disclosed": False,
+        },
+        "data_subject_level": "aggregate",
+        "files": [
+            {
+                "path": "data/a.csv",
+                "byte_size": 10,
+                "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                "media_type": "text/csv",
+                "columns": [
+                    {"name": "region", "value_type": "string", "unit": "none"},
+                    {"name": "period", "value_type": "date", "unit": "none"},
+                ],
+            }
+        ],
+        "bundle_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "time_basis": {
+            "calendar": "iso_date",
+            "granularity": "day",
+            "time_columns": ["period"],
+            "time_semantics": "observation_date",
+        },
+        "geography_basis": {"scheme": "synthetic-regions", "geography_columns": ["region"]},
+        "revision_policy": "closed_series",
+        "revision_notes": "",
         "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
         "declared_at": NOW,
         "metadata": {"owner": "foundation"},
