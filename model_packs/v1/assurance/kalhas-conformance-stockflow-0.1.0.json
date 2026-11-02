@@ -1,0 +1,52 @@
+{
+  "content_hash": "33b8325da40b3d6a29faf73b28aed0e65d9b70be0e86dcaf6de2b8f733b47bd9",
+  "declared_at": "2026-10-28T12:00:00Z",
+  "evidence": [
+    {
+      "bound_claim_ids": [],
+      "content_hash": "bf7bfab6ce518a4077e8d9d3a7f57568428819d6a413cf8327b8b73df210cf0a",
+      "covered_claim_ids": [],
+      "data_vintage": null,
+      "evidence_id": "conformance-stockflow-synthetic-conformance-pack-tests",
+      "geography": null,
+      "horizon": null,
+      "kind": "synthetic_conformance",
+      "reference": "tests/test_conformance_stockflow_domain_pack.py",
+      "review_state": null
+    },
+    {
+      "bound_claim_ids": [],
+      "content_hash": "3d5e2709511f0d561b1a7e8917b36a9d87b90e705139c42e0d4afbf1d7903a04",
+      "covered_claim_ids": [],
+      "data_vintage": null,
+      "evidence_id": "conformance-stockflow-synthetic-conformance-shared-boundary",
+      "geography": null,
+      "horizon": null,
+      "kind": "synthetic_conformance",
+      "reference": "tests/test_phase29_shared_boundary_acceptance.py",
+      "review_state": null
+    }
+  ],
+  "identifier": "assurance-profile-kalhas-conformance-stockflow-0-1-0",
+  "maturity": "conformance_only",
+  "metadata": {
+    "phase": "29",
+    "product_pack": false,
+    "synthetic_only": true
+  },
+  "release_profile_content_hash": "9f20523dfaa7f2786aff98b9cc9945b813bb0124847964e8b4dbdc69ecd96f79",
+  "release_profile_id": "release-profile-kalhas-conformance-stockflow-0-1-0",
+  "retained_failures": [],
+  "schema_version": "1.0.0",
+  "supported_claims": [
+    {
+      "claim_id": "generic-seam-without-kernel-change",
+      "evidence_ids": [
+        "conformance-stockflow-synthetic-conformance-pack-tests",
+        "conformance-stockflow-synthetic-conformance-shared-boundary"
+      ],
+      "statement": "The fixture executes through the generic dispatcher and Runtime-4 bridge with no domain-specific kernel code"
+    }
+  ],
+  "tenant_id": "kalhas-synthetic"
+}

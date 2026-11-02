@@ -41,6 +41,7 @@ uv run ruff check .                        # lint
 uv run ruff format --check .               # formatting
 uv run mypy kalhas tests                   # strict typing
 PYTHONPATH= uv run python scripts/export_schemas.py --check   # schema sync
+PYTHONPATH= uv run python scripts/export_model_pack_artifacts.py --check   # model pack sync
 ```
 
 Additional change-specific rules:
@@ -48,6 +49,8 @@ Additional change-specific rules:
 - JSON Schema artifacts under `schemas/v1/` are **generated**. Never edit them
   by hand; change the contracts and re-run
   `uv run python scripts/export_schemas.py`.
+- `model_packs/v1/` artifacts are generated, never edited by hand, and are
+  regenerated whenever an evidence module or pack release profile changes.
 - Do not add `skip`, `xfail`, `noqa`, `type: ignore`, or suppressed
   diagnostics to make gates pass.
 - No real company or personal data in code, fixtures, docs, or tests.

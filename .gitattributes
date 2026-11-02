@@ -1,0 +1,8 @@
+# Model Pack evidence pins exact file bytes: keep these paths LF in every checkout.
+/model_packs/** text eol=lf
+/scripts/export_model_pack_artifacts.py text eol=lf
+/tests/test_pan_domain_pack.py text eol=lf
+/tests/test_domain_mechanism_runtime.py text eol=lf
+/tests/test_phase29_boundaries.py text eol=lf
+/tests/test_phase29_shared_boundary_acceptance.py text eol=lf
+/tests/test_conformance_stockflow_domain_pack.py text eol=lf

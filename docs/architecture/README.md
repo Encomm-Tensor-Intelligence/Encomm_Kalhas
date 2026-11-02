@@ -1765,3 +1765,65 @@ guarantee of any outcome. The system performs no autonomous live action.
 KALHAS-PAN (Phase 29) and the executable real domain mechanism remain **not
 implemented**. Phase 28 is complete and published at
 `f001d5f027cf21e8964eac72f122730e98ebdd3d`.
+
+## Phase 29 foundation status (2026-10-03 publication overlay)
+
+This overlay supersedes every earlier present-tense statement in this document
+that KALHAS-PAN or an executable `DomainPack` mechanism is not implemented;
+those statements remain accurate only at their dated Phase 26–28 checkpoints.
+
+The Phase 29 foundation is published at
+`1e15d14cac1594c1d74d724ce7f1b3cef6ad2609`. It adds six top-level public v1
+contracts at indexes 55–60 (61 total), six synchronized schema artifacts (61
+artifacts; 62 files including `schemas/v1/README.md`), the versioned mechanism/
+platform/configuration identity surface, and a pure fail-closed mechanism
+dispatcher/runtime over the existing `DomainPack` boundary. There is no dynamic
+pack discovery, plugin runtime, provider call, or pack-specific kernel import.
+
+`KALHAS-PAN` v0.1 is the first executable, minimal synthetic reference pack. It
+has an exact release profile and deterministic one-step compartment-flow
+mechanism, but no assurance maturity is assigned, no catalogue entry is
+instantiated, and it has no real data, empirical calibration, external
+scientific validity, production approval, or government certification.
+
+This published foundation is not evidence that the complete Phase 29 roadmap
+checkpoint closed. The planned synthetic non-health conformance fixture and
+final assurance/catalogue/documentation/closure evidence are not present; they
+remain bounded completion work before Phase 30.
+
+## Phase 29 completion status (2026-11-01 closure overlay)
+
+This overlay supersedes the foundation overlay's statements that the
+conformance fixture, assurance maturity, and catalogue entries are absent; those
+statements remain accurate only at 2026-10-03.
+
+Where things live: the `kalhas-conformance-stockflow` fixture is a tiny
+synthetic, non-health, integer stock-flow pack under `kalhas/domain_packs/`; the
+generator is `scripts/export_model_pack_artifacts.py`; the generated artifacts
+live in `model_packs/v1/`, outside `kalhas/`. No runtime loader or registry
+reads them, and no new component or integration surface exists.
+
+Kernel neutrality is proven by running PAN and the fixture through the same
+generic dispatcher and Runtime-4 bridge under one identical authority chain,
+covering exact identities, one invocation per call, deterministic evidence,
+cross-pack fail-closed cases (including a hybrid pack), and cross-tenant
+rejection. No module under `kalhas/` outside `kalhas/domain_packs/` names either
+pack.
+
+Maturity is evidence-derived. PAN is `experimental`: deterministic execution
+and synthetic conformance evidence only, with no benchmark evidence, no external
+review, and no empirical adequacy claim. The fixture is `conformance_only`. The
+other 12 catalogue entries are `catalogued`: roadmap candidates only, with no
+implemented capability, and their list order is not a delivery order. Only PAN
+(Phases 29–35) and MARITIME-TRADE (34A–35) have a planned wave; the rest are
+`post-35`.
+
+Mechanism step results are not yet consumed by campaign outcomes, objective
+evaluations, or decision briefs. The "pack-to-runtime-to-brief" wording is
+therefore proven only up to the runtime boundary; the pack-to-brief evidence
+path is open work for a later, separately authorized slice and is not claimed as
+done.
+
+Unchanged: the domain-neutral kernel, the frozen v1 contracts (still 61
+contracts and 61 schema artifacts), no live action, no network or provider call,
+no real data, synthetic fixtures only, and no cross-platform proof.

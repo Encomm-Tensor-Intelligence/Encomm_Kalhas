@@ -1210,12 +1210,16 @@ class TestDocumentationTruthfulness:
             assert "not calibrated" in text, relative
             assert "not certainty" in text, relative
 
-    def test_active_docs_deny_autonomous_live_action_and_future_phases(self) -> None:
+    def test_active_docs_deny_autonomous_live_action_and_pan_maturity_overclaim(
+        self,
+    ) -> None:
         for relative in _ACTIVE_DOCS:
             text = _doc_text(relative)
             assert "no autonomous live action" in text, relative
             assert "kalhas-pan" in text, relative
-            assert "not implemented" in text, relative
+            assert "synthetic" in text, relative
+            assert "experimental" in text, relative
+            assert "no benchmark evidence" in text, relative
 
     def test_active_docs_label_colony_visualization_synthetic(self) -> None:
         for relative in _ACTIVE_DOCS:

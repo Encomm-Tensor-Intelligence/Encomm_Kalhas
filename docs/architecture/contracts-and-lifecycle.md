@@ -3072,3 +3072,72 @@ guarantee of any outcome. The system performs no autonomous live action.
 KALHAS-PAN (Phase 29) and the executable real domain mechanism remain **not
 implemented**. Phase 28 is complete and published at
 `f001d5f027cf21e8964eac72f122730e98ebdd3d`.
+
+## Phase 29 foundation status (2026-10-03 publication overlay)
+
+This overlay supersedes every earlier present-tense statement in this document
+that KALHAS-PAN or an executable `DomainPack` mechanism is not implemented;
+those statements remain accurate only at their dated Phase 26–28 checkpoints.
+
+Six additive contracts are appended to `PUBLIC_CONTRACTS` at indexes 55–60:
+`DomainMechanismSpec`, `DomainMechanismStepRequest`,
+`DomainMechanismStepResult`, `ModelPackReleaseProfile`,
+`ModelPackAssuranceProfile`, and `ModelPackCatalogueEntry`. The registry now
+contains 61 contracts and `schemas/v1/` contains 61 synchronized schema
+artifacts (62 files including its README). Historical indexes and schema bytes
+remain unchanged.
+
+The published generic lifecycle is explicit pack supply -> exact manifest/
+release-profile/mechanism validation -> self-covering request verification ->
+pure fail-closed pack step through the dispatcher/runtime -> exact result and
+evidence verification. It creates no dynamic discovery, plugin/provider
+surface, pack-specific kernel import, network call, or new component.
+
+`KALHAS-PAN` v0.1 supplies the first executable minimal synthetic release
+profile and deterministic one-step compartment-flow mechanism. No assurance
+maturity is assigned, no catalogue entry is instantiated, and its deterministic
+conformance evidence is not empirical calibration, external validity,
+production approval, or government certification.
+
+The Phase 29 foundation is published at
+`1e15d14cac1594c1d74d724ce7f1b3cef6ad2609`, but that commit does not prove the
+complete roadmap checkpoint. The planned synthetic non-health conformance
+fixture and final assurance/catalogue/documentation/closure evidence are not
+present and remain bounded completion work before Phase 30.
+
+## Phase 29 completion status (2026-11-01 closure overlay)
+
+This overlay supersedes the foundation overlay's statements that the
+conformance fixture, assurance maturity, and catalogue entries are absent; those
+statements remain accurate only at 2026-10-03.
+
+Artifact lifecycle: the assurance profiles and catalogue under `model_packs/v1/`
+are generated explicitly by `uv run python scripts/export_model_pack_artifacts.py`
+and never edited by hand. Each artifact's `content_hash` follows the
+self-covering rule (SHA-256 of the canonical JSON of the dump without
+`content_hash`); each assurance profile binds the exact release-profile id and
+hash of its live pack; each evidence record pins the SHA-256 of the exact bytes
+of a named test module. Maturity is derived from that evidence by the contract
+validators and cannot be inflated. Changing an evidence module or a pack
+release profile requires regeneration and review of the diff;
+`scripts/export_model_pack_artifacts.py --check` (also a CI step) fails
+otherwise. The `kalhas-conformance-stockflow` fixture is `conformance_only` and
+is not a catalogue entry.
+
+Maturity is evidence-derived. PAN is `experimental`: deterministic execution
+and synthetic conformance evidence only, with no benchmark evidence, no external
+review, and no empirical adequacy claim. The fixture is `conformance_only`. The
+other 12 catalogue entries are `catalogued`: roadmap candidates only, with no
+implemented capability, and their list order is not a delivery order. Only PAN
+(Phases 29–35) and MARITIME-TRADE (34A–35) have a planned wave; the rest are
+`post-35`.
+
+Mechanism step results are not yet consumed by campaign outcomes, objective
+evaluations, or decision briefs. The "pack-to-runtime-to-brief" wording is
+therefore proven only up to the runtime boundary; the pack-to-brief evidence
+path is open work for a later, separately authorized slice and is not claimed as
+done.
+
+Unchanged: the domain-neutral kernel, the frozen v1 contracts (still 61
+contracts and 61 schema artifacts), no live action, no network or provider call,
+no real data, synthetic fixtures only, and no cross-platform proof.

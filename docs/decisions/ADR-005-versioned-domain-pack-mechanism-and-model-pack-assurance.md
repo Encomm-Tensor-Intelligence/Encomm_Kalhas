@@ -4,6 +4,23 @@
 - Date: 2026-09-13
 - Deciders: KALHAS foundation
 
+Implementation note (2026-10-03): the generic mechanism contracts,
+dispatcher/runtime, Model Pack profile contracts, and synthetic `KALHAS-PAN`
+v0.1 release profile/mechanism were published at
+`1e15d14cac1594c1d74d724ce7f1b3cef6ad2609`. This does not assign PAN an
+assurance maturity or catalogue entry and does not record the complete Phase 29
+roadmap checkpoint as closed; the remaining conformance fixture and closure
+evidence stay outside this decision record.
+
+Implementation note (2026-11-01): `kalhas-conformance-stockflow` 0.1.0 is a
+synthetic, non-health, `conformance_only` fixture and never a product pack. PAN
+and the fixture traverse the same generic dispatcher and Runtime-4 bridge with
+zero domain-specific kernel change. Checked-in artifacts under `model_packs/v1/`
+make PAN `experimental` (deterministic execution and synthetic conformance
+evidence only; PAN has no benchmark evidence) and list 12 other entries as
+`catalogued`. Mechanism step results are not yet consumed by campaign outcomes,
+objective evaluations, or decision briefs; that path remains later work.
+
 ## Context
 
 ADR-002 established the domain-neutral kernel and the `DomainPack` boundary.

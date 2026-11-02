@@ -1,0 +1,249 @@
+[
+  {
+    "assurance_profile_content_hash": "96c0bdfeb2bf0596a6228478fb950bda0fc19da6f312c74c522eed1eb79746ee",
+    "assurance_profile_id": "assurance-profile-kalhas-pan-0-1-0",
+    "content_hash": "8817080ec194dc50aa2872fed07c6961e594ad6a076ba5d69c2c48c71795f5b8",
+    "declared_at": "2026-10-28T12:00:00Z",
+    "displayed_maturity": "experimental",
+    "identifier": "catalogue-entry-kalhas-pan-0-1-0",
+    "metadata": {
+      "roadmap_wave": "29-35"
+    },
+    "pack_id": "kalhas-pan",
+    "pack_version": "0.1.0",
+    "release_profile_content_hash": "a3f11759fa75e1e9486b7bd19c00d25a07bed1dc4029e2a940c0c861bd2b615b",
+    "release_profile_id": "release-profile-kalhas-pan-0-1-0",
+    "schema_version": "1.0.0",
+    "summary": "Public health & biosecurity: outbreak, capacity, stockpile and conditional intervention comparison (synthetic v0.1)",
+    "tenant_id": "kalhas-synthetic",
+    "title": "KALHAS PAN"
+  },
+  {
+    "assurance_profile_content_hash": null,
+    "assurance_profile_id": null,
+    "content_hash": "beea8e13500d8d477fb6af32f6c0aefe61d1572d651466cfd565877cd29738fc",
+    "declared_at": "2026-10-28T12:00:00Z",
+    "displayed_maturity": "catalogued",
+    "identifier": "catalogue-entry-kalhas-maritime-trade-0-1-0",
+    "metadata": {
+      "roadmap_wave": "34A-35"
+    },
+    "pack_id": "kalhas-maritime-trade",
+    "pack_version": "0.1.0",
+    "release_profile_content_hash": null,
+    "release_profile_id": null,
+    "schema_version": "1.0.0",
+    "summary": "Ports, chokepoints and strategic supply chains under declared disruption branches",
+    "tenant_id": "kalhas-synthetic",
+    "title": "KALHAS MARITIME-TRADE"
+  },
+  {
+    "assurance_profile_content_hash": null,
+    "assurance_profile_id": null,
+    "content_hash": "de0678bac4c03b17beee91684ae4fabf45179ee98b4299d4d6f9b87b7e18e74b",
+    "declared_at": "2026-10-28T12:00:00Z",
+    "displayed_maturity": "catalogued",
+    "identifier": "catalogue-entry-kalhas-quantum-readiness-0-1-0",
+    "metadata": {
+      "roadmap_wave": "post-35"
+    },
+    "pack_id": "kalhas-quantum-readiness",
+    "pack_version": "0.1.0",
+    "release_profile_content_hash": null,
+    "release_profile_id": null,
+    "schema_version": "1.0.0",
+    "summary": "Post-quantum cryptography transition planning; no cryptographic implementation, scanning, certification or quantum hardware",
+    "tenant_id": "kalhas-synthetic",
+    "title": "KALHAS QUANTUM-READINESS"
+  },
+  {
+    "assurance_profile_content_hash": null,
+    "assurance_profile_id": null,
+    "content_hash": "942b19e1bf5e708f55ccc9052494b858ec3033c05284072dd05da3d771055db1",
+    "declared_at": "2026-10-28T12:00:00Z",
+    "displayed_maturity": "catalogued",
+    "identifier": "catalogue-entry-kalhas-climate-civil-0-1-0",
+    "metadata": {
+      "roadmap_wave": "post-35"
+    },
+    "pack_id": "kalhas-climate-civil",
+    "pack_version": "0.1.0",
+    "release_profile_content_hash": null,
+    "release_profile_id": null,
+    "schema_version": "1.0.0",
+    "summary": "Extreme-weather impacts and civil protection from pinned offline hazard ensembles; never replaces meteorological authorities",
+    "tenant_id": "kalhas-synthetic",
+    "title": "KALHAS CLIMATE-CIVIL"
+  },
+  {
+    "assurance_profile_content_hash": null,
+    "assurance_profile_id": null,
+    "content_hash": "f6e573311ce823fa405bcf11743debb30f984086393bf6fee8833d9a2417709a",
+    "declared_at": "2026-10-28T12:00:00Z",
+    "displayed_maturity": "catalogued",
+    "identifier": "catalogue-entry-kalhas-energy-sec-0-1-0",
+    "metadata": {
+      "roadmap_wave": "post-35"
+    },
+    "pack_id": "kalhas-energy-sec",
+    "pack_version": "0.1.0",
+    "release_profile_content_hash": null,
+    "release_profile_id": null,
+    "schema_version": "1.0.0",
+    "summary": "Energy security: supply, storage, disruption and contingency scenarios",
+    "tenant_id": "kalhas-synthetic",
+    "title": "KALHAS ENERGY-SEC"
+  },
+  {
+    "assurance_profile_content_hash": null,
+    "assurance_profile_id": null,
+    "content_hash": "6f465204e873bdf7e61c2809b62b5f31acf1ae6b1036f1c93f170def5ae574c0",
+    "declared_at": "2026-10-28T12:00:00Z",
+    "displayed_maturity": "catalogued",
+    "identifier": "catalogue-entry-kalhas-food-water-0-1-0",
+    "metadata": {
+      "roadmap_wave": "post-35"
+    },
+    "pack_id": "kalhas-food-water",
+    "pack_version": "0.1.0",
+    "release_profile_content_hash": null,
+    "release_profile_id": null,
+    "schema_version": "1.0.0",
+    "summary": "Food and water security: shocks, reserves, allocation and affordability",
+    "tenant_id": "kalhas-synthetic",
+    "title": "KALHAS FOOD-WATER"
+  },
+  {
+    "assurance_profile_content_hash": null,
+    "assurance_profile_id": null,
+    "content_hash": "415ea7ed7149f6acd076b6d5446cef6e1c2de8e04cb2e63c22e0bf6e7d2f0aee",
+    "declared_at": "2026-10-28T12:00:00Z",
+    "displayed_maturity": "catalogued",
+    "identifier": "catalogue-entry-kalhas-cyber-digital-0-1-0",
+    "metadata": {
+      "roadmap_wave": "post-35"
+    },
+    "pack_id": "kalhas-cyber-digital",
+    "pack_version": "0.1.0",
+    "release_profile_content_hash": null,
+    "release_profile_id": null,
+    "schema_version": "1.0.0",
+    "summary": "Defensive digital-service resilience only; no exploit generation or live effects",
+    "tenant_id": "kalhas-synthetic",
+    "title": "KALHAS CYBER-DIGITAL"
+  },
+  {
+    "assurance_profile_content_hash": null,
+    "assurance_profile_id": null,
+    "content_hash": "36a50b971723d4bfbc4520665d4dcb7f781290ec2a2a45cc84b10287dbe6a19f",
+    "declared_at": "2026-10-28T12:00:00Z",
+    "displayed_maturity": "catalogued",
+    "identifier": "catalogue-entry-kalhas-critical-resilience-0-1-0",
+    "metadata": {
+      "roadmap_wave": "post-35"
+    },
+    "pack_id": "kalhas-critical-resilience",
+    "pack_version": "0.1.0",
+    "release_profile_content_hash": null,
+    "release_profile_id": null,
+    "schema_version": "1.0.0",
+    "summary": "Cross-sector infrastructure cascades and restoration order",
+    "tenant_id": "kalhas-synthetic",
+    "title": "KALHAS CRITICAL-RESILIENCE"
+  },
+  {
+    "assurance_profile_content_hash": null,
+    "assurance_profile_id": null,
+    "content_hash": "853b47f9fd10535e884a78c01180427085e83e5e374357c72f3dc50d3bdb4c64",
+    "declared_at": "2026-10-28T12:00:00Z",
+    "displayed_maturity": "catalogued",
+    "identifier": "catalogue-entry-kalhas-macro-fiscal-0-1-0",
+    "metadata": {
+      "roadmap_wave": "post-35"
+    },
+    "pack_id": "kalhas-macro-fiscal",
+    "pack_version": "0.1.0",
+    "release_profile_content_hash": null,
+    "release_profile_id": null,
+    "schema_version": "1.0.0",
+    "summary": "Conditional macro-fiscal scenarios; never an economic oracle or financial advice",
+    "tenant_id": "kalhas-synthetic",
+    "title": "KALHAS MACRO-FISCAL"
+  },
+  {
+    "assurance_profile_content_hash": null,
+    "assurance_profile_id": null,
+    "content_hash": "45375fff1b25a9539753346ae23a686bf17a7e3cf79b2a11f9f50c10207b4845",
+    "declared_at": "2026-10-28T12:00:00Z",
+    "displayed_maturity": "catalogued",
+    "identifier": "catalogue-entry-kalhas-demography-capacity-0-1-0",
+    "metadata": {
+      "roadmap_wave": "post-35"
+    },
+    "pack_id": "kalhas-demography-capacity",
+    "pack_version": "0.1.0",
+    "release_profile_content_hash": null,
+    "release_profile_id": null,
+    "schema_version": "1.0.0",
+    "summary": "Aggregate demography and public-service capacity; no individual scoring",
+    "tenant_id": "kalhas-synthetic",
+    "title": "KALHAS DEMOGRAPHY-CAPACITY"
+  },
+  {
+    "assurance_profile_content_hash": null,
+    "assurance_profile_id": null,
+    "content_hash": "32332427fa894b7760ed6ef579700b072cfbc0e5c78203245f1df778ea6ed280",
+    "declared_at": "2026-10-28T12:00:00Z",
+    "displayed_maturity": "catalogued",
+    "identifier": "catalogue-entry-kalhas-geo-policy-0-1-0",
+    "metadata": {
+      "roadmap_wave": "post-35"
+    },
+    "pack_id": "kalhas-geo-policy",
+    "pack_version": "0.1.0",
+    "release_profile_content_hash": null,
+    "release_profile_id": null,
+    "schema_version": "1.0.0",
+    "summary": "Declared geopolitical, trade and policy branches; no prediction of elections or persons, no persuasion",
+    "tenant_id": "kalhas-synthetic",
+    "title": "KALHAS GEO-POLICY"
+  },
+  {
+    "assurance_profile_content_hash": null,
+    "assurance_profile_id": null,
+    "content_hash": "197e50d1a5e39baf5abec2bfe064a2fc84f9ddc5f643103916f03fac3f760fb3",
+    "declared_at": "2026-10-28T12:00:00Z",
+    "displayed_maturity": "catalogued",
+    "identifier": "catalogue-entry-kalhas-robotics-0-1-0",
+    "metadata": {
+      "roadmap_wave": "post-35"
+    },
+    "pack_id": "kalhas-robotics",
+    "pack_version": "0.1.0",
+    "release_profile_content_hash": null,
+    "release_profile_id": null,
+    "schema_version": "1.0.0",
+    "summary": "Simulation-only fleet task allocation under energy, delay and failure constraints",
+    "tenant_id": "kalhas-synthetic",
+    "title": "KALHAS ROBOTICS"
+  },
+  {
+    "assurance_profile_content_hash": null,
+    "assurance_profile_id": null,
+    "content_hash": "343166bcd0b9b4ff1681d8bdbfee71f15a5c49e8a81df1102c391890d0df6f6c",
+    "declared_at": "2026-10-28T12:00:00Z",
+    "displayed_maturity": "catalogued",
+    "identifier": "catalogue-entry-kalhas-neuro-symbolic-0-1-0",
+    "metadata": {
+      "roadmap_wave": "post-35"
+    },
+    "pack_id": "kalhas-neuro-symbolic",
+    "pack_version": "0.1.0",
+    "release_profile_content_hash": null,
+    "release_profile_id": null,
+    "schema_version": "1.0.0",
+    "summary": "Evaluation of reasoning and planning with rules and frozen model outputs",
+    "tenant_id": "kalhas-synthetic",
+    "title": "KALHAS NEURO-SYMBOLIC"
+  }
+]

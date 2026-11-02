@@ -1,0 +1,91 @@
+{
+  "content_hash": "96c0bdfeb2bf0596a6228478fb950bda0fc19da6f312c74c522eed1eb79746ee",
+  "declared_at": "2026-10-28T12:00:00Z",
+  "evidence": [
+    {
+      "bound_claim_ids": [],
+      "content_hash": "7a0a65eb4e10fc12253a6513d8aa15256f18250926453f9a99d0ca54e2e6182e",
+      "covered_claim_ids": [],
+      "data_vintage": null,
+      "evidence_id": "pan-deterministic-execution-pack-tests",
+      "geography": null,
+      "horizon": null,
+      "kind": "deterministic_execution",
+      "reference": "tests/test_pan_domain_pack.py",
+      "review_state": null
+    },
+    {
+      "bound_claim_ids": [],
+      "content_hash": "18ff518151a71bc60f9476270834193055c1bc4dede0368e8b70b1eaf622c963",
+      "covered_claim_ids": [],
+      "data_vintage": null,
+      "evidence_id": "pan-deterministic-execution-runtime4-bridge",
+      "geography": null,
+      "horizon": null,
+      "kind": "deterministic_execution",
+      "reference": "tests/test_domain_mechanism_runtime.py",
+      "review_state": null
+    },
+    {
+      "bound_claim_ids": [],
+      "content_hash": "3d5e2709511f0d561b1a7e8917b36a9d87b90e705139c42e0d4afbf1d7903a04",
+      "covered_claim_ids": [],
+      "data_vintage": null,
+      "evidence_id": "pan-synthetic-conformance-shared-boundary",
+      "geography": null,
+      "horizon": null,
+      "kind": "synthetic_conformance",
+      "reference": "tests/test_phase29_shared_boundary_acceptance.py",
+      "review_state": null
+    },
+    {
+      "bound_claim_ids": [],
+      "content_hash": "4203ecb819b8670d2de891656de644489c4d245e88308d5324aa665dfbf6d660",
+      "covered_claim_ids": [],
+      "data_vintage": null,
+      "evidence_id": "pan-synthetic-conformance-phase29-boundaries",
+      "geography": null,
+      "horizon": null,
+      "kind": "synthetic_conformance",
+      "reference": "tests/test_phase29_boundaries.py",
+      "review_state": null
+    }
+  ],
+  "identifier": "assurance-profile-kalhas-pan-0-1-0",
+  "maturity": "experimental",
+  "metadata": {
+    "empirical_adequacy_claim": false,
+    "phase": "29",
+    "synthetic_only": true
+  },
+  "release_profile_content_hash": "a3f11759fa75e1e9486b7bd19c00d25a07bed1dc4029e2a940c0c861bd2b615b",
+  "release_profile_id": "release-profile-kalhas-pan-0-1-0",
+  "retained_failures": [],
+  "schema_version": "1.0.0",
+  "supported_claims": [
+    {
+      "claim_id": "deterministic-replay-on-recorded-platform",
+      "evidence_ids": [
+        "pan-deterministic-execution-pack-tests",
+        "pan-deterministic-execution-runtime4-bridge"
+      ],
+      "statement": "Identical verified requests produce byte-identical results under the recorded platform identity"
+    },
+    {
+      "claim_id": "declared-invariants-hold-on-synthetic-fixtures",
+      "evidence_ids": [
+        "pan-deterministic-execution-pack-tests"
+      ],
+      "statement": "Conservation, non-negativity and capacity invariants hold for the declared synthetic fixtures"
+    },
+    {
+      "claim_id": "generic-seam-without-kernel-change",
+      "evidence_ids": [
+        "pan-synthetic-conformance-shared-boundary",
+        "pan-synthetic-conformance-phase29-boundaries"
+      ],
+      "statement": "The pack executes through the generic dispatcher and Runtime-4 bridge with no domain-specific kernel code"
+    }
+  ],
+  "tenant_id": "kalhas-synthetic"
+}

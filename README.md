@@ -11,12 +11,12 @@ the decision-world engine in a strict three-role architecture alongside NEXUS
 
 [![CI](https://github.com/Encomm-Tensor-Intelligence/Encomm_Kalhas/actions/workflows/ci.yml/badge.svg)](https://github.com/Encomm-Tensor-Intelligence/Encomm_Kalhas/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](https://docs.astral.sh/uv/)
-[![Tests](https://img.shields.io/badge/tests-6%2C850%20passing-2ea44f)](#testing-and-verification)
-[![Phase](https://img.shields.io/badge/Phase%2028-complete-8250DF)](#phase-28--complete-and-published)
+[![Tests](https://img.shields.io/badge/tests-7%2C553%20green-2ea44f)](#testing-and-verification)
+[![Phase](https://img.shields.io/badge/Phase%2029-complete-8250DF)](#phase-29--complete)
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?logo=ruff)](#testing-and-verification)
 [![Formatting](https://img.shields.io/badge/format-ruff%20format-261230?logo=ruff)](#testing-and-verification)
 [![Types](https://img.shields.io/badge/types-mypy%20strict-1F6FEB)](#testing-and-verification)
-[![Schemas](https://img.shields.io/badge/schemas-55%20synchronized-F7C744)](#testing-and-verification)
+[![Schemas](https://img.shields.io/badge/schemas-61%20synchronized-F7C744)](#testing-and-verification)
 [![Replay](https://img.shields.io/badge/replay-deterministic-2ea44f)](#core-guarantees)
 
 </div>
@@ -31,13 +31,13 @@ strategies shares identical recorded conditions. Runtime evidence is
 **empirical and evidence-based under declared models and recorded assumptions
 — not calibrated and not certainty.** It performs no autonomous live action.
 
-The kernel is deliberately domain-neutral: domain concerns arrive only as
-declarative domain packs consumed through the `DomainPack` protocol, and the
-kernel never imports NEXUS or LEGION internals.
+The kernel is deliberately domain-neutral: domain concerns arrive only through
+explicitly supplied, versioned domain packs consumed through the `DomainPack`
+protocol, and the kernel never imports NEXUS or LEGION internals.
 
 ## Core guarantees
 
-- **Versioned public contracts.** All 55 public v1 contracts are frozen once
+- **Versioned public contracts.** All 61 public v1 contracts are frozen once
   shipped, with synchronized JSON Schema artifacts; breaking changes require a
   new version module and API segment, never in-place mutation.
 - **Deterministic replay.** Completed runs replay exactly, verified against
@@ -57,12 +57,13 @@ kernel never imports NEXUS or LEGION internals.
 
 | Area | What it provides |
 | --- | --- |
-| Contracts & lifecycle | 55 versioned v1 contracts, canonical serialization, content hashes, campaign lifecycle state machine |
+| Contracts & lifecycle | 61 versioned v1 contracts, canonical serialization, content hashes, campaign lifecycle state machine |
 | World models | Immutable world versions, domain-pack bindings, capability-input declarations, uncertainty declarations, deterministic realizations |
 | Campaign runtime | Structural, realization-aware (`3.0.0`), and adaptive (`4.0.0`) deterministic runtimes with exact replay |
 | Evidence | Run/campaign metric observations, empirical outcome distributions (Type-7 quantiles, fixed-alpha tails), objective evaluations |
 | Decision support | Immutable decision policies, paired same-seed comparisons, regret/robustness/Pareto evidence, deterministic briefs — read-only, no winners claimed |
 | Adaptive runtime 4.0.0 | Causal mid-run observations, closed bounded policy ASTs, dwell/cooldown/budget switching, exact adaptive replay |
+| Model Packs | Release/assurance/catalogue contracts, a pure mechanism dispatcher/runtime, the synthetic `KALHAS-PAN` v0.1 reference pack (`experimental`), the synthetic conformance fixture (`conformance_only`), and a 13-entry catalogue |
 | API | FastAPI v1 surface (46 paths / 57 operations), typed error envelope, OpenAPI docs |
 | Observability | Operational activity feed; optional local synthetic Colony UI |
 
@@ -87,13 +88,13 @@ flowchart LR
         direction TB
         API["FastAPI v1 surface<br/>46 paths · typed errors"]
         APP["application services<br/>runtimes 1.0.0 – 4.0.0"]
-        CON["versioned v1 contracts<br/>55 contracts · 55 JSON schemas"]
+        CON["versioned v1 contracts<br/>61 contracts · 61 JSON schemas"]
         STORE["in-memory store<br/>snapshots · evidence · replay"]
         API --> APP --> CON
         APP --> STORE
     end
 
-    PACK["domain packs<br/>declarative metadata only"]
+    PACK["versioned domain packs<br/>profiles · pure mechanisms"]
 
     NEXUS -->|NexusAdapter protocol| API
     LEGION -->|LegionAdapter protocol| API
@@ -135,15 +136,16 @@ lifecycle, while the test suite provides executable end-to-end examples.
 ## Testing and verification
 
 ```bash
-uv run pytest                              # full suite: 6,850 tests
+uv run pytest                              # full suite: 7,553 tests collected
 uv run ruff check .                        # lint
 uv run ruff format --check .               # formatting check
 uv run mypy kalhas tests                   # strict type check
 PYTHONPATH= uv run python scripts/export_schemas.py --check   # schema sync
+PYTHONPATH= uv run python scripts/export_model_pack_artifacts.py --check   # model pack sync
 ```
 
-Latest full-suite result: **6,850 tests, 0 failures, 0 errors, 0 skipped**
-(2026-09-02). `make check` runs the same gates where GNU make is available.
+Latest full-suite gate: **7,553 tests collected; exit code 0** (2026-11-01).
+`make check` runs the same gates where GNU make is available.
 
 ## Release status
 
@@ -174,9 +176,38 @@ API paths, causal observation/decision/switch evidence, and the unpatched
 exact-five-plus-adaptive acceptance proof (24 focused tests). The publication
 baseline passed 6,850 tests with 0 failures, 0 errors, and 0 skipped.
 
-### Phase 29 — not started
+## Phase 29 — complete
 
-KALHAS-PAN is not implemented. Phase 29 is outside the current release.
+Phase 29 is implementation-complete and gate-verified at checkpoint CP29-B. Its
+foundation was published at `1e15d14cac1594c1d74d724ce7f1b3cef6ad2609`: six
+public v1 contracts (indexes 55–60, 61 total), a pure fail-closed mechanism
+dispatcher/Runtime-4 bridge, and the synthetic `KALHAS-PAN` v0.1 reference pack.
+The completion work on top of it (slices H29-S07 through H29-S09) adds:
+
+- **Conformance fixture.** `kalhas-conformance-stockflow` 0.1.0 is a tiny
+  synthetic, non-health, integer stock-flow fixture under
+  `kalhas/domain_packs/conformance_stockflow/`. It is labeled
+  `conformance_only`; it is never a product pack, never a portfolio entry, and
+  never a substitute for KALHAS-MARITIME-TRADE.
+- **Shared-boundary proof.** PAN and the fixture traverse the same generic
+  dispatcher and Runtime-4 bridge under one identical authority chain. The
+  proof covers exact identities, one invocation per call, deterministic
+  evidence, cross-pack fail-closed cases (including a hybrid pack), and
+  cross-tenant rejection. There is zero domain-specific kernel change: no
+  module under `kalhas/` outside `kalhas/domain_packs/` names either pack.
+- **Assurance and catalogue artifacts.** `scripts/export_model_pack_artifacts.py`
+  deterministically generates three checked-in artifacts under `model_packs/v1/`
+  (two assurance profiles and a 13-entry catalogue), and `--check` verifies
+  them like `scripts/export_schemas.py --check`. No runtime surface loads them.
+- **Evidence-derived maturity.** PAN is `experimental`, derived only from
+  `synthetic_conformance` and `deterministic_execution` evidence; it has no
+  benchmark evidence, no external review, and no empirical adequacy claim. The
+  fixture is `conformance_only`. The other 12 entries are `catalogued`:
+  roadmap candidates only, with no implemented capability. Their list order is
+  not a delivery order, and only PAN (Phases 29–35) and MARITIME-TRADE
+  (34A–35) have a planned wave; the rest are `post-35`.
+
+See [`docs/model-packs/README.md`](docs/model-packs/README.md) for the catalogue.
 
 ## Documentation
 
@@ -185,7 +216,8 @@ KALHAS-PAN is not implemented. Phase 29 is outside the current release.
 | [`AGENTS.md`](AGENTS.md) | Durable repository rules and gates |
 | [`docs/architecture/README.md`](docs/architecture/README.md) | Layer map and dependency rules |
 | [`docs/architecture/contracts-and-lifecycle.md`](docs/architecture/contracts-and-lifecycle.md) | Contract versions, lifecycle, and hash discipline |
-| [`docs/decisions/`](docs/decisions/) | ADR 001–004 (integration boundaries, domain packs, immutable world contracts, adaptive runtime) |
+| [`docs/decisions/`](docs/decisions/) | ADR 001–005 (integration boundaries, domain packs, immutable world contracts, adaptive runtime, Model Pack mechanism/assurance) |
+| [`docs/model-packs/README.md`](docs/model-packs/README.md) | Model Pack maturity levels, the 13-entry catalogue, and the regeneration workflow |
 | [`CHANGELOG.md`](CHANGELOG.md) | Release and checkpoint timeline |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Workflow, gates, and acceptance rules |
 | [`SECURITY.md`](SECURITY.md) | Scope, reporting, and supported boundaries |
@@ -204,10 +236,24 @@ KALHAS-PAN is not implemented. Phase 29 is outside the current release.
   domain-neutral fixture worlds.
 - **Colony UI is synthetic.** The bundled observability UI renders mock
   activity and is intentionally separate from the verified evidence pipeline.
-- **Domain packs are declarative only.** Manifests, bindings, and declarations
-  are inert metadata; no pack is loaded or executed.
-- **KALHAS-PAN is not implemented.** Phase 29 (Model Pack foundation) has not
-  started and is not authorized.
+- **Executable packs are explicit and local.** The generic mechanism boundary
+  accepts an explicitly supplied, validated `DomainPack`; there is no dynamic
+  discovery, plugin loading, provider call, or pack-specific kernel import.
+- **KALHAS-PAN is a synthetic executable reference.** It is deterministic
+  architecture/mechanism evidence, not an epidemiological forecast. Its
+  maturity is `experimental` — deterministic execution and synthetic
+  conformance evidence only, no benchmark evidence, no empirical adequacy
+  claim; it has no real patient data, empirical calibration, external
+  scientific review, automatic API registration, or authority over a public
+  decision.
+- **Pack results stop at the runtime boundary.** Mechanism step results are
+  not yet consumed by campaign outcomes, objective evaluations, or decision
+  briefs, so the pack-to-runtime-to-brief path is proven only up to the runtime
+  boundary. The pack-to-brief evidence path is open work for a later, separately
+  authorized slice and is not claimed as done.
+- **Catalogue entries are not capabilities.** A `catalogued` entry is a roadmap
+  candidate with no implemented capability, no pack, and no planned delivery
+  order.
 - **No license yet.** No license has been selected; that is a separate
   explicit decision. All rights are reserved by the repository owner until a
   license is added.
