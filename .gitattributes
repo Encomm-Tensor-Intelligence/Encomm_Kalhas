@@ -6,3 +6,5 @@
 /tests/test_phase29_boundaries.py text eol=lf
 /tests/test_phase29_shared_boundary_acceptance.py text eol=lf
 /tests/test_conformance_stockflow_domain_pack.py text eol=lf
+# Raw dataset bundles are stored exactly as published: git must never change their bytes.
+/datasets/** -text

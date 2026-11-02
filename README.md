@@ -142,6 +142,7 @@ uv run ruff format --check .               # formatting check
 uv run mypy kalhas tests                   # strict type check
 PYTHONPATH= uv run python scripts/export_schemas.py --check   # schema sync
 PYTHONPATH= uv run python scripts/export_model_pack_artifacts.py --check   # model pack sync
+PYTHONPATH= uv run python scripts/verify_dataset_bundles.py --check   # dataset bundle check
 ```
 
 Latest full-suite gate: **7,553 tests collected; exit code 0** (2026-11-01).

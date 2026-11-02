@@ -50,6 +50,11 @@ jobs:
         env:
           PYTHONPATH: ""
 
+      - name: Dataset bundle verification
+        run: uv run python scripts/verify_dataset_bundles.py --check
+        env:
+          PYTHONPATH: ""
+
       - name: Pytest (full suite)
         run: uv run pytest
         env:

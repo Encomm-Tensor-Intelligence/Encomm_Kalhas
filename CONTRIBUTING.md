@@ -42,6 +42,7 @@ uv run ruff format --check .               # formatting
 uv run mypy kalhas tests                   # strict typing
 PYTHONPATH= uv run python scripts/export_schemas.py --check   # schema sync
 PYTHONPATH= uv run python scripts/export_model_pack_artifacts.py --check   # model pack sync
+PYTHONPATH= uv run python scripts/verify_dataset_bundles.py --check   # dataset bundle check
 ```
 
 Additional change-specific rules:
@@ -51,6 +52,8 @@ Additional change-specific rules:
   `uv run python scripts/export_schemas.py`.
 - `model_packs/v1/` artifacts are generated, never edited by hand, and are
   regenerated whenever an evidence module or pack release profile changes.
+- Raw dataset bundles under `datasets/v1/raw/` are immutable; a new vintage is a
+  new directory, never an edit of an existing bundle.
 - Do not add `skip`, `xfail`, `noqa`, `type: ignore`, or suppressed
   diagnostics to make gates pass.
 - No real company or personal data in code, fixtures, docs, or tests.

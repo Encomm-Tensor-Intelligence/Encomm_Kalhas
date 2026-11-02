@@ -1,0 +1,123 @@
+{
+  "bundle_hash": "8be52442820fde982c44a46b7e16bf1e13770a1f606687b86374482f94cd36b2",
+  "content_hash": "2d6064cd5cd53683e6852f22782334edf0db56772ecb5446831937cfad914a6d",
+  "data_subject_level": "aggregate",
+  "dataset_id": "ecdc-covid19-hospital-icu",
+  "declared_at": "2026-11-02T19:59:53Z",
+  "files": [
+    {
+      "byte_size": 2275510,
+      "columns": [
+        {
+          "missing_tokens": [],
+          "name": "country",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "indicator",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "date",
+          "unit": "none",
+          "value_type": "date"
+        },
+        {
+          "missing_tokens": [],
+          "name": "year_week",
+          "unit": "none",
+          "value_type": "iso_week"
+        },
+        {
+          "missing_tokens": [],
+          "name": "value",
+          "unit": "indicator-dependent",
+          "value_type": "decimal"
+        },
+        {
+          "missing_tokens": [],
+          "name": "source",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [
+            ""
+          ],
+          "name": "url",
+          "unit": "none",
+          "value_type": "string"
+        }
+      ],
+      "media_type": "text/csv",
+      "path": "data.csv",
+      "sha256": "61667aa74901eb09ce645605c486365b2e1d99fd1d22646f13eccd805afa9617"
+    }
+  ],
+  "geography_basis": {
+    "geography_columns": [
+      "country"
+    ],
+    "scheme": "country-name-as-published"
+  },
+  "identifier": "raw-dataset-ecdc-covid19-hospital-icu-2026-11-02",
+  "license": {
+    "attribution_statement": "Dataset provided by ECDC based on data provided by public health authorities, scientific institutes or health care providers in the relevant reporting countries and/or by WHO.",
+    "license_class": "attribution_commercial",
+    "license_id": "ecdc-third-party-database-reuse-terms",
+    "modifications_must_be_disclosed": true,
+    "scope_restrictions": [
+      "permission does not extend to identifiable third-party copyright material"
+    ],
+    "terms_locator": "https://www.ecdc.europa.eu/en/ecdc-intellectual-property-notices",
+    "terms_read_at": "2026-11-02T19:57:50Z"
+  },
+  "metadata": {
+    "acquisition": {
+      "byte_size": 2275510,
+      "etag": "\"ce555a236324da1:0\"",
+      "http_status": 200,
+      "last_modified": "Fri, 01 Dec 2023 14:31:57 GMT",
+      "retrieved_at_basis": "HTTP Date response header of the authoritative second GET (Mon, 02 Nov 2026 19:59:53 GMT)",
+      "url": "https://opendata.ecdc.europa.eu/covid19/hospitalicuadmissionrates/csv/data.csv"
+    },
+    "encoding_notes": "The published file begins with a UTF-8 byte order mark and uses LF line endings; the first header cell is country. Bytes are stored exactly as published.",
+    "indicator_units": {
+      "Daily ICU occupancy": "patients (COVID-19 patients in ICU on a given day)",
+      "Daily hospital occupancy": "patients (COVID-19 patients in hospital on a given day)",
+      "Weekly new ICU admissions per 100k": "new admissions of COVID-19 patients per 100 000 population per week",
+      "Weekly new hospital admissions per 100k": "new admissions of COVID-19 patients per 100 000 population per week"
+    },
+    "indicator_units_source": "https://www.ecdc.europa.eu/sites/default/files/documents/2021-01-13_Variable_Dictionary_and_Disclaimer_hosp_icu_all_data.pdf, variable table on pp. 1-2 (variable list labelled as of 20200813)",
+    "modification_notice": "none — raw bytes as published",
+    "register_entry": "R30-D01/D01",
+    "tenant_note": "kalhas-reference is the repository namespace for real public reference data; synthetic Phase 29 artifacts remain under kalhas-synthetic",
+    "time_notes": "The dictionary defines date only as 'Date for daily occupancy indicators' and year_week as YYYY-Www; it gives no separate definition of date for weekly rows. time_semantics observation_date follows the dictionary for daily occupancy rows. Daily occupancy rows and weekly admission rows coexist in the same file; in this file every weekly row carries a Sunday date and a year_week, which is a description of the bytes and not a dictionary definition.",
+    "title_note": "source.title is the publisher page title as inferred from its URL; the publisher page itself was not fetched in this intake."
+  },
+  "retrieved_at": "2026-11-02T19:59:53Z",
+  "revision_notes": "ECDC ceased updates on 1 December 2023 (final week 47 of 2023). Corrections after closure are not guaranteed (register entry R30-D01/D01, note U02).",
+  "revision_policy": "closed_series",
+  "schema_version": "1.0.0",
+  "source": {
+    "publisher": "European Centre for Disease Prevention and Control (ECDC)",
+    "publisher_release_id": null,
+    "source_locator": "https://www.ecdc.europa.eu/en/publications-data/download-data-hospital-and-icu-admission-rates-and-current-occupancy-covid-19",
+    "title": "Download data on hospital and ICU admission rates and current occupancy for COVID-19"
+  },
+  "tenant_id": "kalhas-reference",
+  "time_basis": {
+    "calendar": "iso_date",
+    "granularity": "day",
+    "time_columns": [
+      "date",
+      "year_week"
+    ],
+    "time_semantics": "observation_date"
+  },
+  "vintage": "2026-11-02"
+}
