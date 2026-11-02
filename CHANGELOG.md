@@ -63,6 +63,11 @@ independent audit before it is committed to `main`.
 
 - 7,553 tests collected; exit code 0 (2026-11-01).
 
+### Committed
+
+- `b3b19719bc9a7557800584a0d434bca75d7b24a9` — Phase 29: conformance
+  fixture, shared-boundary proof, Model Pack assurance/catalogue, closure docs.
+
 ## [Phase 29 foundation] — 2026-10-03
 
 ### Added

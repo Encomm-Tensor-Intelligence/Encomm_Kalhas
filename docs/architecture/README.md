@@ -1827,3 +1827,6 @@ done.
 Unchanged: the domain-neutral kernel, the frozen v1 contracts (still 61
 contracts and 61 schema artifacts), no live action, no network or provider call,
 no real data, synthetic fixtures only, and no cross-platform proof.
+
+The Phase 29 completion is committed and published at
+`b3b19719bc9a7557800584a0d434bca75d7b24a9`.

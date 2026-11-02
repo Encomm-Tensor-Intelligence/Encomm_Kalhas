@@ -16,6 +16,8 @@ _CHANGELOG_HEADING = "## [Phase 29] — 2026-11-01"
 _OVERLAY_HEADING = "## Phase 29 completion status (2026-11-01 closure overlay)"
 _ADR_PATH = "docs/decisions/ADR-005-versioned-domain-pack-mechanism-and-model-pack-assurance.md"
 _FOUNDATION_COMMIT = "1e15d14cac1594c1d74d724ce7f1b3cef6ad2609"
+_PUBLISHED_COMMIT = "b3b19719bc9a7557800584a0d434bca75d7b24a9"
+_README_HEADING = "## Phase 29 — complete and published"
 
 _REQUIRED_FACTS = (
     "kalhas-conformance-stockflow",
@@ -73,7 +75,7 @@ def _overlay(relative: str) -> str:
 
 
 def _readme_phase29_section() -> str:
-    return _from_heading("README.md", "## Phase 29 — complete", until="## ")
+    return _from_heading("README.md", _README_HEADING, until="## ")
 
 
 def _adr_new_note() -> str:
@@ -111,7 +113,7 @@ def test_phase29_facts_are_present_in_every_closure_document() -> None:
 def test_readme_phase29_status_is_single_and_numbers_agree() -> None:
     readme = _read("README.md")
     headings = [line for line in readme.splitlines() if line.startswith("## Phase 29")]
-    assert headings == ["## Phase 29 — complete"]
+    assert headings == [_README_HEADING]
     assert _FOUNDATION_COMMIT in _readme_phase29_section()
 
     badge = re.search(r"badge/tests-([0-9%A-F]+)%20green", readme)
@@ -168,6 +170,18 @@ def test_gitattributes_pins_lf_for_every_evidence_reference() -> None:
         for evidence in profile["evidence"]:
             pin = f"/{evidence['reference']} text eol=lf"
             assert pin in lines, f"{pin!r} missing from .gitattributes"
+
+
+def test_phase29_publication_commit_is_recorded() -> None:
+    assert _PUBLISHED_COMMIT in _readme_phase29_section()
+    entry = _changelog_entry()
+    assert "### Committed" in entry
+    assert _PUBLISHED_COMMIT in entry.split("### Committed", 1)[1]
+    for relative in (
+        "docs/architecture/README.md",
+        "docs/architecture/contracts-and-lifecycle.md",
+    ):
+        assert _PUBLISHED_COMMIT in _overlay(relative), relative
 
 
 def test_adr005_records_the_closure_note_and_keeps_the_foundation_note() -> None:

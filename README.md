@@ -12,7 +12,7 @@ the decision-world engine in a strict three-role architecture alongside NEXUS
 [![CI](https://github.com/Encomm-Tensor-Intelligence/Encomm_Kalhas/actions/workflows/ci.yml/badge.svg)](https://github.com/Encomm-Tensor-Intelligence/Encomm_Kalhas/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](https://docs.astral.sh/uv/)
 [![Tests](https://img.shields.io/badge/tests-7%2C553%20green-2ea44f)](#testing-and-verification)
-[![Phase](https://img.shields.io/badge/Phase%2029-complete-8250DF)](#phase-29--complete)
+[![Phase](https://img.shields.io/badge/Phase%2029-complete-8250DF)](#phase-29--complete-and-published)
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?logo=ruff)](#testing-and-verification)
 [![Formatting](https://img.shields.io/badge/format-ruff%20format-261230?logo=ruff)](#testing-and-verification)
 [![Types](https://img.shields.io/badge/types-mypy%20strict-1F6FEB)](#testing-and-verification)
@@ -176,9 +176,10 @@ API paths, causal observation/decision/switch evidence, and the unpatched
 exact-five-plus-adaptive acceptance proof (24 focused tests). The publication
 baseline passed 6,850 tests with 0 failures, 0 errors, and 0 skipped.
 
-## Phase 29 — complete
+## Phase 29 — complete and published
 
-Phase 29 is implementation-complete and gate-verified at checkpoint CP29-B. Its
+Phase 29 is implementation-complete, gate-verified at checkpoint CP29-B,
+committed, and published at `b3b19719bc9a7557800584a0d434bca75d7b24a9`. Its
 foundation was published at `1e15d14cac1594c1d74d724ce7f1b3cef6ad2609`: six
 public v1 contracts (indexes 55–60, 61 total), a pure fail-closed mechanism
 dispatcher/Runtime-4 bridge, and the synthetic `KALHAS-PAN` v0.1 reference pack.
