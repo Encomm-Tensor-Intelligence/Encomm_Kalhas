@@ -1,0 +1,393 @@
+{
+  "bundle_hash": "c8fee2790fa1ed1ebdddca237531c6b70f092c404b507c30501b49568f243e0e",
+  "content_hash": "418e2fc4d1e0d9130a3c751a507216baf37e6447d7ecfb4dc0ee631cd475ac2c",
+  "curated_dataset_id": "ecdc-covid19-hospital-icu-by-indicator",
+  "curation_version": "1.0.0",
+  "declared_at": "2026-11-03T07:54:06.472067Z",
+  "files": [
+    {
+      "byte_size": 485641,
+      "columns": [
+        {
+          "missing_tokens": [],
+          "name": "country",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "date",
+          "unit": "none",
+          "value_type": "date"
+        },
+        {
+          "missing_tokens": [],
+          "name": "value",
+          "unit": "indicator-dependent",
+          "value_type": "decimal"
+        },
+        {
+          "missing_tokens": [],
+          "name": "source",
+          "unit": "none",
+          "value_type": "string"
+        }
+      ],
+      "media_type": "text/csv",
+      "path": "daily-hospital-occupancy.csv",
+      "sha256": "f8a0c3bf1f2ee60b834a4f50beccf5d1615a75b17ed55d69d65419f2b45f7835"
+    },
+    {
+      "byte_size": 401594,
+      "columns": [
+        {
+          "missing_tokens": [],
+          "name": "country",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "date",
+          "unit": "none",
+          "value_type": "date"
+        },
+        {
+          "missing_tokens": [],
+          "name": "value",
+          "unit": "indicator-dependent",
+          "value_type": "decimal"
+        },
+        {
+          "missing_tokens": [],
+          "name": "source",
+          "unit": "none",
+          "value_type": "string"
+        }
+      ],
+      "media_type": "text/csv",
+      "path": "daily-icu-occupancy.csv",
+      "sha256": "00e2a5acf7591953f14708bd199e3d3de46e508944ae14cb9a8e751f4f6bae39"
+    },
+    {
+      "byte_size": 187416,
+      "columns": [
+        {
+          "missing_tokens": [],
+          "name": "country",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "year_week",
+          "unit": "none",
+          "value_type": "iso_week"
+        },
+        {
+          "missing_tokens": [],
+          "name": "value",
+          "unit": "indicator-dependent",
+          "value_type": "decimal"
+        },
+        {
+          "missing_tokens": [],
+          "name": "source",
+          "unit": "none",
+          "value_type": "string"
+        }
+      ],
+      "media_type": "text/csv",
+      "path": "weekly-hospital-admissions-per-100k.csv",
+      "sha256": "6e009d782f196cbbf1f58a8098355be2a25628baca9b31666bf5627015ebf2d1"
+    },
+    {
+      "byte_size": 154284,
+      "columns": [
+        {
+          "missing_tokens": [],
+          "name": "country",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "year_week",
+          "unit": "none",
+          "value_type": "iso_week"
+        },
+        {
+          "missing_tokens": [],
+          "name": "value",
+          "unit": "indicator-dependent",
+          "value_type": "decimal"
+        },
+        {
+          "missing_tokens": [],
+          "name": "source",
+          "unit": "none",
+          "value_type": "string"
+        }
+      ],
+      "media_type": "text/csv",
+      "path": "weekly-icu-admissions-per-100k.csv",
+      "sha256": "56b2b4dd7f8469231f75004c9d0a0af09a44555a7ecdc05457dede05ac98232a"
+    }
+  ],
+  "geography_basis": {
+    "geography_columns": [
+      "country"
+    ],
+    "scheme": "country-name-as-published"
+  },
+  "identifier": "curated-dataset-ecdc-covid19-hospital-icu-by-indicator-1.0.0",
+  "inputs": [
+    {
+      "raw_bundle_hash": "8be52442820fde982c44a46b7e16bf1e13770a1f606687b86374482f94cd36b2",
+      "raw_content_hash": "2d6064cd5cd53683e6852f22782334edf0db56772ecb5446831937cfad914a6d",
+      "raw_manifest_id": "raw-dataset-ecdc-covid19-hospital-icu-2026-11-02"
+    }
+  ],
+  "license": {
+    "attribution_statement": "Dataset provided by ECDC based on data provided by public health authorities, scientific institutes or health care providers in the relevant reporting countries and/or by WHO.",
+    "license_class": "attribution_commercial",
+    "license_id": "ecdc-third-party-database-reuse-terms",
+    "modifications_must_be_disclosed": true,
+    "scope_restrictions": [
+      "permission does not extend to identifiable third-party copyright material"
+    ],
+    "terms_locator": "https://www.ecdc.europa.eu/en/ecdc-intellectual-property-notices",
+    "terms_read_at": "2026-11-02T19:57:50Z"
+  },
+  "metadata": {
+    "output_units": {
+      "daily-hospital-occupancy.csv": "patients (COVID-19 patients in hospital on a given day)",
+      "daily-icu-occupancy.csv": "patients (COVID-19 patients in ICU on a given day)",
+      "weekly-hospital-admissions-per-100k.csv": "new admissions of COVID-19 patients per 100 000 population per week",
+      "weekly-icu-admissions-per-100k.csv": "new admissions of COVID-19 patients per 100 000 population per week"
+    },
+    "output_units_source": "raw-dataset-ecdc-covid19-hospital-icu-2026-11-02",
+    "time_notes": "Daily files carry date; weekly files carry year_week."
+  },
+  "modification_notice": "Removed the UTF-8 byte order mark; split the rows by indicator into four files; kept the columns country, the time column (date for daily files, year_week for weekly files), value and source; dropped the columns indicator and url, and dropped year_week from daily files and date from weekly files; validated the declared types; sorted by country and time. No value was changed, aggregated, imputed, interpolated or converted.",
+  "plan": {
+    "outputs": [
+      {
+        "output_path": "daily-hospital-occupancy.csv",
+        "source_manifest_id": "raw-dataset-ecdc-covid19-hospital-icu-2026-11-02",
+        "source_path": "data.csv",
+        "steps": [
+          {
+            "encoding": "utf-8-sig",
+            "op": "decode_text"
+          },
+          {
+            "op": "parse_csv"
+          },
+          {
+            "column": "indicator",
+            "op": "filter_rows_in",
+            "values": [
+              "Daily hospital occupancy"
+            ]
+          },
+          {
+            "columns": [
+              "country",
+              "date",
+              "value",
+              "source"
+            ],
+            "op": "select_columns"
+          },
+          {
+            "op": "cast_columns",
+            "types": {
+              "date": "date",
+              "value": "decimal"
+            }
+          },
+          {
+            "columns": [
+              "country",
+              "date"
+            ],
+            "op": "require_unique_key"
+          },
+          {
+            "columns": [
+              "country",
+              "date"
+            ],
+            "op": "sort_rows"
+          }
+        ]
+      },
+      {
+        "output_path": "daily-icu-occupancy.csv",
+        "source_manifest_id": "raw-dataset-ecdc-covid19-hospital-icu-2026-11-02",
+        "source_path": "data.csv",
+        "steps": [
+          {
+            "encoding": "utf-8-sig",
+            "op": "decode_text"
+          },
+          {
+            "op": "parse_csv"
+          },
+          {
+            "column": "indicator",
+            "op": "filter_rows_in",
+            "values": [
+              "Daily ICU occupancy"
+            ]
+          },
+          {
+            "columns": [
+              "country",
+              "date",
+              "value",
+              "source"
+            ],
+            "op": "select_columns"
+          },
+          {
+            "op": "cast_columns",
+            "types": {
+              "date": "date",
+              "value": "decimal"
+            }
+          },
+          {
+            "columns": [
+              "country",
+              "date"
+            ],
+            "op": "require_unique_key"
+          },
+          {
+            "columns": [
+              "country",
+              "date"
+            ],
+            "op": "sort_rows"
+          }
+        ]
+      },
+      {
+        "output_path": "weekly-hospital-admissions-per-100k.csv",
+        "source_manifest_id": "raw-dataset-ecdc-covid19-hospital-icu-2026-11-02",
+        "source_path": "data.csv",
+        "steps": [
+          {
+            "encoding": "utf-8-sig",
+            "op": "decode_text"
+          },
+          {
+            "op": "parse_csv"
+          },
+          {
+            "column": "indicator",
+            "op": "filter_rows_in",
+            "values": [
+              "Weekly new hospital admissions per 100k"
+            ]
+          },
+          {
+            "columns": [
+              "country",
+              "year_week",
+              "value",
+              "source"
+            ],
+            "op": "select_columns"
+          },
+          {
+            "op": "cast_columns",
+            "types": {
+              "value": "decimal",
+              "year_week": "iso_week"
+            }
+          },
+          {
+            "columns": [
+              "country",
+              "year_week"
+            ],
+            "op": "require_unique_key"
+          },
+          {
+            "columns": [
+              "country",
+              "year_week"
+            ],
+            "op": "sort_rows"
+          }
+        ]
+      },
+      {
+        "output_path": "weekly-icu-admissions-per-100k.csv",
+        "source_manifest_id": "raw-dataset-ecdc-covid19-hospital-icu-2026-11-02",
+        "source_path": "data.csv",
+        "steps": [
+          {
+            "encoding": "utf-8-sig",
+            "op": "decode_text"
+          },
+          {
+            "op": "parse_csv"
+          },
+          {
+            "column": "indicator",
+            "op": "filter_rows_in",
+            "values": [
+              "Weekly new ICU admissions per 100k"
+            ]
+          },
+          {
+            "columns": [
+              "country",
+              "year_week",
+              "value",
+              "source"
+            ],
+            "op": "select_columns"
+          },
+          {
+            "op": "cast_columns",
+            "types": {
+              "value": "decimal",
+              "year_week": "iso_week"
+            }
+          },
+          {
+            "columns": [
+              "country",
+              "year_week"
+            ],
+            "op": "require_unique_key"
+          },
+          {
+            "columns": [
+              "country",
+              "year_week"
+            ],
+            "op": "sort_rows"
+          }
+        ]
+      }
+    ],
+    "vocabulary_version": "1.0.0"
+  },
+  "schema_version": "1.0.0",
+  "tenant_id": "kalhas-reference",
+  "time_basis": {
+    "calendar": "iso_date",
+    "granularity": "day",
+    "time_columns": [
+      "date",
+      "year_week"
+    ],
+    "time_semantics": "observation_date"
+  }
+}

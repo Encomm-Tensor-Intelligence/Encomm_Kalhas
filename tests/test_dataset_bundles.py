@@ -324,3 +324,67 @@ def test_a_curated_directory_without_a_manifest_fails(chain_root: Path) -> None:
     result = _run(chain_root)
     assert result.returncode == 1
     assert "missing_manifest" in result.stdout
+
+
+# --- committed ECDC curated bundle (H30-D02) ---------------------------------------------
+
+
+ECDC_CURATED = "ecdc-covid19-hospital-icu-by-indicator"
+ECDC_CURATED_PATH = f"datasets/v1/curated/{ECDC_CURATED}/1.0.0"
+ECDC_OUTPUTS = {
+    "daily-hospital-occupancy.csv",
+    "daily-icu-occupancy.csv",
+    "weekly-hospital-admissions-per-100k.csv",
+    "weekly-icu-admissions-per-100k.csv",
+}
+
+
+def test_committed_ecdc_curated_bundle_and_completeness() -> None:
+    import csv
+
+    from kalhas.contracts.v1.curated_dataset import CuratedDatasetManifest
+
+    directory = REPO_ROOT / ECDC_CURATED_PATH
+    manifest = CuratedDatasetManifest.model_validate_json(
+        (directory / "manifest.json").read_bytes()
+    )
+    raw = _ecdc_manifest()
+    assert manifest.tenant_id == "kalhas-reference"
+    assert manifest.license == raw.license
+    assert {file.path for file in manifest.files} == ECDC_OUTPUTS
+    assert len(manifest.files) == 4
+
+    def row_count(path: Path, encoding: str) -> int:
+        with path.open(encoding=encoding, newline="") as source:
+            reader = csv.reader(source)
+            next(reader)
+            return sum(1 for _ in reader)
+
+    raw_count = row_count(_ecdc_manifest_path().parent / "data.csv", "utf-8-sig")
+    assert sum(row_count(directory / name, "utf-8") for name in ECDC_OUTPUTS) == raw_count
+
+    readme = (REPO_ROOT / "datasets/README.md").read_text(encoding="utf-8")
+    assert raw.license.attribution_statement is not None
+    assert raw.license.attribution_statement in readme
+    assert manifest.modification_notice in readme
+
+    result = _run(REPO_ROOT)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert f"ok {ECDC_CURATED_PATH}" in result.stdout
+
+
+def test_committed_ecdc_curated_byte_tamper_fails(copied_root: Path) -> None:
+    data = copied_root / ECDC_CURATED_PATH / "daily-hospital-occupancy.csv"
+    content = bytearray(data.read_bytes())
+    content[-2] ^= 0x01
+    data.write_bytes(bytes(content))
+    result = _run(copied_root)
+    assert result.returncode == 1
+    assert f"FAIL {ECDC_CURATED_PATH}: sha256_mismatch" in result.stdout
+
+
+def test_committed_ecdc_curated_missing_file_fails(copied_root: Path) -> None:
+    (copied_root / ECDC_CURATED_PATH / "daily-hospital-occupancy.csv").unlink()
+    result = _run(copied_root)
+    assert result.returncode == 1
+    assert f"FAIL {ECDC_CURATED_PATH}: missing_file" in result.stdout
