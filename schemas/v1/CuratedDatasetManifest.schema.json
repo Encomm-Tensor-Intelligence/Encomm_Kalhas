@@ -1,0 +1,705 @@
+{
+  "$defs": {
+    "CastColumnsStep": {
+      "additionalProperties": false,
+      "description": "Validate columns against a target type; the text is kept verbatim.",
+      "properties": {
+        "op": {
+          "const": "cast_columns",
+          "title": "Op",
+          "type": "string"
+        },
+        "types": {
+          "additionalProperties": {
+            "enum": [
+              "string",
+              "integer",
+              "decimal",
+              "date",
+              "iso_week"
+            ],
+            "type": "string"
+          },
+          "minProperties": 1,
+          "propertyNames": {
+            "minLength": 1
+          },
+          "title": "Types",
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "types"
+      ],
+      "title": "CastColumnsStep",
+      "type": "object"
+    },
+    "CuratedOutputPlan": {
+      "additionalProperties": false,
+      "description": "The ordered steps that produce one output file from one raw file.",
+      "properties": {
+        "output_path": {
+          "title": "Output Path",
+          "type": "string"
+        },
+        "source_manifest_id": {
+          "minLength": 1,
+          "title": "Source Manifest Id",
+          "type": "string"
+        },
+        "source_path": {
+          "title": "Source Path",
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "cast_columns": "#/$defs/CastColumnsStep",
+                "decode_text": "#/$defs/DecodeTextStep",
+                "filter_rows_in": "#/$defs/FilterRowsInStep",
+                "parse_csv": "#/$defs/ParseCsvStep",
+                "rename_columns": "#/$defs/RenameColumnsStep",
+                "require_unique_key": "#/$defs/RequireUniqueKeyStep",
+                "select_columns": "#/$defs/SelectColumnsStep",
+                "sort_rows": "#/$defs/SortRowsStep"
+              },
+              "propertyName": "op"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/DecodeTextStep"
+              },
+              {
+                "$ref": "#/$defs/ParseCsvStep"
+              },
+              {
+                "$ref": "#/$defs/SelectColumnsStep"
+              },
+              {
+                "$ref": "#/$defs/RenameColumnsStep"
+              },
+              {
+                "$ref": "#/$defs/FilterRowsInStep"
+              },
+              {
+                "$ref": "#/$defs/CastColumnsStep"
+              },
+              {
+                "$ref": "#/$defs/RequireUniqueKeyStep"
+              },
+              {
+                "$ref": "#/$defs/SortRowsStep"
+              }
+            ]
+          },
+          "minItems": 2,
+          "title": "Steps",
+          "type": "array"
+        }
+      },
+      "required": [
+        "output_path",
+        "source_manifest_id",
+        "source_path",
+        "steps"
+      ],
+      "title": "CuratedOutputPlan",
+      "type": "object"
+    },
+    "DecodeTextStep": {
+      "additionalProperties": false,
+      "description": "Decode the source bytes as text (mandatory first step).",
+      "properties": {
+        "encoding": {
+          "enum": [
+            "utf-8",
+            "utf-8-sig"
+          ],
+          "title": "Encoding",
+          "type": "string"
+        },
+        "op": {
+          "const": "decode_text",
+          "title": "Op",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "encoding"
+      ],
+      "title": "DecodeTextStep",
+      "type": "object"
+    },
+    "FilterRowsInStep": {
+      "additionalProperties": false,
+      "description": "Keep rows whose raw ``column`` text is in a declared value list.",
+      "properties": {
+        "column": {
+          "minLength": 1,
+          "title": "Column",
+          "type": "string"
+        },
+        "op": {
+          "const": "filter_rows_in",
+          "title": "Op",
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "op",
+        "column",
+        "values"
+      ],
+      "title": "FilterRowsInStep",
+      "type": "object"
+    },
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ParseCsvStep": {
+      "additionalProperties": false,
+      "description": "Parse CSV: comma delimiter, double-quote quoting, first row is the header.",
+      "properties": {
+        "op": {
+          "const": "parse_csv",
+          "title": "Op",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "title": "ParseCsvStep",
+      "type": "object"
+    },
+    "RawDatasetColumn": {
+      "additionalProperties": false,
+      "description": "One declared column of one raw file (declared, never inferred).",
+      "properties": {
+        "missing_tokens": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Tokens",
+          "type": "array"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "unit": {
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value_type": {
+          "enum": [
+            "string",
+            "integer",
+            "decimal",
+            "date",
+            "iso_week",
+            "boolean"
+          ],
+          "title": "Value Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "value_type",
+        "unit"
+      ],
+      "title": "RawDatasetColumn",
+      "type": "object"
+    },
+    "RawDatasetFile": {
+      "additionalProperties": false,
+      "description": "One declared raw file: relative path, size, SHA-256, type, columns.",
+      "properties": {
+        "byte_size": {
+          "exclusiveMinimum": 0,
+          "title": "Byte Size",
+          "type": "integer"
+        },
+        "columns": {
+          "items": {
+            "$ref": "#/$defs/RawDatasetColumn"
+          },
+          "minItems": 1,
+          "title": "Columns",
+          "type": "array"
+        },
+        "media_type": {
+          "enum": [
+            "text/csv",
+            "application/json",
+            "application/xml"
+          ],
+          "title": "Media Type",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "byte_size",
+        "sha256",
+        "media_type",
+        "columns"
+      ],
+      "title": "RawDatasetFile",
+      "type": "object"
+    },
+    "RawDatasetGeographyBasis": {
+      "additionalProperties": false,
+      "description": "Declared geography basis of a bundle (declared, never inferred).",
+      "properties": {
+        "geography_columns": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Geography Columns",
+          "type": "array"
+        },
+        "scheme": {
+          "minLength": 1,
+          "title": "Scheme",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scheme",
+        "geography_columns"
+      ],
+      "title": "RawDatasetGeographyBasis",
+      "type": "object"
+    },
+    "RawDatasetLicense": {
+      "additionalProperties": false,
+      "description": "Declared license terms of one raw dataset (declarative only).\n\nExactly two license classes are representable. ``terms_locator`` is\nopaque text that is recorded and never dereferenced.",
+      "properties": {
+        "attribution_statement": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attribution Statement"
+        },
+        "license_class": {
+          "enum": [
+            "public_domain",
+            "attribution_commercial"
+          ],
+          "title": "License Class",
+          "type": "string"
+        },
+        "license_id": {
+          "minLength": 1,
+          "title": "License Id",
+          "type": "string"
+        },
+        "modifications_must_be_disclosed": {
+          "title": "Modifications Must Be Disclosed",
+          "type": "boolean"
+        },
+        "scope_restrictions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Scope Restrictions",
+          "type": "array"
+        },
+        "terms_locator": {
+          "minLength": 1,
+          "title": "Terms Locator",
+          "type": "string"
+        },
+        "terms_read_at": {
+          "format": "date-time",
+          "title": "Terms Read At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "license_class",
+        "license_id",
+        "terms_locator",
+        "terms_read_at",
+        "modifications_must_be_disclosed"
+      ],
+      "title": "RawDatasetLicense",
+      "type": "object"
+    },
+    "RawDatasetReference": {
+      "additionalProperties": false,
+      "description": "An exact reference to one raw dataset manifest and its bundle.",
+      "properties": {
+        "raw_bundle_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Raw Bundle Hash",
+          "type": "string"
+        },
+        "raw_content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Raw Content Hash",
+          "type": "string"
+        },
+        "raw_manifest_id": {
+          "minLength": 1,
+          "title": "Raw Manifest Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "raw_manifest_id",
+        "raw_content_hash",
+        "raw_bundle_hash"
+      ],
+      "title": "RawDatasetReference",
+      "type": "object"
+    },
+    "RawDatasetTimeBasis": {
+      "additionalProperties": false,
+      "description": "Declared time basis of a bundle (declared, never inferred).",
+      "properties": {
+        "calendar": {
+          "enum": [
+            "iso_date",
+            "iso_week",
+            "year",
+            "year_month"
+          ],
+          "title": "Calendar",
+          "type": "string"
+        },
+        "granularity": {
+          "enum": [
+            "day",
+            "week",
+            "month",
+            "year"
+          ],
+          "title": "Granularity",
+          "type": "string"
+        },
+        "time_columns": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Time Columns",
+          "type": "array"
+        },
+        "time_semantics": {
+          "enum": [
+            "observation_date",
+            "reporting_date",
+            "reference_period"
+          ],
+          "title": "Time Semantics",
+          "type": "string"
+        }
+      },
+      "required": [
+        "calendar",
+        "granularity",
+        "time_columns",
+        "time_semantics"
+      ],
+      "title": "RawDatasetTimeBasis",
+      "type": "object"
+    },
+    "RenameColumnsStep": {
+      "additionalProperties": false,
+      "description": "Rename existing columns to new, unique names.",
+      "properties": {
+        "mapping": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minProperties": 1,
+          "propertyNames": {
+            "minLength": 1
+          },
+          "title": "Mapping",
+          "type": "object"
+        },
+        "op": {
+          "const": "rename_columns",
+          "title": "Op",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "mapping"
+      ],
+      "title": "RenameColumnsStep",
+      "type": "object"
+    },
+    "RequireUniqueKeyStep": {
+      "additionalProperties": false,
+      "description": "Fail the plan unless these columns are unique across rows.",
+      "properties": {
+        "columns": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Columns",
+          "type": "array"
+        },
+        "op": {
+          "const": "require_unique_key",
+          "title": "Op",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "columns"
+      ],
+      "title": "RequireUniqueKeyStep",
+      "type": "object"
+    },
+    "SelectColumnsStep": {
+      "additionalProperties": false,
+      "description": "Keep exactly these existing columns, in this order.",
+      "properties": {
+        "columns": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Columns",
+          "type": "array"
+        },
+        "op": {
+          "const": "select_columns",
+          "title": "Op",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "columns"
+      ],
+      "title": "SelectColumnsStep",
+      "type": "object"
+    },
+    "SortRowsStep": {
+      "additionalProperties": false,
+      "description": "Stable ascending sort by these columns using typed comparison.",
+      "properties": {
+        "columns": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Columns",
+          "type": "array"
+        },
+        "op": {
+          "const": "sort_rows",
+          "title": "Op",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "columns"
+      ],
+      "title": "SortRowsStep",
+      "type": "object"
+    },
+    "TransformationPlan": {
+      "additionalProperties": false,
+      "description": "A closed, declarative plan with one or more named outputs.",
+      "properties": {
+        "outputs": {
+          "items": {
+            "$ref": "#/$defs/CuratedOutputPlan"
+          },
+          "minItems": 1,
+          "title": "Outputs",
+          "type": "array"
+        },
+        "vocabulary_version": {
+          "const": "1.0.0",
+          "title": "Vocabulary Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vocabulary_version",
+        "outputs"
+      ],
+      "title": "TransformationPlan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Immutable declarative identity of one curated dataset bundle.\n\n``identifier`` must equal ``curated-dataset-<curated_dataset_id>-\n<curation_version>``. Inputs are unique and sorted by raw manifest\nidentifier, and every plan output must name one of them. The declared\nfiles must be ``text/csv`` and their paths must equal the plan output\npaths exactly, in the same order, within 25 MiB in total. Time and\ngeography columns must name declared output columns. The contract\nchecks shape only: the hashes are recomputed by the pure verifier.",
+  "properties": {
+    "bundle_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Bundle Hash",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "curated_dataset_id": {
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "title": "Curated Dataset Id",
+      "type": "string"
+    },
+    "curation_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Curation Version",
+      "type": "string"
+    },
+    "declared_at": {
+      "format": "date-time",
+      "title": "Declared At",
+      "type": "string"
+    },
+    "files": {
+      "items": {
+        "$ref": "#/$defs/RawDatasetFile"
+      },
+      "minItems": 1,
+      "title": "Files",
+      "type": "array"
+    },
+    "geography_basis": {
+      "$ref": "#/$defs/RawDatasetGeographyBasis"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "inputs": {
+      "items": {
+        "$ref": "#/$defs/RawDatasetReference"
+      },
+      "minItems": 1,
+      "title": "Inputs",
+      "type": "array"
+    },
+    "license": {
+      "$ref": "#/$defs/RawDatasetLicense"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "modification_notice": {
+      "minLength": 1,
+      "title": "Modification Notice",
+      "type": "string"
+    },
+    "plan": {
+      "$ref": "#/$defs/TransformationPlan"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "time_basis": {
+      "$ref": "#/$defs/RawDatasetTimeBasis"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "curated_dataset_id",
+    "curation_version",
+    "inputs",
+    "plan",
+    "license",
+    "modification_notice",
+    "files",
+    "bundle_hash",
+    "time_basis",
+    "geography_basis",
+    "content_hash",
+    "declared_at"
+  ],
+  "title": "CuratedDatasetManifest",
+  "type": "object"
+}

@@ -22,6 +22,7 @@ from kalhas.contracts.v1.campaign_metric_observation import CampaignMetricObserv
 from kalhas.contracts.v1.campaign_metric_statistics import CampaignMetricStatisticsMatrix
 from kalhas.contracts.v1.campaign_outcome import CampaignOutcomeDistributionMatrix
 from kalhas.contracts.v1.campaign_trajectory import CampaignTrajectoryMatrix
+from kalhas.contracts.v1.curated_dataset import CuratedDatasetManifest
 from kalhas.contracts.v1.dataset import RawDatasetManifest
 from kalhas.contracts.v1.domain_mechanism import (
     DomainMechanismSpec,
@@ -3114,6 +3115,66 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         "geography_basis": {"scheme": "synthetic-regions", "geography_columns": ["region"]},
         "revision_policy": "closed_series",
         "revision_notes": "",
+        "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "declared_at": NOW,
+        "metadata": {"owner": "foundation"},
+    },
+    CuratedDatasetManifest: {
+        "identifier": "curated-dataset-synthetic-clean-1.0.0",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "curated_dataset_id": "synthetic-clean",
+        "curation_version": "1.0.0",
+        "inputs": [
+            {
+                "raw_manifest_id": "raw-dataset-synthetic-counts-2026-01-01",
+                "raw_content_hash": "0" * 64,
+                "raw_bundle_hash": "0" * 64,
+            }
+        ],
+        "plan": {
+            "vocabulary_version": "1.0.0",
+            "outputs": [
+                {
+                    "output_path": "clean.csv",
+                    "source_manifest_id": "raw-dataset-synthetic-counts-2026-01-01",
+                    "source_path": "data/a.csv",
+                    "steps": [
+                        {"op": "decode_text", "encoding": "utf-8-sig"},
+                        {"op": "parse_csv"},
+                        {"op": "sort_rows", "columns": ["region"]},
+                    ],
+                }
+            ],
+        },
+        "license": {
+            "license_class": "public_domain",
+            "license_id": "synthetic-public-domain",
+            "terms_locator": "synthetic://opaque-terms",
+            "terms_read_at": NOW,
+            "modifications_must_be_disclosed": False,
+        },
+        "modification_notice": "Synthetic modification notice.",
+        "files": [
+            {
+                "path": "clean.csv",
+                "byte_size": 10,
+                "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                "media_type": "text/csv",
+                "columns": [
+                    {"name": "region", "value_type": "string", "unit": "none"},
+                    {"name": "period", "value_type": "date", "unit": "none"},
+                ],
+            }
+        ],
+        "bundle_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "time_basis": {
+            "calendar": "iso_date",
+            "granularity": "day",
+            "time_columns": ["period"],
+            "time_semantics": "observation_date",
+        },
+        "geography_basis": {"scheme": "synthetic-regions", "geography_columns": ["region"]},
         "content_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
         "declared_at": NOW,
         "metadata": {"owner": "foundation"},

@@ -28,6 +28,7 @@ from kalhas.contracts.v1.campaign_trajectory import (
     CampaignTrajectoryRunCell,
 )
 from kalhas.contracts.v1.common import ApiErrorResponse, ErrorCode, ErrorDetail, RuntimeMode
+from kalhas.contracts.v1.curated_dataset import CuratedDatasetManifest
 from kalhas.contracts.v1.dataset import RawDatasetManifest
 from kalhas.contracts.v1.domain_mechanism import (
     DomainMechanismSpec,
@@ -184,6 +185,7 @@ PUBLIC_CONTRACTS: tuple[type[VersionedContract], ...] = (
     ModelPackAssuranceProfile,
     ModelPackCatalogueEntry,
     RawDatasetManifest,
+    CuratedDatasetManifest,
 )
 __all__ = [
     "API_VERSION",
@@ -203,6 +205,7 @@ __all__ = [
     "CampaignStatus",
     "CampaignTrajectoryMatrix",
     "CampaignTrajectoryRunCell",
+    "CuratedDatasetManifest",
     "ClarificationQuestion",
     "ContextBundle",
     "DecisionBrief",

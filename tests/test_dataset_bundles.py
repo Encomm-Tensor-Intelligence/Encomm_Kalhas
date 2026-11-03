@@ -18,6 +18,14 @@ from pathlib import Path
 
 import pytest
 from kalhas.contracts.v1.dataset import MAX_RAW_DATASET_TOTAL_BYTES, RawDatasetManifest
+from pydantic import BaseModel
+
+from tests.test_curated_dataset_contracts import (
+    GOLDEN_OUTPUT,
+    RAW_FILES,
+    build_curated,
+    build_raw_manifest,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "scripts" / "verify_dataset_bundles.py"
@@ -222,3 +230,97 @@ def test_nothing_under_kalhas_references_datasets_or_the_script() -> None:
         text = path.read_text(encoding="utf-8")
         assert "datasets/" not in text, path
         assert "verify_dataset_bundles" not in text, path
+
+
+# --- synthetic raw -> curated chain in a temporary root ----------------------------------------
+
+
+def _render(model: BaseModel) -> str:
+    dumped = model.model_dump(mode="json")
+    return json.dumps(dumped, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+
+
+@pytest.fixture
+def chain_root(scratch_root: Path) -> Path:
+    raw = build_raw_manifest()
+    raw_dir = scratch_root / "datasets/v1/raw" / raw.dataset_id / raw.vintage
+    raw_dir.mkdir(parents=True)
+    (raw_dir / "manifest.json").write_text(_render(raw), encoding="utf-8", newline="\n")
+    for path, content in RAW_FILES.items():
+        (raw_dir / path).write_bytes(content)
+    curated = build_curated(raw=raw)
+    curated_dir = (
+        scratch_root / "datasets/v1/curated" / curated.curated_dataset_id / curated.curation_version
+    )
+    curated_dir.mkdir(parents=True)
+    (curated_dir / "manifest.json").write_text(_render(curated), encoding="utf-8", newline="\n")
+    (curated_dir / "clean.csv").write_bytes(GOLDEN_OUTPUT)
+    return scratch_root
+
+
+def _curated_dir(root: Path) -> Path:
+    return root / "datasets/v1/curated/synthetic-clean/1.0.0"
+
+
+def test_the_script_passes_on_a_synthetic_raw_and_curated_chain(chain_root: Path) -> None:
+    result = _run(chain_root)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "ok datasets/v1/raw/synthetic-weekly/2026-11-02" in result.stdout
+    assert "ok datasets/v1/curated/synthetic-clean/1.0.0" in result.stdout
+
+
+def test_the_chain_check_never_writes(chain_root: Path) -> None:
+    before = _tree_digest(chain_root)
+    assert _run(chain_root).returncode == 0
+    assert _tree_digest(chain_root) == before
+
+
+def test_a_curated_byte_tamper_fails(chain_root: Path) -> None:
+    data = _curated_dir(chain_root) / "clean.csv"
+    content = bytearray(data.read_bytes())
+    content[0] ^= 0x01
+    data.write_bytes(bytes(content))
+    result = _run(chain_root)
+    assert result.returncode == 1
+    assert "FAIL datasets/v1/curated/synthetic-clean/1.0.0: sha256_mismatch" in result.stdout
+    assert "ok datasets/v1/raw/synthetic-weekly/2026-11-02" in result.stdout
+
+
+def test_a_missing_referenced_raw_bundle_fails(chain_root: Path) -> None:
+    shutil.rmtree(chain_root / "datasets/v1/raw")
+    result = _run(chain_root)
+    assert result.returncode == 1
+    assert "FAIL datasets/v1/curated/synthetic-clean/1.0.0: raw_input_missing" in result.stdout
+
+
+def test_a_raw_tamper_fails_the_raw_and_the_curated_bundle(chain_root: Path) -> None:
+    source = chain_root / "datasets/v1/raw/synthetic-weekly/2026-11-02/source.csv"
+    content = bytearray(source.read_bytes())
+    content[-3] ^= 0x01
+    source.write_bytes(bytes(content))
+    result = _run(chain_root)
+    assert result.returncode == 1
+    assert "FAIL datasets/v1/raw/synthetic-weekly/2026-11-02: sha256_mismatch" in result.stdout
+    assert "FAIL datasets/v1/curated/synthetic-clean/1.0.0: raw_input_invalid" in result.stdout
+
+
+def test_an_extra_curated_file_fails(chain_root: Path) -> None:
+    (_curated_dir(chain_root) / "extra.csv").write_bytes(b"x")
+    result = _run(chain_root)
+    assert result.returncode == 1
+    assert "undeclared_file" in result.stdout
+
+
+def test_a_renamed_curated_version_directory_is_an_identity_failure(chain_root: Path) -> None:
+    directory = _curated_dir(chain_root)
+    directory.rename(directory.parent / "9.9.9")
+    result = _run(chain_root)
+    assert result.returncode == 1
+    assert "identity_mismatch" in result.stdout
+
+
+def test_a_curated_directory_without_a_manifest_fails(chain_root: Path) -> None:
+    (_curated_dir(chain_root) / "manifest.json").unlink()
+    result = _run(chain_root)
+    assert result.returncode == 1
+    assert "missing_manifest" in result.stdout

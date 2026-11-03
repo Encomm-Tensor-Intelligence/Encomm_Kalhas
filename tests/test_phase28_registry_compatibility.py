@@ -4,7 +4,8 @@ After the accepted Phase 28 appends grew ``PUBLIC_CONTRACTS`` from 50 to
 55, this suite owned the exact registry/schema cardinality. The accepted
 Phase 29 H29-S02A appends grew it again from 55 to 58, and the accepted
 H29-S02B appends grew it once more from 58 to 61, and the accepted
-Phase 30 H30-S01 append grew it from 61 to 62. This suite guards the
+Phase 30 H30-S01 append grew it from 61 to 62, and the accepted
+Phase 30 H30-S02A append grew it from 62 to 63. This suite guards the
 additive-compatibility contract for all historical slices:
 
 - API and schema versions stay unchanged (``"1"`` / ``"1.0.0"``);
@@ -16,12 +17,13 @@ additive-compatibility contract for all historical slices:
   (``RuntimeObservationDeclaration`` /
   ``ExternalObservationInputBundle`` / ``AdaptivePolicy`` /
   ``AdaptiveRunTrajectoryExecution`` / ``AdaptiveRunTrajectoryReplayManifest``);
-- the current registry is exactly 62 with a frozen Phase 29 tail
+- the current registry is exactly 63 with a frozen Phase 29 tail
   (indexes 55-57 ``DomainMechanismSpec`` /
   ``DomainMechanismStepRequest`` / ``DomainMechanismStepResult`` and
   indexes 58-60 ``ModelPackReleaseProfile`` /
   ``ModelPackAssuranceProfile`` / ``ModelPackCatalogueEntry``) and a
-  frozen Phase 30 tail (index 61 ``RawDatasetManifest``);
+  frozen Phase 30 tail (index 61 ``RawDatasetManifest``, index 62
+  ``CuratedDatasetManifest``);
 - the schema artifact set follows the public registry (count, titles);
 - all 47 frozen historical schema byte hashes remain exact;
 - the three Phase 27 decision schemas and all five Phase 28 schemas still
@@ -35,7 +37,7 @@ additive-compatibility contract for all historical slices:
   module the scan still rejects the obsolete literals 50, 55 and 58.
 
 Only this module (the single owner) may assert the exact current
-cardinality (62). Every other suite must stay additive-safe: ``>= N`` for
+cardinality (63). Every other suite must stay additive-safe: ``>= N`` for
 the registry and ``== len(PUBLIC_CONTRACTS)`` for schema artifacts, so a
 later additive contract never breaks an unrelated suite. The AST scan is
 the durable guard for that rule.
@@ -98,8 +100,9 @@ _PHASE29_MECHANISM_TAIL = (
     "DomainMechanismStepResult",
 )
 
-#: The exact Phase 30 contract tail (index 61): the raw-dataset manifest.
-_PHASE30_TAIL = ("RawDatasetManifest",)
+#: The exact Phase 30 contract tail (indexes 61-62): the raw and curated
+#: dataset manifests.
+_PHASE30_TAIL = ("RawDatasetManifest", "CuratedDatasetManifest")
 
 #: The exact Phase 29 contract tail (indexes 58-60): Model Pack contracts.
 _PHASE29_MODEL_PACK_TAIL = (
@@ -110,9 +113,9 @@ _PHASE29_MODEL_PACK_TAIL = (
 
 #: Obsolete *current-global-count* literals the AST detector rejects in this
 #: owner module, in either equality orientation. The owner may still assert
-#: the current exact count (62); every other module may assert no exact
+#: the current exact count (63); every other module may assert no exact
 #: integer count at all.
-_OBSOLETE_GLOBAL_COUNTS = (50, 55, 58, 61)
+_OBSOLETE_GLOBAL_COUNTS = (50, 55, 58, 61, 62)
 
 #: The single module allowed to assert the exact current cardinality.
 _OWNER_MODULE_NAME = Path(__file__).name
@@ -167,6 +170,17 @@ _NESTED_PHASE30 = (
     "RawDatasetFile",
     "RawDatasetTimeBasis",
     "RawDatasetGeographyBasis",
+    "DecodeTextStep",
+    "ParseCsvStep",
+    "SelectColumnsStep",
+    "RenameColumnsStep",
+    "FilterRowsInStep",
+    "CastColumnsStep",
+    "RequireUniqueKeyStep",
+    "SortRowsStep",
+    "CuratedOutputPlan",
+    "TransformationPlan",
+    "RawDatasetReference",
 )
 
 
@@ -177,8 +191,8 @@ class TestVersionBoundary:
 
 
 class TestPublicContractRegistry:
-    def test_current_public_contract_count_is_exactly_62(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 62
+    def test_current_public_contract_count_is_exactly_63(self) -> None:
+        assert len(PUBLIC_CONTRACTS) == 63
 
     def test_immutable_accepted_50_phase27_prefix_is_unchanged(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
@@ -193,8 +207,9 @@ class TestPublicContractRegistry:
         assert names[57] == "DomainMechanismStepResult"
         assert names[58:61] == _PHASE29_MODEL_PACK_TAIL
         assert names[60] == "ModelPackCatalogueEntry"
-        assert names[61:62] == _PHASE30_TAIL
+        assert names[61:63] == _PHASE30_TAIL
         assert names[61] == "RawDatasetManifest"
+        assert names[62] == "CuratedDatasetManifest"
 
 
 class TestSchemaCompatibility:
@@ -207,7 +222,7 @@ class TestSchemaCompatibility:
     def test_schema_artifact_count_follows_the_public_registry(self) -> None:
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
         assert len(schema_files) == len(PUBLIC_CONTRACTS)
-        assert len(schema_files) == 62
+        assert len(schema_files) == 63
 
     def test_schema_titles_equal_public_contract_names(self) -> None:
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
@@ -393,7 +408,7 @@ class TestStaleAssertionDetector:
         assert _stale_equality_nodes(src) == []
 
     def test_owner_module_may_assert_the_current_exact_count(self) -> None:
-        src = "assert len(PUBLIC_CONTRACTS) == 62\nassert len(schema_files) == 62\n"
+        src = "assert len(PUBLIC_CONTRACTS) == 63\nassert len(schema_files) == 63\n"
         assert _stale_equality_nodes(src, owner=True) == []
 
     def test_owner_module_still_flags_obsolete_counts(self) -> None:

@@ -1,12 +1,19 @@
-"""Verify every committed raw dataset bundle against its manifest (offline).
+"""Verify every committed dataset bundle against its manifest (offline).
 
-Discovers ``datasets/v1/raw/<dataset_id>/<vintage>/manifest.json`` under the
-repository root (or ``--root``), parses each manifest as a
-``RawDatasetManifest``, requires the directory names to equal the manifest
-identity, reads every other file of the bundle as relative POSIX path ->
-bytes, and runs the pure ``verify_raw_dataset_bundle``. It only reads: it
-never writes, never touches the network, and prints the bundle directory and
-the bounded failure reason, never bytes.
+Discovers raw bundles at ``datasets/v1/raw/<dataset_id>/<vintage>/`` and
+curated bundles at ``datasets/v1/curated/<curated_dataset_id>/<version>/``
+under the repository root (or ``--root``). Each directory must hold a
+``manifest.json`` whose identity equals the directory names.
+
+- A raw manifest is parsed as a ``RawDatasetManifest`` and checked with the
+  pure ``verify_raw_dataset_bundle`` against every other file of the bundle.
+- A curated manifest is parsed as a ``CuratedDatasetManifest``; its
+  referenced raw bundles are loaded from ``datasets/v1/raw/`` by parsing the
+  raw manifest identifier, and the pure ``verify_curated_dataset_bundle``
+  re-executes the plan against the raw bytes and the curated files.
+
+It only reads: it never writes, never touches the network, and prints the
+bundle directory and the bounded failure reason, never bytes.
 
 Usage::
 
@@ -17,42 +24,65 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import re
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
+from kalhas.application.curated_dataset_verifier import verify_curated_dataset_bundle
+from kalhas.application.dataset_transformation_errors import CuratedDatasetVerificationError
 from kalhas.application.raw_dataset_errors import RawDatasetVerificationError
 from kalhas.application.raw_dataset_verifier import verify_raw_dataset_bundle
+from kalhas.contracts.v1.curated_dataset import CuratedDatasetManifest
 from kalhas.contracts.v1.dataset import RawDatasetManifest
 from pydantic import ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_NAME = "manifest.json"
 RAW_RELATIVE = Path("datasets") / "v1" / "raw"
+CURATED_RELATIVE = Path("datasets") / "v1" / "curated"
+_RAW_IDENTIFIER = re.compile(
+    r"raw-dataset-(?P<dataset_id>[a-z0-9]+(?:-[a-z0-9]+)*)"
+    r"-(?P<vintage>\d{4}-\d{2}-\d{2}(?:\.[1-9]\d*)?)"
+)
 
 
-def _bundle_directories(root: Path) -> tuple[list[Path], list[str]]:
-    """Return every ``<dataset_id>/<vintage>`` directory and structural failures."""
-    raw_root = root / RAW_RELATIVE
+def _bundle_directories(root: Path, relative: Path) -> tuple[list[Path], list[str]]:
+    """Return every ``<id>/<version>`` directory under ``relative`` and structural failures."""
+    base = root / relative
     bundles: list[Path] = []
     failures: list[str] = []
-    if not raw_root.is_dir():
+    if not base.is_dir():
         return bundles, failures
-    for dataset_dir in sorted(raw_root.iterdir()):
-        if not dataset_dir.is_dir():
-            failures.append(f"FAIL {dataset_dir.relative_to(root).as_posix()}: unexpected_entry")
+    for id_dir in sorted(base.iterdir()):
+        if not id_dir.is_dir():
+            failures.append(f"FAIL {id_dir.relative_to(root).as_posix()}: unexpected_entry")
             continue
-        for vintage_dir in sorted(dataset_dir.iterdir()):
-            if not vintage_dir.is_dir():
+        for version_dir in sorted(id_dir.iterdir()):
+            if not version_dir.is_dir():
                 failures.append(
-                    f"FAIL {vintage_dir.relative_to(root).as_posix()}: unexpected_entry"
+                    f"FAIL {version_dir.relative_to(root).as_posix()}: unexpected_entry"
                 )
                 continue
-            bundles.append(vintage_dir)
+            bundles.append(version_dir)
     return bundles, failures
 
 
-def _verify_bundle(root: Path, bundle: Path) -> str | None:
-    """Return a bounded failure reason for one bundle, or ``None`` when it verifies."""
+def _read_files(bundle: Path) -> dict[str, bytes]:
+    """Every file of a bundle except its top-level manifest, by relative POSIX path."""
+    files: dict[str, bytes] = {}
+    for path in sorted(bundle.rglob("*")):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(bundle).as_posix()
+        if relative == MANIFEST_NAME:
+            continue
+        files[relative] = path.read_bytes()
+    return files
+
+
+def _load_raw(bundle: Path) -> tuple[RawDatasetManifest, dict[str, bytes]] | str:
+    """Parse one raw bundle, or return a bounded failure reason."""
     manifest_path = bundle / MANIFEST_NAME
     if not manifest_path.is_file():
         return "missing_manifest"
@@ -62,17 +92,47 @@ def _verify_bundle(root: Path, bundle: Path) -> str | None:
         return "invalid_manifest"
     if bundle.parent.name != manifest.dataset_id or bundle.name != manifest.vintage:
         return "identity_mismatch"
-    files: dict[str, bytes] = {}
-    for path in sorted(bundle.rglob("*")):
-        if not path.is_file():
-            continue
-        relative = path.relative_to(bundle).as_posix()
-        if relative == MANIFEST_NAME:
-            continue
-        files[relative] = path.read_bytes()
+    return manifest, _read_files(bundle)
+
+
+def _verify_raw(bundle: Path) -> str | None:
+    loaded = _load_raw(bundle)
+    if isinstance(loaded, str):
+        return loaded
+    manifest, files = loaded
     try:
         verify_raw_dataset_bundle(manifest, files)
     except RawDatasetVerificationError as error:
+        return error.reason
+    return None
+
+
+def _verify_curated(root: Path, bundle: Path) -> str | None:
+    manifest_path = bundle / MANIFEST_NAME
+    if not manifest_path.is_file():
+        return "missing_manifest"
+    try:
+        manifest = CuratedDatasetManifest.model_validate_json(manifest_path.read_bytes())
+    except ValidationError:
+        return "invalid_manifest"
+    if (
+        bundle.parent.name != manifest.curated_dataset_id
+        or bundle.name != manifest.curation_version
+    ):
+        return "identity_mismatch"
+    raw_bundles: dict[str, tuple[RawDatasetManifest, Mapping[str, bytes]]] = {}
+    for reference in manifest.inputs:
+        match = _RAW_IDENTIFIER.fullmatch(reference.raw_manifest_id)
+        if match is None:
+            return "raw_input_missing"
+        raw_dir = root / RAW_RELATIVE / match.group("dataset_id") / match.group("vintage")
+        loaded = _load_raw(raw_dir)
+        if isinstance(loaded, str):
+            return "raw_input_missing"
+        raw_bundles[reference.raw_manifest_id] = loaded
+    try:
+        verify_curated_dataset_bundle(manifest, raw_bundles, _read_files(bundle))
+    except CuratedDatasetVerificationError as error:
         return error.reason
     return None
 
@@ -88,13 +148,22 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     root: Path = args.root.resolve()
 
-    bundles, failures = _bundle_directories(root)
-    if not bundles and not failures:
+    raw_bundles, failures = _bundle_directories(root, RAW_RELATIVE)
+    curated_bundles, curated_failures = _bundle_directories(root, CURATED_RELATIVE)
+    failures += curated_failures
+    if not raw_bundles and not curated_bundles and not failures:
         print("no dataset bundles")
         return 0
-    for bundle in bundles:
+    for bundle in raw_bundles:
         name = bundle.relative_to(root).as_posix()
-        reason = _verify_bundle(root, bundle)
+        reason = _verify_raw(bundle)
+        if reason is None:
+            print(f"ok {name}")
+        else:
+            failures.append(f"FAIL {name}: {reason}")
+    for bundle in curated_bundles:
+        name = bundle.relative_to(root).as_posix()
+        reason = _verify_curated(root, bundle)
         if reason is None:
             print(f"ok {name}")
         else:

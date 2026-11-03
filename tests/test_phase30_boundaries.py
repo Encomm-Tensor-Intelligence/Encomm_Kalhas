@@ -148,3 +148,121 @@ def test_new_kernel_modules_never_use_clock_constructors(relative: str) -> None:
             assert node.attr not in {"now", "today", "utcnow"}, (relative, node.attr)
         elif isinstance(node, ast.ImportFrom) and node.module == "datetime":
             assert not {alias.name for alias in node.names} & {"datetime", "date", "time"}, relative
+
+
+# --- ADR-007 and the curated-dataset modules (H30-S02A) ----------------------------------------
+
+ADR007_PATH = (
+    REPO_ROOT
+    / "docs"
+    / "decisions"
+    / "ADR-007-curated-dataset-lineage-and-closed-transformation-plans.md"
+)
+
+_CURATED_MODULES = (
+    "contracts/v1/curated_dataset.py",
+    "application/dataset_transformation_engine.py",
+    "application/curated_dataset_verifier.py",
+    "application/dataset_transformation_errors.py",
+)
+
+_CURATED_ALLOWED_IMPORTS = _ALLOWED_EXACT_IMPORTS | {
+    "csv",
+    "io",
+    "decimal",
+    "kalhas.application.dataset_transformation_engine",
+    "kalhas.application.dataset_transformation_errors",
+    "kalhas.application.raw_dataset_verifier",
+}
+
+_OPERATIONS = (
+    "decode_text",
+    "parse_csv",
+    "select_columns",
+    "rename_columns",
+    "filter_rows_in",
+    "cast_columns",
+    "require_unique_key",
+    "sort_rows",
+)
+
+
+def _adr007_normalized() -> str:
+    return re.sub(r"\s+", " ", ADR007_PATH.read_text(encoding="utf-8")).lower()
+
+
+def test_adr007_is_accepted_and_dated() -> None:
+    assert ADR007_PATH.is_file(), "ADR-007 file is missing"
+    normalized = _adr007_normalized()
+    assert "# adr 007: curated dataset lineage and closed transformation plans" in normalized
+    assert "- status: accepted" in normalized
+    assert "- date: 2026-11-02" in normalized
+
+
+def test_adr007_records_all_six_decisions() -> None:
+    normalized = _adr007_normalized()
+    for number in range(1, 7):
+        assert f"### d30-01e-{number} \u2014 " in normalized, number
+
+
+def test_adr007_supersedes_nothing_and_claims_no_later_work() -> None:
+    normalized = _adr007_normalized()
+    assert "this adr supersedes nothing" in normalized
+    assert "must not be read as claiming any of them" in normalized
+
+
+def test_adr007_freezes_the_manifest_vocabulary_and_tenant_namespace() -> None:
+    normalized = _adr007_normalized()
+    assert "curateddatasetmanifest" in normalized
+    assert "closed vocabulary, version `1.0.0`" in normalized
+    assert "`kalhas-reference`" in normalized
+    for operation in _OPERATIONS:
+        assert f"`{operation}`" in normalized, operation
+
+
+@pytest.mark.parametrize("relative", _CURATED_MODULES)
+def test_curated_modules_carry_no_domain_vocabulary(relative: str) -> None:
+    tree = ast.parse((KALHAS_ROOT / relative).read_text(encoding="utf-8"))
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            found |= _words(node.value)
+        elif isinstance(node, ast.Name):
+            found |= _words(node.id)
+        elif isinstance(node, ast.Attribute):
+            found |= _words(node.attr)
+        elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            found |= _words(node.name)
+        elif isinstance(node, ast.arg):
+            found |= _words(node.arg)
+        elif isinstance(node, ast.alias):
+            found |= _words(node.name)
+            if node.asname:
+                found |= _words(node.asname)
+    assert not (found & _DOMAIN_WORDS), (relative, sorted(found & _DOMAIN_WORDS))
+
+
+@pytest.mark.parametrize("relative", _CURATED_MODULES)
+def test_curated_modules_import_only_the_allowlist(relative: str) -> None:
+    tree = ast.parse((KALHAS_ROOT / relative).read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names = [alias.name for alias in node.names]
+        elif isinstance(node, ast.ImportFrom):
+            assert node.level == 0, (relative, "relative import")
+            names = [node.module or ""]
+        else:
+            continue
+        for name in names:
+            allowed = name in _CURATED_ALLOWED_IMPORTS or name.startswith(_ALLOWED_IMPORT_PREFIXES)
+            assert allowed, (relative, name)
+
+
+@pytest.mark.parametrize("relative", _CURATED_MODULES)
+def test_curated_modules_use_only_the_date_type_from_datetime(relative: str) -> None:
+    tree = ast.parse((KALHAS_ROOT / relative).read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute):
+            assert node.attr not in {"now", "today", "utcnow"}, (relative, node.attr)
+        elif isinstance(node, ast.ImportFrom) and node.module == "datetime":
+            assert {alias.name for alias in node.names} <= {"date"}, relative
