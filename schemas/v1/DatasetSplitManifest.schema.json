@@ -1,0 +1,292 @@
+{
+  "$defs": {
+    "FileMembership": {
+      "additionalProperties": false,
+      "properties": {
+        "counts": {
+          "$ref": "#/$defs/PartitionCounts"
+        },
+        "membership_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Membership Hash",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "counts",
+        "membership_hash"
+      ],
+      "title": "FileMembership",
+      "type": "object"
+    },
+    "FileSplitRule": {
+      "additionalProperties": false,
+      "properties": {
+        "geography_rule": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GeographyPartitionRule"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "time_rule": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TimePartitionRule"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "FileSplitRule",
+      "type": "object"
+    },
+    "GeographyPartitionRule": {
+      "additionalProperties": false,
+      "properties": {
+        "column": {
+          "minLength": 1,
+          "title": "Column",
+          "type": "string"
+        },
+        "holdout_values": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Holdout Values",
+          "type": "array"
+        },
+        "validation_values": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Validation Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "column",
+        "validation_values",
+        "holdout_values"
+      ],
+      "title": "GeographyPartitionRule",
+      "type": "object"
+    },
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "PartitionCounts": {
+      "additionalProperties": false,
+      "properties": {
+        "development": {
+          "minimum": 0,
+          "title": "Development",
+          "type": "integer"
+        },
+        "holdout": {
+          "minimum": 0,
+          "title": "Holdout",
+          "type": "integer"
+        },
+        "validation": {
+          "minimum": 0,
+          "title": "Validation",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "development",
+        "validation",
+        "holdout"
+      ],
+      "title": "PartitionCounts",
+      "type": "object"
+    },
+    "TimePartitionRule": {
+      "additionalProperties": false,
+      "properties": {
+        "column": {
+          "minLength": 1,
+          "title": "Column",
+          "type": "string"
+        },
+        "holdout_from": {
+          "title": "Holdout From",
+          "type": "string"
+        },
+        "validation_from": {
+          "title": "Validation From",
+          "type": "string"
+        },
+        "value_type": {
+          "enum": [
+            "date",
+            "iso_week"
+          ],
+          "title": "Value Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "column",
+        "value_type",
+        "validation_from",
+        "holdout_from"
+      ],
+      "title": "TimePartitionRule",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A locked split; the note explains the rule and declares value-blind selection.",
+  "properties": {
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "curated_bundle_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Curated Bundle Hash",
+      "type": "string"
+    },
+    "curated_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Curated Content Hash",
+      "type": "string"
+    },
+    "curated_manifest_id": {
+      "minLength": 1,
+      "title": "Curated Manifest Id",
+      "type": "string"
+    },
+    "file_rules": {
+      "items": {
+        "$ref": "#/$defs/FileSplitRule"
+      },
+      "minItems": 1,
+      "title": "File Rules",
+      "type": "array"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "locked_at": {
+      "format": "date-time",
+      "title": "Locked At",
+      "type": "string"
+    },
+    "memberships": {
+      "items": {
+        "$ref": "#/$defs/FileMembership"
+      },
+      "minItems": 1,
+      "title": "Memberships",
+      "type": "array"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "preregistration_note": {
+      "minLength": 1,
+      "title": "Preregistration Note",
+      "type": "string"
+    },
+    "rule_vocabulary_version": {
+      "const": "1.0.0",
+      "title": "Rule Vocabulary Version",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "split_id": {
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "title": "Split Id",
+      "type": "string"
+    },
+    "split_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Split Version",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "split_id",
+    "split_version",
+    "curated_manifest_id",
+    "curated_content_hash",
+    "curated_bundle_hash",
+    "rule_vocabulary_version",
+    "file_rules",
+    "memberships",
+    "preregistration_note",
+    "locked_at",
+    "content_hash"
+  ],
+  "title": "DatasetSplitManifest",
+  "type": "object"
+}

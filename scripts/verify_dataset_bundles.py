@@ -2,7 +2,8 @@
 
 Discovers raw bundles at ``datasets/v1/raw/<dataset_id>/<vintage>/`` and
 curated bundles at ``datasets/v1/curated/<curated_dataset_id>/<version>/``
-under the repository root (or ``--root``). Each directory must hold a
+and split bundles at ``datasets/v1/splits/<split_id>/<version>/`` under the
+repository root (or ``--root``). Each directory must hold a
 ``manifest.json`` whose identity equals the directory names.
 
 - A raw manifest is parsed as a ``RawDatasetManifest`` and checked with the
@@ -11,6 +12,8 @@ under the repository root (or ``--root``). Each directory must hold a
   referenced raw bundles are loaded from ``datasets/v1/raw/`` by parsing the
   raw manifest identifier, and the pure ``verify_curated_dataset_bundle``
   re-executes the plan against the raw bytes and the curated files.
+
+- A split manifest is checked against its curated and raw input chain.
 
 It only reads: it never writes, never touches the network, and prints the
 bundle directory and the bounded failure reason, never bytes.
@@ -30,17 +33,24 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from kalhas.application.curated_dataset_verifier import verify_curated_dataset_bundle
+from kalhas.application.dataset_split_errors import DatasetSplitVerificationError
+from kalhas.application.dataset_split_verifier import verify_dataset_split
 from kalhas.application.dataset_transformation_errors import CuratedDatasetVerificationError
 from kalhas.application.raw_dataset_errors import RawDatasetVerificationError
 from kalhas.application.raw_dataset_verifier import verify_raw_dataset_bundle
 from kalhas.contracts.v1.curated_dataset import CuratedDatasetManifest
 from kalhas.contracts.v1.dataset import RawDatasetManifest
+from kalhas.contracts.v1.dataset_split import DatasetSplitManifest
 from pydantic import ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_NAME = "manifest.json"
 RAW_RELATIVE = Path("datasets") / "v1" / "raw"
 CURATED_RELATIVE = Path("datasets") / "v1" / "curated"
+SPLIT_RELATIVE = Path("datasets") / "v1" / "splits"
+_CURATED_IDENTIFIER = re.compile(
+    r"curated-dataset-(?P<dataset_id>[a-z0-9]+(?:-[a-z0-9]+)*)-(?P<version>\d+\.\d+\.\d+)"
+)
 _RAW_IDENTIFIER = re.compile(
     r"raw-dataset-(?P<dataset_id>[a-z0-9]+(?:-[a-z0-9]+)*)"
     r"-(?P<vintage>\d{4}-\d{2}-\d{2}(?:\.[1-9]\d*)?)"
@@ -137,6 +147,50 @@ def _verify_curated(root: Path, bundle: Path) -> str | None:
     return None
 
 
+def _verify_split(root: Path, bundle: Path) -> str | None:
+    manifest_path = bundle / MANIFEST_NAME
+    if not manifest_path.is_file():
+        return "missing_manifest"
+    if any(path.name != MANIFEST_NAME for path in bundle.iterdir()):
+        return "undeclared_file"
+    try:
+        split = DatasetSplitManifest.model_validate_json(manifest_path.read_bytes())
+    except ValidationError:
+        return "invalid_manifest"
+    if bundle.parent.name != split.split_id or bundle.name != split.split_version:
+        return "identity_mismatch"
+    match = _CURATED_IDENTIFIER.fullmatch(split.curated_manifest_id)
+    if match is None:
+        return "curated_input_missing"
+    curated_dir = root / CURATED_RELATIVE / match.group("dataset_id") / match.group("version")
+    curated_path = curated_dir / MANIFEST_NAME
+    if not curated_path.is_file():
+        return "curated_input_missing"
+    try:
+        curated = CuratedDatasetManifest.model_validate_json(curated_path.read_bytes())
+    except ValidationError:
+        return "curated_input_invalid"
+    if curated.curated_dataset_id != match.group(
+        "dataset_id"
+    ) or curated.curation_version != match.group("version"):
+        return "curated_input_invalid"
+    raw_bundles: dict[str, tuple[RawDatasetManifest, Mapping[str, bytes]]] = {}
+    for reference in curated.inputs:
+        raw_match = _RAW_IDENTIFIER.fullmatch(reference.raw_manifest_id)
+        if raw_match is None:
+            return "curated_input_invalid"
+        raw_dir = root / RAW_RELATIVE / raw_match.group("dataset_id") / raw_match.group("vintage")
+        loaded = _load_raw(raw_dir)
+        if isinstance(loaded, str):
+            return "curated_input_invalid"
+        raw_bundles[reference.raw_manifest_id] = loaded
+    try:
+        verify_dataset_split(split, curated, _read_files(curated_dir), raw_bundles)
+    except DatasetSplitVerificationError as error:
+        return error.reason
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument(
@@ -151,7 +205,9 @@ def main(argv: list[str] | None = None) -> int:
     raw_bundles, failures = _bundle_directories(root, RAW_RELATIVE)
     curated_bundles, curated_failures = _bundle_directories(root, CURATED_RELATIVE)
     failures += curated_failures
-    if not raw_bundles and not curated_bundles and not failures:
+    split_bundles, split_failures = _bundle_directories(root, SPLIT_RELATIVE)
+    failures += split_failures
+    if not raw_bundles and not curated_bundles and not split_bundles and not failures:
         print("no dataset bundles")
         return 0
     for bundle in raw_bundles:
@@ -164,6 +220,13 @@ def main(argv: list[str] | None = None) -> int:
     for bundle in curated_bundles:
         name = bundle.relative_to(root).as_posix()
         reason = _verify_curated(root, bundle)
+        if reason is None:
+            print(f"ok {name}")
+        else:
+            failures.append(f"FAIL {name}: {reason}")
+    for bundle in split_bundles:
+        name = bundle.relative_to(root).as_posix()
+        reason = _verify_split(root, bundle)
         if reason is None:
             print(f"ok {name}")
         else:

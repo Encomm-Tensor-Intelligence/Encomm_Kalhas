@@ -3179,6 +3179,41 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         "declared_at": NOW,
         "metadata": {"owner": "foundation"},
     },
+    next(
+        contract for contract in PUBLIC_CONTRACTS if contract.__name__ == "DatasetSplitManifest"
+    ): {
+        "identifier": "dataset-split-synthetic-1.0.0",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "split_id": "synthetic",
+        "split_version": "1.0.0",
+        "curated_manifest_id": "curated-dataset-synthetic-clean-1.0.0",
+        "curated_content_hash": "0" * 64,
+        "curated_bundle_hash": "0" * 64,
+        "rule_vocabulary_version": "1.0.0",
+        "file_rules": [
+            {
+                "path": "clean.csv",
+                "time_rule": {
+                    "column": "period",
+                    "value_type": "date",
+                    "validation_from": "2020-01-01",
+                    "holdout_from": "2021-01-01",
+                },
+            }
+        ],
+        "memberships": [
+            {
+                "path": "clean.csv",
+                "counts": {"development": 1, "validation": 0, "holdout": 0},
+                "membership_hash": "0" * 64,
+            }
+        ],
+        "preregistration_note": "Calendar rule; no outcome values were inspected.",
+        "locked_at": NOW,
+        "content_hash": "0" * 64,
+        "metadata": {},
+    },
 }
 
 

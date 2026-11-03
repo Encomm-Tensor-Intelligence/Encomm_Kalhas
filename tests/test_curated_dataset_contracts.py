@@ -420,7 +420,7 @@ def test_manifest_and_helpers_are_frozen() -> None:
 
 def test_manifest_is_registered_and_helpers_are_not() -> None:
     names = [contract.__name__ for contract in PUBLIC_CONTRACTS]
-    assert names[-1] == "CuratedDatasetManifest"
+    assert names[62] == "CuratedDatasetManifest"
     from kalhas.contracts.v1 import curated_dataset
 
     for helper in HELPER_NAMES:
