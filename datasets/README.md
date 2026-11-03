@@ -49,3 +49,24 @@ Removed the UTF-8 byte order mark; split the rows by indicator into four files; 
 
 Outputs built from this curated bundle must carry both the acknowledgement
 and the modification notice.
+
+## Split: ecdc-covid19-hospital-icu-primary 1.0.0
+
+This split references curated dataset `ecdc-covid19-hospital-icu-by-indicator`
+version `1.0.0`. Daily files use validation from `2022-07-01` and holdout
+from `2023-01-01`; weekly files use validation from `2022-W26` and holdout
+from `2023-W01`. A holdout geography takes precedence over time; otherwise
+holdout time takes precedence over validation time.
+
+The geography holdout set H is selected by ranking the distinct country
+labels across all four files by SHA-256 of their UTF-8 text, ascending, and
+taking the first five. In rank order H is: Ireland, Estonia, Belgium,
+Netherlands, Portugal. Each file uses the intersection of H and its own
+country labels, preserving that order.
+
+Preregistration note (verbatim):
+
+Calendar cut points (validation from 2022-07-01 / 2022-W26, holdout from 2023-01-01 / 2023-W01) and a geography holdout of the five country labels with the lowest SHA-256 of their UTF-8 text, fixed by the reviewer before this split was built. No outcome values were inspected to choose the rule. Before locking, the reviewer ran the split engine on this curated bundle with an unrelated trial rule for software verification only, observing partition row counts and the country coverage of each file, but no values.
+
+The holdout partition is sealed until a separately authorized evaluation
+(H30-S06).

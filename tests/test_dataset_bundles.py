@@ -449,3 +449,107 @@ def test_split_chain_rejects_missing_curated(split_chain_root: Path) -> None:
     result = _run(split_chain_root)
     assert result.returncode == 1
     assert "curated_input_missing" in result.stdout
+
+
+# --- committed ECDC split (H30-D03) ------------------------------------------------------
+
+
+ECDC_SPLIT_PATH = "datasets/v1/splits/ecdc-covid19-hospital-icu-primary/1.0.0"
+
+
+def test_ecdc_split_fixed_rule_and_sealed_holdout() -> None:
+    import csv
+
+    from kalhas.application.dataset_split_errors import SealedPartitionError
+    from kalhas.application.dataset_split_verifier import select_partition_rows
+    from kalhas.contracts.v1.curated_dataset import CuratedDatasetManifest
+    from kalhas.contracts.v1.dataset_split import DatasetSplitManifest
+
+    split = DatasetSplitManifest.model_validate_json(
+        (REPO_ROOT / ECDC_SPLIT_PATH / "manifest.json").read_bytes()
+    )
+    directory = REPO_ROOT / ECDC_CURATED_PATH
+    curated = CuratedDatasetManifest.model_validate_json((directory / "manifest.json").read_bytes())
+    assert split.tenant_id == "kalhas-reference"
+    assert split.curated_manifest_id == curated.identifier
+    assert split.curated_content_hash == curated.content_hash
+    assert split.curated_bundle_hash == curated.bundle_hash
+    assert split.split_id == "ecdc-covid19-hospital-icu-primary"
+    assert split.split_version == "1.0.0"
+    assert split.metadata["geography_holdout_procedure"] == "sha256-rank-ascending-top-5"
+
+    labels_by_file: dict[str, set[str]] = {}
+    counts_by_file: dict[str, int] = {}
+    files = {}
+    for file in curated.files:
+        files[file.path] = (directory / file.path).read_bytes()
+        with (directory / file.path).open(encoding="utf-8", newline="") as source:
+            reader = csv.reader(source)
+            country = next(reader).index("country")
+            labels: set[str] = set()
+            count = 0
+            for row in reader:
+                labels.add(row[country])
+                count += 1
+            labels_by_file[file.path] = labels
+            counts_by_file[file.path] = count
+    all_labels = set().union(*labels_by_file.values())
+    holdout = sorted(
+        all_labels, key=lambda label: hashlib.sha256(label.encode("utf-8")).hexdigest()
+    )[:5]
+    assert len(holdout) == 5
+    assert split.metadata["geography_holdout_set"] == holdout
+    assert [rule.path for rule in split.file_rules] == [file.path for file in curated.files]
+    for rule, membership in zip(split.file_rules, split.memberships, strict=True):
+        assert rule.path == membership.path
+        assert rule.time_rule is not None
+        if rule.path.startswith("daily-"):
+            assert (
+                rule.time_rule.column,
+                rule.time_rule.value_type,
+                rule.time_rule.validation_from,
+                rule.time_rule.holdout_from,
+            ) == ("date", "date", "2022-07-01", "2023-01-01")
+        else:
+            assert (
+                rule.time_rule.column,
+                rule.time_rule.value_type,
+                rule.time_rule.validation_from,
+                rule.time_rule.holdout_from,
+            ) == ("year_week", "iso_week", "2022-W26", "2023-W01")
+        expected = [label for label in holdout if label in labels_by_file[rule.path]]
+        if expected:
+            assert rule.geography_rule is not None
+            assert rule.geography_rule.column == "country"
+            assert rule.geography_rule.validation_values == ()
+            assert list(rule.geography_rule.holdout_values) == expected
+        else:
+            assert rule.geography_rule is None
+        counts = membership.counts
+        assert counts.development + counts.validation + counts.holdout == counts_by_file[rule.path]
+        with pytest.raises(SealedPartitionError):
+            select_partition_rows(split, curated, files, rule.path, "holdout")
+    result = _run(REPO_ROOT)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert f"ok {ECDC_SPLIT_PATH}" in result.stdout
+    assert split.preregistration_note in (REPO_ROOT / "datasets/README.md").read_text(
+        encoding="utf-8"
+    )
+
+
+def test_ecdc_split_edited_cut_is_rejected(copied_root: Path) -> None:
+    path = copied_root / ECDC_SPLIT_PATH / "manifest.json"
+    text = path.read_text(encoding="utf-8")
+    edited = text.replace('"validation_from": "2022-07-01"', '"validation_from": "2022-07-02"', 1)
+    assert edited != text
+    path.write_text(edited, encoding="utf-8", newline="\n")
+    result = _run(copied_root)
+    assert result.returncode == 1
+    assert f"FAIL {ECDC_SPLIT_PATH}:" in result.stdout
+
+
+def test_ecdc_split_extra_file_is_rejected(copied_root: Path) -> None:
+    (copied_root / ECDC_SPLIT_PATH / "extra").write_bytes(b"x")
+    result = _run(copied_root)
+    assert result.returncode == 1
+    assert f"FAIL {ECDC_SPLIT_PATH}: undeclared_file" in result.stdout

@@ -1,0 +1,140 @@
+{
+  "content_hash": "5b025a700402477934155a18c5807850907054e1c479f280b3e0e540095e70e6",
+  "curated_bundle_hash": "c8fee2790fa1ed1ebdddca237531c6b70f092c404b507c30501b49568f243e0e",
+  "curated_content_hash": "418e2fc4d1e0d9130a3c751a507216baf37e6447d7ecfb4dc0ee631cd475ac2c",
+  "curated_manifest_id": "curated-dataset-ecdc-covid19-hospital-icu-by-indicator-1.0.0",
+  "file_rules": [
+    {
+      "geography_rule": {
+        "column": "country",
+        "holdout_values": [
+          "Ireland",
+          "Estonia",
+          "Belgium",
+          "Netherlands"
+        ],
+        "validation_values": []
+      },
+      "path": "daily-hospital-occupancy.csv",
+      "time_rule": {
+        "column": "date",
+        "holdout_from": "2023-01-01",
+        "validation_from": "2022-07-01",
+        "value_type": "date"
+      }
+    },
+    {
+      "geography_rule": {
+        "column": "country",
+        "holdout_values": [
+          "Ireland",
+          "Estonia",
+          "Belgium",
+          "Netherlands"
+        ],
+        "validation_values": []
+      },
+      "path": "daily-icu-occupancy.csv",
+      "time_rule": {
+        "column": "date",
+        "holdout_from": "2023-01-01",
+        "validation_from": "2022-07-01",
+        "value_type": "date"
+      }
+    },
+    {
+      "geography_rule": {
+        "column": "country",
+        "holdout_values": [
+          "Ireland",
+          "Estonia",
+          "Belgium",
+          "Netherlands",
+          "Portugal"
+        ],
+        "validation_values": []
+      },
+      "path": "weekly-hospital-admissions-per-100k.csv",
+      "time_rule": {
+        "column": "year_week",
+        "holdout_from": "2023-W01",
+        "validation_from": "2022-W26",
+        "value_type": "iso_week"
+      }
+    },
+    {
+      "geography_rule": {
+        "column": "country",
+        "holdout_values": [
+          "Ireland",
+          "Estonia",
+          "Netherlands"
+        ],
+        "validation_values": []
+      },
+      "path": "weekly-icu-admissions-per-100k.csv",
+      "time_rule": {
+        "column": "year_week",
+        "holdout_from": "2023-W01",
+        "validation_from": "2022-W26",
+        "value_type": "iso_week"
+      }
+    }
+  ],
+  "identifier": "dataset-split-ecdc-covid19-hospital-icu-primary-1.0.0",
+  "locked_at": "2026-11-03T09:14:35.826995Z",
+  "memberships": [
+    {
+      "counts": {
+        "development": 7164,
+        "holdout": 3750,
+        "validation": 1505
+      },
+      "membership_hash": "f67cf7c4666345eaaae727389c665f5ca4f3ad31574681a632e57e421bb6ef2b",
+      "path": "daily-hospital-occupancy.csv"
+    },
+    {
+      "counts": {
+        "development": 6114,
+        "holdout": 2607,
+        "validation": 1229
+      },
+      "membership_hash": "d9a29647f25006a7acef6ebdeb2e02fa7f752cc7b4b7bba434796b85e13e6e74",
+      "path": "daily-icu-occupancy.csv"
+    },
+    {
+      "counts": {
+        "development": 1542,
+        "holdout": 1362,
+        "validation": 355
+      },
+      "membership_hash": "055244a66bb2c5d752cbdf49158e2ddf3e0060cdb5fc9469760a86c3cc2948b9",
+      "path": "weekly-hospital-admissions-per-100k.csv"
+    },
+    {
+      "counts": {
+        "development": 1387,
+        "holdout": 1027,
+        "validation": 295
+      },
+      "membership_hash": "cefd21e5af650fa36783e9b6199278e85db88854a78df16f3916734b8eda6f22",
+      "path": "weekly-icu-admissions-per-100k.csv"
+    }
+  ],
+  "metadata": {
+    "geography_holdout_procedure": "sha256-rank-ascending-top-5",
+    "geography_holdout_set": [
+      "Ireland",
+      "Estonia",
+      "Belgium",
+      "Netherlands",
+      "Portugal"
+    ]
+  },
+  "preregistration_note": "Calendar cut points (validation from 2022-07-01 / 2022-W26, holdout from 2023-01-01 / 2023-W01) and a geography holdout of the five country labels with the lowest SHA-256 of their UTF-8 text, fixed by the reviewer before this split was built. No outcome values were inspected to choose the rule. Before locking, the reviewer ran the split engine on this curated bundle with an unrelated trial rule for software verification only, observing partition row counts and the country coverage of each file, but no values.",
+  "rule_vocabulary_version": "1.0.0",
+  "schema_version": "1.0.0",
+  "split_id": "ecdc-covid19-hospital-icu-primary",
+  "split_version": "1.0.0",
+  "tenant_id": "kalhas-reference"
+}
