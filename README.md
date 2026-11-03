@@ -133,6 +133,16 @@ Every API response uses one typed error shape (`code`, `message`, `details`,
 explicitly lifecycle-gated. The architecture guides describe the complete
 lifecycle, while the test suite provides executable end-to-end examples.
 
+## KALHAS Lab (local)
+
+Run the separate local app with:
+
+```bash
+uv run uvicorn kalhas_lab.app:create_lab_app --factory --host 127.0.0.1 --port 8000
+```
+
+Open http://127.0.0.1:8000/lab/. It runs the real kernel with synthetic inputs and local mocks; it is not a forecast or recommendation.
+
 ## Testing and verification
 
 ```bash

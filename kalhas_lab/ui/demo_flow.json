@@ -1,0 +1,585 @@
+{
+  "flow_version": "1.0.0",
+  "steps": [
+    {
+      "id": "scenario",
+      "stage": "Scenario",
+      "title": "Register scenario",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/scenarios",
+      "body": {
+        "identifier": "scenario-1",
+        "tenant_id": "{tenant}",
+        "schema_version": "1.0.0",
+        "name": "Synthetic capacity scenario",
+        "created_at": "2026-01-01T12:00:00Z",
+        "objectives": [
+          {
+            "identifier": "obj-1",
+            "description": "Maximize the primary metric",
+            "direction": "maximize",
+            "target": 5.0,
+            "weight": 1.0
+          }
+        ],
+        "constraints": [
+          {
+            "identifier": "c-1",
+            "description": "Stay within declared bounds"
+          }
+        ],
+        "time_horizon": {
+          "start": "2026-01-01T12:00:00Z",
+          "end": "2026-01-02T12:00:00Z",
+          "resolution": "step"
+        },
+        "metrics": [
+          {
+            "identifier": "m-1",
+            "name": "Primary metric",
+            "unit": "units"
+          }
+        ],
+        "assumptions": [
+          {
+            "identifier": "a-1",
+            "statement": "Conditions remain stable",
+            "confidence": 0.9
+          }
+        ],
+        "metadata": {}
+      },
+      "expect_status": 201,
+      "capture": {}
+    },
+    {
+      "id": "validate",
+      "stage": "Scenario",
+      "title": "Validate scenario",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/scenarios/scenario-1/validate",
+      "body": null,
+      "expect_status": 200,
+      "capture": {}
+    },
+    {
+      "id": "pack",
+      "stage": "World",
+      "title": "Register domain pack",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/domain-packs",
+      "body": {
+        "identifier": "manifest-1",
+        "pack_id": "pack-1",
+        "name": "Reference domain pack",
+        "pack_version": "1.2.3",
+        "description": "Declarative pack metadata only",
+        "supported_api_versions": [
+          "1"
+        ],
+        "capabilities": [
+          {
+            "identifier": "cap-1",
+            "description": "Declared capability",
+            "input_ids": [
+              "in-a",
+              "in-b"
+            ],
+            "output_ids": [
+              "out-1"
+            ],
+            "metadata": {}
+          }
+        ],
+        "schema_metadata": {
+          "declarative": true
+        },
+        "created_at": "2026-01-01T12:00:00Z",
+        "metadata": {}
+      },
+      "expect_status": 201,
+      "capture": {}
+    },
+    {
+      "id": "bind",
+      "stage": "World",
+      "title": "Bind pack",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/scenarios/scenario-1/domain-pack-bindings",
+      "body": {
+        "manifest_id": "manifest-1",
+        "bound_at": "2026-01-01T12:00:00Z"
+      },
+      "expect_status": 201,
+      "capture": {}
+    },
+    {
+      "id": "capability",
+      "stage": "World",
+      "title": "Declare capability",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/scenarios/scenario-1/domain-capability-declarations",
+      "body": {
+        "manifest_id": "manifest-1",
+        "capability_id": "cap-1",
+        "input_values": {
+          "in-a": "alpha",
+          "in-b": 42
+        },
+        "declared_at": "2026-01-01T12:00:00Z"
+      },
+      "expect_status": 201,
+      "capture": {}
+    },
+    {
+      "id": "state-model",
+      "stage": "World",
+      "title": "Declare state model",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/scenarios/scenario-1/domain-state-models",
+      "body": {
+        "manifest_id": "manifest-1",
+        "state_model_id": "lab-state",
+        "state_fields": [
+          {
+            "identifier": "level",
+            "description": "Synthetic level",
+            "value_kind": "integer",
+            "initial_value": 0,
+            "metadata": {}
+          }
+        ],
+        "declared_at": "2026-01-01T12:00:00Z"
+      },
+      "expect_status": 201,
+      "capture": {}
+    },
+    {
+      "id": "set-low",
+      "stage": "World",
+      "title": "Declare set-low",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/scenarios/scenario-1/domain-state-transitions",
+      "body": {
+        "manifest_id": "manifest-1",
+        "state_model_id": "lab-state",
+        "transition_id": "set-low",
+        "description": "Set synthetic level",
+        "guard_values": {},
+        "target_values": {
+          "level": 2
+        },
+        "declared_at": "2026-01-01T12:00:00Z"
+      },
+      "expect_status": 201,
+      "capture": {}
+    },
+    {
+      "id": "set-mid",
+      "stage": "World",
+      "title": "Declare set-mid",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/scenarios/scenario-1/domain-state-transitions",
+      "body": {
+        "manifest_id": "manifest-1",
+        "state_model_id": "lab-state",
+        "transition_id": "set-mid",
+        "description": "Set synthetic level",
+        "guard_values": {},
+        "target_values": {
+          "level": 5
+        },
+        "declared_at": "2026-01-01T12:00:00Z"
+      },
+      "expect_status": 201,
+      "capture": {}
+    },
+    {
+      "id": "set-high",
+      "stage": "World",
+      "title": "Declare set-high",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/scenarios/scenario-1/domain-state-transitions",
+      "body": {
+        "manifest_id": "manifest-1",
+        "state_model_id": "lab-state",
+        "transition_id": "set-high",
+        "description": "Set synthetic level",
+        "guard_values": {},
+        "target_values": {
+          "level": 9
+        },
+        "declared_at": "2026-01-01T12:00:00Z"
+      },
+      "expect_status": 201,
+      "capture": {}
+    },
+    {
+      "id": "metric-binding",
+      "stage": "World",
+      "title": "Bind metric",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/scenarios/scenario-1/metric-observations",
+      "body": {
+        "manifest_id": "manifest-1",
+        "state_model_id": "lab-state",
+        "metric_id": "m-1",
+        "state_field_id": "level",
+        "declared_at": "2026-01-01T12:00:00Z"
+      },
+      "expect_status": 201,
+      "capture": {}
+    },
+    {
+      "id": "evaluation-profile",
+      "stage": "World",
+      "title": "Declare evaluation profile",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/scenarios/scenario-1/evaluation-profile",
+      "body": {
+        "bindings": [
+          {
+            "objective_id": "obj-1",
+            "metric_id": "m-1",
+            "normalization_scale": 10.0
+          }
+        ],
+        "declared_at": "2026-01-01T12:00:00Z"
+      },
+      "expect_status": 201,
+      "capture": {}
+    },
+    {
+      "id": "uncertainty",
+      "stage": "World",
+      "title": "Declare uncertainty",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/scenarios/scenario-1/uncertainty-model",
+      "body": {
+        "bindings": [
+          {
+            "manifest_id": "manifest-1",
+            "state_model_id": "lab-state",
+            "state_field_id": "level",
+            "distribution": {
+              "kind": "uniform",
+              "low": 0.0,
+              "high": 8.0
+            },
+            "rounding_policy": "nearest_ties_to_even"
+          }
+        ],
+        "declared_at": "2026-01-01T12:00:00Z"
+      },
+      "expect_status": 201,
+      "capture": {}
+    },
+    {
+      "id": "compile",
+      "stage": "World",
+      "title": "Compile world",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/scenarios/scenario-1/compile",
+      "body": null,
+      "expect_status": 200,
+      "capture": {
+        "world_id": "/version/identifier"
+      }
+    },
+    {
+      "id": "campaign",
+      "stage": "Campaign",
+      "title": "Prepare campaign",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/campaigns",
+      "body": {
+        "campaign_id": "campaign-1",
+        "campaign_name": "Reference campaign",
+        "scenario_id": "scenario-1",
+        "world_version_id": "{world_id}",
+        "strategy_request": {
+          "identifier": "sr-1",
+          "tenant_id": "{tenant}",
+          "schema_version": "1.0.0",
+          "scenario_id": "scenario-1",
+          "required_observations": [
+            {
+              "metric_id": "m-1",
+              "description": "observe m-1",
+              "required": true
+            }
+          ],
+          "requested_at": "2026-01-01T12:00:00Z",
+          "metadata": {}
+        },
+        "seed_ensemble": [
+          {
+            "identifier": "seed-01",
+            "tenant_id": "{tenant}",
+            "schema_version": "1.0.0",
+            "algorithm": "deterministic",
+            "seed_value": "synthetic-01",
+            "metadata": {}
+          },
+          {
+            "identifier": "seed-02",
+            "tenant_id": "{tenant}",
+            "schema_version": "1.0.0",
+            "algorithm": "deterministic",
+            "seed_value": "synthetic-02",
+            "metadata": {}
+          },
+          {
+            "identifier": "seed-03",
+            "tenant_id": "{tenant}",
+            "schema_version": "1.0.0",
+            "algorithm": "deterministic",
+            "seed_value": "synthetic-03",
+            "metadata": {}
+          },
+          {
+            "identifier": "seed-04",
+            "tenant_id": "{tenant}",
+            "schema_version": "1.0.0",
+            "algorithm": "deterministic",
+            "seed_value": "synthetic-04",
+            "metadata": {}
+          },
+          {
+            "identifier": "seed-05",
+            "tenant_id": "{tenant}",
+            "schema_version": "1.0.0",
+            "algorithm": "deterministic",
+            "seed_value": "synthetic-05",
+            "metadata": {}
+          },
+          {
+            "identifier": "seed-06",
+            "tenant_id": "{tenant}",
+            "schema_version": "1.0.0",
+            "algorithm": "deterministic",
+            "seed_value": "synthetic-06",
+            "metadata": {}
+          },
+          {
+            "identifier": "seed-07",
+            "tenant_id": "{tenant}",
+            "schema_version": "1.0.0",
+            "algorithm": "deterministic",
+            "seed_value": "synthetic-07",
+            "metadata": {}
+          },
+          {
+            "identifier": "seed-08",
+            "tenant_id": "{tenant}",
+            "schema_version": "1.0.0",
+            "algorithm": "deterministic",
+            "seed_value": "synthetic-08",
+            "metadata": {}
+          }
+        ],
+        "runtime_version": "3.0.0",
+        "created_at": "2026-01-01T12:00:00Z"
+      },
+      "expect_status": 201,
+      "capture": {}
+    },
+    {
+      "id": "realizations",
+      "stage": "Campaign",
+      "title": "Realize worlds",
+      "kind": "http",
+      "method": "GET",
+      "path": "/v1/campaigns/campaign-1/world-realizations",
+      "body": null,
+      "expect_status": 200,
+      "capture": {}
+    },
+    {
+      "id": "plans",
+      "stage": "Campaign",
+      "title": "Prepare trajectories",
+      "kind": "lab",
+      "method": "POST",
+      "path": "/lab/api/campaigns/campaign-1/trajectory-plans",
+      "body": null,
+      "expect_status": 200,
+      "capture": {}
+    },
+    {
+      "id": "start",
+      "stage": "Campaign",
+      "title": "Start campaign",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/campaigns/campaign-1/start",
+      "body": {
+        "changed_at": "2026-01-01T12:00:00Z"
+      },
+      "expect_status": 200,
+      "capture": {}
+    },
+    {
+      "id": "execute",
+      "stage": "Campaign",
+      "title": "Execute campaign",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/campaigns/campaign-1/execute",
+      "body": null,
+      "expect_status": 200,
+      "capture": {}
+    },
+    {
+      "id": "runs",
+      "stage": "Runs",
+      "title": "List runs",
+      "kind": "http",
+      "method": "GET",
+      "path": "/v1/campaigns/campaign-1/runs",
+      "body": null,
+      "expect_status": 200,
+      "capture": {
+        "runs": "/run_plans",
+        "first_plan": "/run_plans/0/identifier"
+      }
+    },
+    {
+      "id": "trajectories",
+      "stage": "Trajectories",
+      "title": "Verify trajectory matrix",
+      "kind": "http",
+      "method": "GET",
+      "path": "/v1/campaigns/campaign-1/realization-trajectory-matrix",
+      "body": null,
+      "expect_status": 200,
+      "capture": {}
+    },
+    {
+      "id": "run-trajectories",
+      "stage": "Trajectories",
+      "title": "Load run trajectories",
+      "kind": "http",
+      "method": "GET",
+      "path": "/v1/runs/run-{item.identifier}/realization-trajectory-execution",
+      "body": null,
+      "expect_status": 200,
+      "capture": {
+        "trajectory_runs": ""
+      },
+      "for_each": "runs"
+    },
+    {
+      "id": "observations",
+      "stage": "Statistics",
+      "title": "Extract observations",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/runs/run-{item.identifier}/realization-metric-observations",
+      "body": null,
+      "expect_status": 201,
+      "capture": {},
+      "for_each": "runs"
+    },
+    {
+      "id": "statistics",
+      "stage": "Statistics",
+      "title": "Calculate statistics",
+      "kind": "http",
+      "method": "GET",
+      "path": "/v1/campaigns/campaign-1/realization-metric-statistics",
+      "body": null,
+      "expect_status": 200,
+      "capture": {}
+    },
+    {
+      "id": "outcomes",
+      "stage": "Evidence",
+      "title": "Fetch outcome distributions",
+      "kind": "http",
+      "method": "GET",
+      "path": "/v1/campaigns/campaign-1/outcome-distributions",
+      "body": null,
+      "expect_status": 200,
+      "capture": {}
+    },
+    {
+      "id": "decision-policy",
+      "stage": "Evidence",
+      "title": "Declare decision policy",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/campaigns/campaign-1/decision-policy",
+      "body": {
+        "target_requirement_mode": "global",
+        "minimum_target_achievement_probability": 0.5,
+        "objective_target_requirements": [],
+        "minimum_sample_count": 2,
+        "tie_tolerance": 0.05,
+        "all_targeted_objectives_are_hard_gates": true,
+        "declared_at": "2026-01-04T12:00:00Z",
+        "metadata": {}
+      },
+      "expect_status": 201,
+      "capture": {}
+    },
+    {
+      "id": "comparison",
+      "stage": "Evidence",
+      "title": "Compare strategies",
+      "kind": "http",
+      "method": "GET",
+      "path": "/v1/campaigns/campaign-1/strategy-comparison",
+      "body": null,
+      "expect_status": 200,
+      "capture": {}
+    },
+    {
+      "id": "brief",
+      "stage": "Evidence",
+      "title": "Fetch decision brief",
+      "kind": "http",
+      "method": "GET",
+      "path": "/v1/campaigns/campaign-1/decision-brief",
+      "body": null,
+      "expect_status": 200,
+      "capture": {}
+    },
+    {
+      "id": "verify",
+      "stage": "Replay",
+      "title": "Verify run inputs",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/runs/run-{first_plan}/verify-inputs",
+      "body": null,
+      "expect_status": 200,
+      "capture": {}
+    },
+    {
+      "id": "replay",
+      "stage": "Replay",
+      "title": "Replay first run",
+      "kind": "http",
+      "method": "GET",
+      "path": "/v1/runs/run-{first_plan}/replay",
+      "body": null,
+      "expect_status": 200,
+      "capture": {}
+    }
+  ]
+}

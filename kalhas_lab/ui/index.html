@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KALHAS Lab</title>
+    <meta
+      name="description"
+      content="Run the local KALHAS kernel step by step and inspect its evidence."
+    />
+    <link rel="stylesheet" href="/lab/styles.css" />
+    <script defer src="/lab/app.js"></script>
+  </head>
+  <body>
+    <header class="masthead">
+      <div class="masthead__title">
+        <h1>KALHAS Lab</h1>
+        <p>A deterministic decision world, run live against your local kernel.</p>
+      </div>
+      <dl class="masthead__status">
+        <div>
+          <dt>Kernel</dt>
+          <dd><i id="health-dot" class="lamp"></i><span id="health">Connecting</span></dd>
+        </div>
+        <div>
+          <dt>Version</dt>
+          <dd id="version">–</dd>
+        </div>
+        <div>
+          <dt>Tenant</dt>
+          <dd id="tenant" class="mono">lab-demo-1</dd>
+        </div>
+      </dl>
+      <div class="masthead__controls">
+        <button id="reset" class="btn btn--quiet" type="button">Reset</button>
+        <button id="step" class="btn btn--line" type="button">Run next step</button>
+        <button id="run" class="btn btn--solid" type="button">Run full pipeline</button>
+      </div>
+    </header>
+
+    <p class="disclosure">
+      Local demo: the real KALHAS kernel on synthetic inputs. NEXUS and LEGION are local mocks; one
+      Lab-only step prepares trajectory plans in process. Nothing here is a forecast or a
+      recommendation.
+    </p>
+
+    <div class="layout">
+      <aside class="chain" aria-labelledby="chain-title">
+        <div class="chain__head">
+          <h2 id="chain-title">Provenance chain</h2>
+          <span id="progress" class="chain__progress">0 of 0</span>
+        </div>
+        <div class="meter" aria-hidden="true"><i id="meter-fill"></i></div>
+        <p class="chain__hint">Each step is a real request. Select one to read its JSON.</p>
+        <ol id="pipeline" class="chain__list"></ol>
+      </aside>
+
+      <main class="bench">
+        <section class="specimen" aria-labelledby="specimen-title">
+          <h2 id="specimen-title">World under test</h2>
+          <dl id="specimen" class="specimen__facts">
+            <div>
+              <dt>World</dt>
+              <dd class="pending">Compiled when the pipeline reaches step 13</dd>
+            </div>
+          </dl>
+        </section>
+
+        <figure class="plate plate--wide" aria-labelledby="fig1-caption">
+          <div class="plate__body">
+            <div class="ensemble__worlds">
+              <svg
+                id="fig-worlds"
+                class="fig"
+                viewBox="0 0 960 104"
+                role="img"
+                aria-label="Realized initial levels of the world ensemble"
+              ></svg>
+            </div>
+            <div id="ensemble" class="ensemble__panels">
+              <p class="plate__empty">The ensemble draws itself once the runs are loaded.</p>
+            </div>
+          </div>
+          <figcaption id="fig1-caption">
+            <b>Figure 1.</b> Every strategy faces the same realized worlds (top: one dot per seed,
+            drawn from the declared uncertainty). Below, one panel per strategy: thin lines are
+            single seeds, the heavy line is the median path, the dashed line is the objective
+            target. Endpoints are kernel-reported states; interior points are the targets of applied
+            transitions.
+          </figcaption>
+        </figure>
+
+        <div class="pair">
+          <figure class="plate" aria-labelledby="fig2-caption">
+            <div class="plate__body">
+              <svg
+                id="fig-decision"
+                class="fig"
+                viewBox="0 0 520 340"
+                role="img"
+                aria-label="Decision space: regret against probability of reaching the target"
+              ></svg>
+              <div id="verdict" class="verdict">
+                <p class="plate__empty">The decision brief appears after the comparison.</p>
+              </div>
+            </div>
+            <figcaption id="fig2-caption">
+              <b>Figure 2.</b> Decision space. Lower regret is better; points above the dashed line
+              meet the policy's feasibility threshold. Hollow points are infeasible.
+            </figcaption>
+          </figure>
+
+          <figure class="plate" aria-labelledby="fig3-caption">
+            <div class="plate__body">
+              <div id="replay" class="replay">
+                <p class="plate__empty">Replay proof appears after the last two steps.</p>
+              </div>
+            </div>
+            <figcaption id="fig3-caption">
+              <b>Figure 3.</b> Replay proof. The input hash recorded at execution is recomputed from
+              stored artifacts, character by character, then the run is replayed.
+            </figcaption>
+          </figure>
+        </div>
+
+        <section class="plate plate--table" aria-labelledby="table-title">
+          <h2 id="table-title"><b>Table 1.</b> Outcome distributions across the ensemble</h2>
+          <div class="table-scroll">
+            <table class="outcomes">
+              <thead>
+                <tr>
+                  <th scope="col">Strategy</th>
+                  <th scope="col">Transition sequence</th>
+                  <th scope="col" class="num">Min</th>
+                  <th scope="col" class="num">Median</th>
+                  <th scope="col" class="num">Max</th>
+                  <th scope="col" class="range-col">Range</th>
+                  <th scope="col" class="num">P(target)</th>
+                  <th scope="col" class="num">Median regret</th>
+                  <th scope="col">Feasible</th>
+                </tr>
+              </thead>
+              <tbody id="outcomes">
+                <tr>
+                  <td colspan="9" class="plate__empty">No outcomes yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="pair pair--logs">
+          <section class="plate plate--log" aria-labelledby="log-title">
+            <h2 id="log-title">Request log <span id="log-count" class="count">0</span></h2>
+            <ol id="log" class="log"></ol>
+          </section>
+          <section class="plate plate--log" aria-labelledby="activity-title">
+            <h2 id="activity-title">
+              Kernel activity <span id="activity-count" class="count">0</span>
+            </h2>
+            <ol id="activity" class="log"></ol>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <dialog id="drawer" class="drawer" aria-labelledby="drawer-title">
+      <div class="drawer__head">
+        <h2 id="drawer-title">Step</h2>
+        <button id="close-drawer" class="btn btn--quiet" type="button">Close</button>
+      </div>
+      <div id="drawer-body" class="drawer__body"></div>
+    </dialog>
+  </body>
+</html>
