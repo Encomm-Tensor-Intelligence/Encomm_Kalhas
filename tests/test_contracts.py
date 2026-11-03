@@ -3214,6 +3214,43 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         "content_hash": "0" * 64,
         "metadata": {},
     },
+    next(contract for contract in PUBLIC_CONTRACTS if contract.__name__ == "BenchmarkProtocol"): {
+        "identifier": "benchmark-protocol-synthetic-1.0.0",
+        "tenant_id": "tenant-1",
+        "schema_version": "1.0.0",
+        "protocol_id": "synthetic",
+        "protocol_version": "1.0.0",
+        "split_manifest_id": "dataset-split-synthetic-1.0.0",
+        "split_content_hash": "0" * 64,
+        "curated_manifest_id": "curated-dataset-synthetic-clean-1.0.0",
+        "curated_content_hash": "0" * 64,
+        "curated_bundle_hash": "0" * 64,
+        "task_vocabulary_version": "1.0.0",
+        "targets": [
+            {
+                "path": "clean.csv",
+                "series_column": "region",
+                "time_column": "period",
+                "value_column": "value",
+                "horizons": [1],
+                "history_window": 2,
+                "min_history_points": 1,
+                "minimum_evaluable_tasks": 1,
+                "non_negative": True,
+            }
+        ],
+        "quantile_levels": ["0.025", "0.1", "0.25", "0.5", "0.75", "0.9", "0.975"],
+        "scoring_rule": "kalhas-wis-k3-v1",
+        "comparison": {
+            "reference_baseline_id": "synthetic",
+            "reference_baseline_version": "1.0.0",
+            "relative_wis_pass_below": "1",
+        },
+        "preregistration_note": "Fixed in advance; no outcome values were inspected.",
+        "locked_at": NOW,
+        "content_hash": "0" * 64,
+        "metadata": {},
+    },
 }
 
 

@@ -553,3 +553,74 @@ def test_ecdc_split_extra_file_is_rejected(copied_root: Path) -> None:
     result = _run(copied_root)
     assert result.returncode == 1
     assert f"FAIL {ECDC_SPLIT_PATH}: undeclared_file" in result.stdout
+
+
+# --- synthetic protocol chain -------------------------------------------------------------
+
+
+@pytest.fixture
+def protocol_chain_root(scratch_root: Path) -> Path:
+    from tests.test_benchmark_task_engine import chain
+
+    raw, sources, curated, files, split, protocol = chain()
+    raw_dir = scratch_root / "datasets/v1/raw" / raw.dataset_id / raw.vintage
+    raw_dir.mkdir(parents=True)
+    (raw_dir / "manifest.json").write_text(_render(raw), encoding="utf-8", newline="\n")
+    for name, content in sources.items():
+        (raw_dir / name).write_bytes(content)
+    curated_dir = (
+        scratch_root / "datasets/v1/curated" / curated.curated_dataset_id / curated.curation_version
+    )
+    curated_dir.mkdir(parents=True)
+    (curated_dir / "manifest.json").write_text(_render(curated), encoding="utf-8", newline="\n")
+    for name, content in files.items():
+        (curated_dir / name).write_bytes(content)
+    split_dir = scratch_root / "datasets/v1/splits" / split.split_id / split.split_version
+    split_dir.mkdir(parents=True)
+    (split_dir / "manifest.json").write_text(_render(split), encoding="utf-8", newline="\n")
+    directory = (
+        scratch_root / "benchmarks/v1/protocols" / protocol.protocol_id / protocol.protocol_version
+    )
+    directory.mkdir(parents=True)
+    (directory / "manifest.json").write_text(_render(protocol), encoding="utf-8", newline="\n")
+    return scratch_root
+
+
+def test_protocol_chain_passes(protocol_chain_root: Path) -> None:
+    result = _run(protocol_chain_root)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "ok benchmarks/v1/protocols/synthetic/1.0.0" in result.stdout
+
+
+def test_protocol_chain_extra_file_fails(protocol_chain_root: Path) -> None:
+    (protocol_chain_root / "benchmarks/v1/protocols/synthetic/1.0.0/extra").write_bytes(b"x")
+    result = _run(protocol_chain_root)
+    assert result.returncode == 1
+    assert "undeclared_file" in result.stdout
+
+
+def test_protocol_chain_edited_manifest_fails(protocol_chain_root: Path) -> None:
+    path = protocol_chain_root / "benchmarks/v1/protocols/synthetic/1.0.0/manifest.json"
+    text = path.read_text(encoding="utf-8")
+    edited = text.replace("Fixed without", "Changed without")
+    assert edited != text
+    path.write_text(edited, encoding="utf-8", newline="\n")
+    result = _run(protocol_chain_root)
+    assert result.returncode == 1
+    assert "content_hash_mismatch" in result.stdout
+
+
+def test_protocol_chain_missing_split_fails(protocol_chain_root: Path) -> None:
+    shutil.rmtree(protocol_chain_root / "datasets/v1/splits")
+    result = _run(protocol_chain_root)
+    assert result.returncode == 1
+    assert "split_input_missing" in result.stdout
+
+
+def test_real_repository_has_verified_input_chain_and_no_protocol() -> None:
+    result = _run(REPO_ROOT)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "ok datasets/v1/raw/ecdc-covid19-hospital-icu/2026-11-02" in result.stdout
+    assert "ok datasets/v1/curated/ecdc-covid19-hospital-icu-by-indicator/1.0.0" in result.stdout
+    assert "ok datasets/v1/splits/ecdc-covid19-hospital-icu-primary/1.0.0" in result.stdout
+    assert not (REPO_ROOT / "benchmarks").exists()

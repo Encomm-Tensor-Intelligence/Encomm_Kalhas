@@ -326,3 +326,67 @@ def test_split_modules_have_pure_imports(relative: str) -> None:
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
             assert node.func.id not in {"open", "exec", "eval", "__import__"}, relative
+
+
+# ADR-009 benchmark boundaries
+_BENCHMARK_MODULES = (
+    "contracts/v1/benchmark_protocol.py",
+    "application/benchmark_task_engine.py",
+    "application/benchmark_protocol_verifier.py",
+    "application/benchmark_errors.py",
+)
+_BENCHMARK_ALLOWED_IMPORTS = _SPLIT_ALLOWED_IMPORTS | {
+    "bisect",
+    "dataclasses",
+    "kalhas.application.benchmark_errors",
+    "kalhas.application.benchmark_protocol_verifier",
+    "kalhas.application.curated_dataset_verifier",
+    "kalhas.application.dataset_split_verifier",
+}
+
+
+def test_adr009_scope_and_decisions() -> None:
+    path = REPO_ROOT / "docs/decisions/ADR-009-benchmark-protocol-forecast-producers-and-scoring.md"
+    normalized = re.sub(r"\s+", " ", path.read_text(encoding="utf-8")).lower()
+    assert "- status: accepted" in normalized
+    assert "- date: 2026-11-03" in normalized
+    for number in range(1, 11):
+        assert f"### d30-02-{number} — " in normalized
+    for phrase in (
+        "this adr supersedes nothing",
+        "must not be read as claiming any of them",
+        "benchmarkprotocol",
+        "forecastset",
+        "benchmarkscorereport",
+        "kalhas-wis-k3-v1",
+        "option a",
+    ):
+        assert phrase in normalized
+
+
+@pytest.mark.parametrize("relative", _BENCHMARK_MODULES)
+def test_benchmark_neutral_vocabulary(relative: str) -> None:
+    test_curated_modules_carry_no_domain_vocabulary(relative)
+
+
+@pytest.mark.parametrize("relative", _BENCHMARK_MODULES)
+def test_benchmark_pure_imports(relative: str) -> None:
+    tree = ast.parse((KALHAS_ROOT / relative).read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names = [alias.name for alias in node.names]
+        elif isinstance(node, ast.ImportFrom):
+            assert node.level == 0
+            names = [node.module or ""]
+            if node.module == "datetime":
+                assert {alias.name for alias in node.names} <= {"date", "timedelta"}
+        else:
+            names = []
+        for name in names:
+            assert name in _BENCHMARK_ALLOWED_IMPORTS or name.startswith(
+                _ALLOWED_IMPORT_PREFIXES
+            ), (relative, name)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            assert node.func.id not in {"open", "exec", "eval", "__import__"}
+        if isinstance(node, ast.Attribute):
+            assert node.attr not in {"now", "today", "utcnow", "environ", "getenv"}

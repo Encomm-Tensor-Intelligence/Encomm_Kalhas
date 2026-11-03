@@ -1,0 +1,253 @@
+{
+  "$defs": {
+    "BenchmarkComparison": {
+      "additionalProperties": false,
+      "properties": {
+        "reference_baseline_id": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "title": "Reference Baseline Id",
+          "type": "string"
+        },
+        "reference_baseline_version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Reference Baseline Version",
+          "type": "string"
+        },
+        "relative_wis_pass_below": {
+          "pattern": "^[0-9]+(\\.[0-9]{1,6})?$",
+          "title": "Relative Wis Pass Below",
+          "type": "string"
+        }
+      },
+      "required": [
+        "reference_baseline_id",
+        "reference_baseline_version",
+        "relative_wis_pass_below"
+      ],
+      "title": "BenchmarkComparison",
+      "type": "object"
+    },
+    "BenchmarkTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "history_window": {
+          "maximum": 3660,
+          "minimum": 1,
+          "title": "History Window",
+          "type": "integer"
+        },
+        "horizons": {
+          "items": {
+            "maximum": 366,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "minItems": 1,
+          "title": "Horizons",
+          "type": "array"
+        },
+        "min_history_points": {
+          "minimum": 1,
+          "title": "Min History Points",
+          "type": "integer"
+        },
+        "minimum_evaluable_tasks": {
+          "minimum": 1,
+          "title": "Minimum Evaluable Tasks",
+          "type": "integer"
+        },
+        "non_negative": {
+          "title": "Non Negative",
+          "type": "boolean"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "series_column": {
+          "minLength": 1,
+          "title": "Series Column",
+          "type": "string"
+        },
+        "time_column": {
+          "minLength": 1,
+          "title": "Time Column",
+          "type": "string"
+        },
+        "value_column": {
+          "minLength": 1,
+          "title": "Value Column",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "series_column",
+        "time_column",
+        "value_column",
+        "horizons",
+        "history_window",
+        "min_history_points",
+        "minimum_evaluable_tasks",
+        "non_negative"
+      ],
+      "title": "BenchmarkTarget",
+      "type": "object"
+    },
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "description": "A protocol lock; its note declares that selection was value-blind.",
+  "properties": {
+    "comparison": {
+      "$ref": "#/$defs/BenchmarkComparison"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "curated_bundle_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Curated Bundle Hash",
+      "type": "string"
+    },
+    "curated_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Curated Content Hash",
+      "type": "string"
+    },
+    "curated_manifest_id": {
+      "minLength": 1,
+      "title": "Curated Manifest Id",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "locked_at": {
+      "format": "date-time",
+      "title": "Locked At",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "preregistration_note": {
+      "minLength": 1,
+      "title": "Preregistration Note",
+      "type": "string"
+    },
+    "protocol_id": {
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "title": "Protocol Id",
+      "type": "string"
+    },
+    "protocol_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Protocol Version",
+      "type": "string"
+    },
+    "quantile_levels": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Quantile Levels",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scoring_rule": {
+      "const": "kalhas-wis-k3-v1",
+      "title": "Scoring Rule",
+      "type": "string"
+    },
+    "split_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Split Content Hash",
+      "type": "string"
+    },
+    "split_manifest_id": {
+      "minLength": 1,
+      "title": "Split Manifest Id",
+      "type": "string"
+    },
+    "targets": {
+      "items": {
+        "$ref": "#/$defs/BenchmarkTarget"
+      },
+      "minItems": 1,
+      "title": "Targets",
+      "type": "array"
+    },
+    "task_vocabulary_version": {
+      "const": "1.0.0",
+      "title": "Task Vocabulary Version",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "protocol_id",
+    "protocol_version",
+    "split_manifest_id",
+    "split_content_hash",
+    "curated_manifest_id",
+    "curated_content_hash",
+    "curated_bundle_hash",
+    "task_vocabulary_version",
+    "targets",
+    "quantile_levels",
+    "scoring_rule",
+    "comparison",
+    "preregistration_note",
+    "locked_at",
+    "content_hash"
+  ],
+  "title": "BenchmarkProtocol",
+  "type": "object"
+}

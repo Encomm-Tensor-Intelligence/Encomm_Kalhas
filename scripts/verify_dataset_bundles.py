@@ -2,8 +2,9 @@
 
 Discovers raw bundles at ``datasets/v1/raw/<dataset_id>/<vintage>/`` and
 curated bundles at ``datasets/v1/curated/<curated_dataset_id>/<version>/``
-and split bundles at ``datasets/v1/splits/<split_id>/<version>/`` under the
-repository root (or ``--root``). Each directory must hold a
+split bundles at ``datasets/v1/splits/<split_id>/<version>/``, and protocols
+at ``benchmarks/v1/protocols/<protocol_id>/<version>/`` under the repository
+root (or ``--root``). Each directory must hold a
 ``manifest.json`` whose identity equals the directory names.
 
 - A raw manifest is parsed as a ``RawDatasetManifest`` and checked with the
@@ -14,6 +15,7 @@ repository root (or ``--root``). Each directory must hold a
   re-executes the plan against the raw bytes and the curated files.
 
 - A split manifest is checked against its curated and raw input chain.
+- A protocol is checked against its split, curated and raw input chain.
 
 It only reads: it never writes, never touches the network, and prints the
 bundle directory and the bounded failure reason, never bytes.
@@ -32,12 +34,15 @@ import sys
 from collections.abc import Mapping
 from pathlib import Path
 
+from kalhas.application.benchmark_errors import BenchmarkProtocolVerificationError
+from kalhas.application.benchmark_protocol_verifier import verify_benchmark_protocol
 from kalhas.application.curated_dataset_verifier import verify_curated_dataset_bundle
 from kalhas.application.dataset_split_errors import DatasetSplitVerificationError
 from kalhas.application.dataset_split_verifier import verify_dataset_split
 from kalhas.application.dataset_transformation_errors import CuratedDatasetVerificationError
 from kalhas.application.raw_dataset_errors import RawDatasetVerificationError
 from kalhas.application.raw_dataset_verifier import verify_raw_dataset_bundle
+from kalhas.contracts.v1.benchmark_protocol import BenchmarkProtocol
 from kalhas.contracts.v1.curated_dataset import CuratedDatasetManifest
 from kalhas.contracts.v1.dataset import RawDatasetManifest
 from kalhas.contracts.v1.dataset_split import DatasetSplitManifest
@@ -48,6 +53,10 @@ MANIFEST_NAME = "manifest.json"
 RAW_RELATIVE = Path("datasets") / "v1" / "raw"
 CURATED_RELATIVE = Path("datasets") / "v1" / "curated"
 SPLIT_RELATIVE = Path("datasets") / "v1" / "splits"
+PROTOCOL_RELATIVE = Path("benchmarks") / "v1" / "protocols"
+_SPLIT_IDENTIFIER = re.compile(
+    r"dataset-split-(?P<split_id>[a-z0-9]+(?:-[a-z0-9]+)*)-(?P<version>\d+\.\d+\.\d+)"
+)
 _CURATED_IDENTIFIER = re.compile(
     r"curated-dataset-(?P<dataset_id>[a-z0-9]+(?:-[a-z0-9]+)*)-(?P<version>\d+\.\d+\.\d+)"
 )
@@ -191,6 +200,68 @@ def _verify_split(root: Path, bundle: Path) -> str | None:
     return None
 
 
+def _verify_protocol(root: Path, bundle: Path) -> str | None:
+    path = bundle / MANIFEST_NAME
+    if not path.is_file():
+        return "missing_manifest"
+    if any(entry.name != MANIFEST_NAME for entry in bundle.iterdir()):
+        return "undeclared_file"
+    try:
+        protocol = BenchmarkProtocol.model_validate_json(path.read_bytes())
+    except ValidationError:
+        return "invalid_manifest"
+    if bundle.parent.name != protocol.protocol_id or bundle.name != protocol.protocol_version:
+        return "identity_mismatch"
+    split_match = _SPLIT_IDENTIFIER.fullmatch(protocol.split_manifest_id)
+    if split_match is None:
+        return "split_input_missing"
+    split_dir = root / SPLIT_RELATIVE / split_match.group("split_id") / split_match.group("version")
+    split_path = split_dir / MANIFEST_NAME
+    if not split_path.is_file():
+        return "split_input_missing"
+    if any(entry.name != MANIFEST_NAME for entry in split_dir.iterdir()):
+        return "split_input_invalid"
+    try:
+        split = DatasetSplitManifest.model_validate_json(split_path.read_bytes())
+    except ValidationError:
+        return "split_input_invalid"
+    if split.split_id != split_match.group("split_id") or split.split_version != split_match.group(
+        "version"
+    ):
+        return "split_input_invalid"
+    curated_match = _CURATED_IDENTIFIER.fullmatch(split.curated_manifest_id)
+    if curated_match is None:
+        return "split_input_invalid"
+    curated_dir = (
+        root / CURATED_RELATIVE / curated_match.group("dataset_id") / curated_match.group("version")
+    )
+    curated_path = curated_dir / MANIFEST_NAME
+    if not curated_path.is_file():
+        return "split_input_invalid"
+    try:
+        curated = CuratedDatasetManifest.model_validate_json(curated_path.read_bytes())
+    except ValidationError:
+        return "split_input_invalid"
+    if curated.curated_dataset_id != curated_match.group(
+        "dataset_id"
+    ) or curated.curation_version != curated_match.group("version"):
+        return "split_input_invalid"
+    raw_bundles: dict[str, tuple[RawDatasetManifest, Mapping[str, bytes]]] = {}
+    for reference in curated.inputs:
+        match = _RAW_IDENTIFIER.fullmatch(reference.raw_manifest_id)
+        if match is None:
+            return "split_input_invalid"
+        loaded = _load_raw(root / RAW_RELATIVE / match.group("dataset_id") / match.group("vintage"))
+        if isinstance(loaded, str):
+            return "split_input_invalid"
+        raw_bundles[reference.raw_manifest_id] = loaded
+    try:
+        verify_benchmark_protocol(protocol, split, curated, _read_files(curated_dir), raw_bundles)
+    except BenchmarkProtocolVerificationError as error:
+        return error.reason
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument(
@@ -207,7 +278,15 @@ def main(argv: list[str] | None = None) -> int:
     failures += curated_failures
     split_bundles, split_failures = _bundle_directories(root, SPLIT_RELATIVE)
     failures += split_failures
-    if not raw_bundles and not curated_bundles and not split_bundles and not failures:
+    protocols, protocol_failures = _bundle_directories(root, PROTOCOL_RELATIVE)
+    failures += protocol_failures
+    if (
+        not raw_bundles
+        and not curated_bundles
+        and not split_bundles
+        and not protocols
+        and not failures
+    ):
         print("no dataset bundles")
         return 0
     for bundle in raw_bundles:
@@ -227,6 +306,13 @@ def main(argv: list[str] | None = None) -> int:
     for bundle in split_bundles:
         name = bundle.relative_to(root).as_posix()
         reason = _verify_split(root, bundle)
+        if reason is None:
+            print(f"ok {name}")
+        else:
+            failures.append(f"FAIL {name}: {reason}")
+    for bundle in protocols:
+        name = bundle.relative_to(root).as_posix()
+        reason = _verify_protocol(root, bundle)
         if reason is None:
             print(f"ok {name}")
         else:

@@ -8,3 +8,5 @@
 /tests/test_conformance_stockflow_domain_pack.py text eol=lf
 # Raw dataset bundles are stored exactly as published: git must never change their bytes.
 /datasets/** -text
+# Preserve benchmark bundle bytes exactly.
+/benchmarks/** -text
