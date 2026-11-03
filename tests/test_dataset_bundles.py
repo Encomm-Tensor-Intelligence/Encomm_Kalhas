@@ -388,3 +388,64 @@ def test_committed_ecdc_curated_missing_file_fails(copied_root: Path) -> None:
     result = _run(copied_root)
     assert result.returncode == 1
     assert f"FAIL {ECDC_CURATED_PATH}: missing_file" in result.stdout
+
+
+# --- synthetic split bundle --------------------------------------------------------------
+
+
+@pytest.fixture
+def split_chain_root(scratch_root: Path) -> Path:
+    from tests.test_dataset_split_engine import RAW_FILES as SPLIT_RAW_FILES
+    from tests.test_dataset_split_engine import build_split, synthetic_chain
+
+    raw, curated, files = synthetic_chain()
+    raw_dir = scratch_root / "datasets/v1/raw" / raw.dataset_id / raw.vintage
+    raw_dir.mkdir(parents=True)
+    (raw_dir / "manifest.json").write_text(_render(raw), encoding="utf-8", newline="\n")
+    for name, content in SPLIT_RAW_FILES.items():
+        (raw_dir / name).write_bytes(content)
+    curated_dir = (
+        scratch_root / "datasets/v1/curated" / curated.curated_dataset_id / curated.curation_version
+    )
+    curated_dir.mkdir(parents=True)
+    (curated_dir / "manifest.json").write_text(_render(curated), encoding="utf-8", newline="\n")
+    for name, content in files.items():
+        (curated_dir / name).write_bytes(content)
+    split = build_split(curated, files)
+    split_dir = scratch_root / "datasets/v1/splits" / split.split_id / split.split_version
+    split_dir.mkdir(parents=True)
+    (split_dir / "manifest.json").write_text(_render(split), encoding="utf-8", newline="\n")
+    return scratch_root
+
+
+def test_split_chain_script_passes(split_chain_root: Path) -> None:
+    result = _run(split_chain_root)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "ok datasets/v1/splits/synthetic/1.0.0" in result.stdout
+
+
+def test_split_chain_rejects_extra_file(split_chain_root: Path) -> None:
+    (split_chain_root / "datasets/v1/splits/synthetic/1.0.0/extra").write_bytes(b"x")
+    result = _run(split_chain_root)
+    assert result.returncode == 1
+    assert "undeclared_file" in result.stdout
+
+
+def test_split_chain_rejects_manifest_edit(split_chain_root: Path) -> None:
+    path = split_chain_root / "datasets/v1/splits/synthetic/1.0.0/manifest.json"
+    text = path.read_text(encoding="utf-8")
+    path.write_text(
+        text.replace("Calendar and geography", "Different calendar and geography"),
+        encoding="utf-8",
+        newline="\n",
+    )
+    result = _run(split_chain_root)
+    assert result.returncode == 1
+    assert "content_hash_mismatch" in result.stdout
+
+
+def test_split_chain_rejects_missing_curated(split_chain_root: Path) -> None:
+    shutil.rmtree(split_chain_root / "datasets/v1/curated")
+    result = _run(split_chain_root)
+    assert result.returncode == 1
+    assert "curated_input_missing" in result.stdout
