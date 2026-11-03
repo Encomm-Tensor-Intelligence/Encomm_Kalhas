@@ -624,3 +624,120 @@ def test_real_repository_has_verified_input_chain_and_no_protocol() -> None:
     assert "ok datasets/v1/curated/ecdc-covid19-hospital-icu-by-indicator/1.0.0" in result.stdout
     assert "ok datasets/v1/splits/ecdc-covid19-hospital-icu-primary/1.0.0" in result.stdout
     assert not (REPO_ROOT / "benchmarks").exists()
+
+
+@pytest.fixture
+def forecast_chain_root(protocol_chain_root: Path) -> Path:
+    from kalhas.application.benchmark_scoring import build_benchmark_score_report
+
+    from tests.test_benchmark_scoring import NOW, prepared
+
+    _, _, curated, files, split, protocol, candidate, cb, reference, rb = prepared()
+    for artifact, data in ((candidate, cb), (reference, rb)):
+        directory = (
+            protocol_chain_root
+            / "benchmarks/v1/forecasts"
+            / artifact.forecast_set_id
+            / artifact.forecast_set_version
+        )
+        directory.mkdir(parents=True)
+        (directory / "manifest.json").write_text(_render(artifact), encoding="utf-8", newline="\n")
+        (directory / "forecasts.csv").write_bytes(data)
+    report = build_benchmark_score_report(
+        report_id="report",
+        report_version="1.0.0",
+        protocol=protocol,
+        split_manifest=split,
+        curated_manifest=curated,
+        curated_files=files,
+        candidate=candidate,
+        candidate_csv=cb,
+        reference=reference,
+        reference_csv=rb,
+        limitations=("Synthetic only",),
+        scored_at=NOW,
+        metadata={},
+    )
+    directory = (
+        protocol_chain_root / "benchmarks/v1/reports" / report.report_id / report.report_version
+    )
+    directory.mkdir(parents=True)
+    (directory / "manifest.json").write_text(_render(report), encoding="utf-8", newline="\n")
+    return protocol_chain_root
+
+
+def test_forecast_and_report_chain_passes(forecast_chain_root: Path) -> None:
+    result = _run(forecast_chain_root)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "ok benchmarks/v1/forecasts/candidate/1.0.0" in result.stdout
+    assert "ok benchmarks/v1/reports/report/1.0.0" in result.stdout
+
+
+@pytest.mark.parametrize(
+    "mutation,reason",
+    [
+        ("extra", "undeclared_file"),
+        ("missing", "missing_forecasts_file"),
+        ("edited", "file_mismatch"),
+        ("manifest", "invalid_manifest"),
+        ("protocol", "protocol_input_missing"),
+        ("report-input", "forecast_input_missing"),
+        ("holdout", "sealed_partition"),
+    ],
+)
+def test_forecast_and_report_fail_closed(
+    forecast_chain_root: Path, mutation: str, reason: str
+) -> None:
+    directory = forecast_chain_root / "benchmarks/v1/forecasts/candidate/1.0.0"
+    if mutation == "extra":
+        (directory / "extra").write_bytes(b"x")
+    elif mutation == "missing":
+        (directory / "forecasts.csv").unlink()
+    elif mutation == "edited":
+        (directory / "forecasts.csv").write_bytes(b"edited")
+    elif mutation == "manifest":
+        (directory / "manifest.json").write_text("{}", encoding="utf-8")
+    elif mutation == "protocol":
+        shutil.rmtree(forecast_chain_root / "benchmarks/v1/protocols")
+    elif mutation == "report-input":
+        shutil.rmtree(directory)
+    else:
+        path = directory / "manifest.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["partition"] = "holdout"
+        path.write_text(json.dumps(data), encoding="utf-8")
+    result = _run(forecast_chain_root)
+    assert result.returncode == 1
+    assert reason in result.stdout
+    assert "Traceback" not in result.stderr
+
+
+def test_forecast_manifest_hash_tampering(forecast_chain_root: Path) -> None:
+    path = forecast_chain_root / "benchmarks/v1/forecasts/candidate/1.0.0/manifest.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["metadata"] = {"changed": True}
+    path.write_text(json.dumps(data), encoding="utf-8")
+    result = _run(forecast_chain_root)
+    assert result.returncode == 1
+    assert "content_hash_mismatch" in result.stdout
+
+
+def test_holdout_report_is_sealed(forecast_chain_root: Path) -> None:
+    path = forecast_chain_root / "benchmarks/v1/reports/report/1.0.0/manifest.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["partition"] = "holdout"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    result = _run(forecast_chain_root)
+    assert result.returncode == 1
+    assert "FAIL benchmarks/v1/reports/report/1.0.0: sealed_partition" in result.stdout
+    assert "Traceback" not in result.stderr
+
+
+def test_forecast_failures_precede_report_results(forecast_chain_root: Path) -> None:
+    path = forecast_chain_root / "benchmarks/v1/forecasts/candidate/1.0.0/forecasts.csv"
+    path.write_bytes(b"edited")
+    result = _run(forecast_chain_root)
+    assert result.returncode == 1
+    assert result.stdout.index("FAIL benchmarks/v1/forecasts/") < result.stdout.index(
+        "FAIL benchmarks/v1/reports/"
+    )

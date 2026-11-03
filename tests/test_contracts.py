@@ -3251,6 +3251,64 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         "content_hash": "0" * 64,
         "metadata": {},
     },
+    next(contract for contract in PUBLIC_CONTRACTS if contract.__name__ == "ForecastSet"): {
+        "identifier": "forecast-set-synthetic-1.0.0",
+        "tenant_id": "tenant-1",
+        "forecast_set_id": "synthetic",
+        "forecast_set_version": "1.0.0",
+        "protocol_manifest_id": "benchmark-protocol-synthetic-1.0.0",
+        "protocol_content_hash": "0" * 64,
+        "partition": "development",
+        "producer": {
+            "kind": "baseline",
+            "producer_id": "synthetic",
+            "producer_version": "1.0.0",
+            "configuration_hash": "0" * 64,
+        },
+        "forecasts_file": {
+            "path": "forecasts.csv",
+            "sha256": "0" * 64,
+            "byte_size": 1,
+            "row_count": 0,
+        },
+        "created_at": NOW,
+        "content_hash": "0" * 64,
+        "metadata": {},
+    },
+    next(
+        contract for contract in PUBLIC_CONTRACTS if contract.__name__ == "BenchmarkScoreReport"
+    ): {
+        "identifier": "benchmark-score-report-synthetic-1.0.0",
+        "tenant_id": "tenant-1",
+        "report_id": "synthetic",
+        "report_version": "1.0.0",
+        "protocol_manifest_id": "benchmark-protocol-synthetic-1.0.0",
+        "protocol_content_hash": "0" * 64,
+        "partition": "development",
+        "candidate_forecast_set_id": "forecast-set-a-1.0.0",
+        "candidate_forecast_set_content_hash": "0" * 64,
+        "reference_forecast_set_id": "forecast-set-b-1.0.0",
+        "reference_forecast_set_content_hash": "0" * 64,
+        "scoring_rule": "kalhas-wis-k3-v1",
+        "cells": [
+            {
+                "path": "clean.csv",
+                "horizon": 1,
+                "evaluable_tasks": 0,
+                "inadmissible_origin_tasks": 0,
+                "insufficient_history_tasks": 0,
+                "candidate": None,
+                "reference": None,
+                "relative_wis": None,
+                "verdict": "inconclusive",
+                "verdict_reason": "insufficient_evaluable_tasks",
+            }
+        ],
+        "limitations": ["Synthetic data."],
+        "scored_at": NOW,
+        "content_hash": "0" * 64,
+        "metadata": {},
+    },
 }
 
 

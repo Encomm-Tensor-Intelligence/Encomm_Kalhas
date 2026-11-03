@@ -10,6 +10,7 @@ from kalhas.contracts.v1.activity import OperationalActivityEvent, OperationalAc
 from kalhas.contracts.v1.adaptive_policy import AdaptivePolicy
 from kalhas.contracts.v1.adaptive_trajectory_execution import AdaptiveRunTrajectoryExecution
 from kalhas.contracts.v1.adaptive_trajectory_replay import AdaptiveRunTrajectoryReplayManifest
+from kalhas.contracts.v1.benchmark_forecast import BenchmarkScoreReport, ForecastSet
 from kalhas.contracts.v1.benchmark_protocol import BenchmarkProtocol
 from kalhas.contracts.v1.campaign import (
     CampaignSpec,
@@ -190,6 +191,8 @@ PUBLIC_CONTRACTS: tuple[type[VersionedContract], ...] = (
     CuratedDatasetManifest,
     DatasetSplitManifest,
     BenchmarkProtocol,
+    ForecastSet,
+    BenchmarkScoreReport,
 )
 __all__ = [
     "API_VERSION",
@@ -212,6 +215,8 @@ __all__ = [
     "CuratedDatasetManifest",
     "DatasetSplitManifest",
     "BenchmarkProtocol",
+    "BenchmarkScoreReport",
+    "ForecastSet",
     "ClarificationQuestion",
     "ContextBundle",
     "DecisionBrief",

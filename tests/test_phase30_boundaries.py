@@ -390,3 +390,59 @@ def test_benchmark_pure_imports(relative: str) -> None:
             assert node.func.id not in {"open", "exec", "eval", "__import__"}
         if isinstance(node, ast.Attribute):
             assert node.attr not in {"now", "today", "utcnow", "environ", "getenv"}
+
+
+_FORECAST_MODULES = (
+    "contracts/v1/benchmark_forecast.py",
+    "application/benchmark_scoring.py",
+    "application/benchmark_forecast_verifier.py",
+    "application/benchmark_forecast_errors.py",
+)
+_FORECAST_ALLOWED_IMPORTS = _BENCHMARK_ALLOWED_IMPORTS | {
+    "fractions",
+    "csv",
+    "io",
+    "kalhas.application.benchmark_task_engine",
+    "kalhas.application.benchmark_forecast_errors",
+    "kalhas.application.benchmark_scoring",
+}
+
+
+def test_adr010_scope_and_decisions() -> None:
+    path = (
+        REPO_ROOT / "docs/decisions/ADR-010-declared-missing-rows-in-benchmark-task-derivation.md"
+    )
+    normalized = re.sub(r"\s+", " ", path.read_text(encoding="utf-8")).lower()
+    assert "- status: accepted" in normalized
+    assert "- date: 2026-11-03" in normalized
+    for number in range(1, 5):
+        assert f"### d30-02m-{number} — " in normalized
+    assert "this adr supersedes nothing" in normalized
+    assert "must not be read as claiming any of them" in normalized
+
+
+@pytest.mark.parametrize("relative", _FORECAST_MODULES)
+def test_forecast_modules_are_neutral_and_pure(relative: str) -> None:
+    test_curated_modules_carry_no_domain_vocabulary(relative)
+    tree = ast.parse((KALHAS_ROOT / relative).read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names = [a.name for a in node.names]
+        elif isinstance(node, ast.ImportFrom):
+            assert node.level == 0
+            names = [node.module or ""]
+        else:
+            names = []
+        for name in names:
+            assert name in _FORECAST_ALLOWED_IMPORTS or name.startswith(_ALLOWED_IMPORT_PREFIXES)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            assert node.func.id not in {"open", "exec", "eval", "__import__"}
+        if isinstance(node, ast.Attribute):
+            assert node.attr not in {"now", "today", "utcnow", "environ", "getenv"}
+        if relative in {
+            "application/benchmark_scoring.py",
+            "application/benchmark_forecast_verifier.py",
+        }:
+            assert not (isinstance(node, ast.Name) and node.id == "float")
+            assert not (isinstance(node, ast.Constant) and isinstance(node.value, float))
+            assert all(name not in {"decimal", "math"} for name in names)

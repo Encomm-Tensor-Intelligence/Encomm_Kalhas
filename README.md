@@ -16,7 +16,7 @@ the decision-world engine in a strict three-role architecture alongside NEXUS
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?logo=ruff)](#testing-and-verification)
 [![Formatting](https://img.shields.io/badge/format-ruff%20format-261230?logo=ruff)](#testing-and-verification)
 [![Types](https://img.shields.io/badge/types-mypy%20strict-1F6FEB)](#testing-and-verification)
-[![Schemas](https://img.shields.io/badge/schemas-65%20synchronized-F7C744)](#testing-and-verification)
+[![Schemas](https://img.shields.io/badge/schemas-67%20synchronized-F7C744)](#testing-and-verification)
 [![Replay](https://img.shields.io/badge/replay-deterministic-2ea44f)](#core-guarantees)
 
 </div>
@@ -37,7 +37,7 @@ protocol, and the kernel never imports NEXUS or LEGION internals.
 
 ## Core guarantees
 
-- **Versioned public contracts.** All 65 public v1 contracts are frozen once
+- **Versioned public contracts.** All 67 public v1 contracts are frozen once
   shipped, with synchronized JSON Schema artifacts; breaking changes require a
   new version module and API segment, never in-place mutation.
 - **Deterministic replay.** Completed runs replay exactly, verified against
@@ -57,7 +57,7 @@ protocol, and the kernel never imports NEXUS or LEGION internals.
 
 | Area | What it provides |
 | --- | --- |
-| Contracts & lifecycle | 65 versioned v1 contracts, canonical serialization, content hashes, campaign lifecycle state machine |
+| Contracts & lifecycle | 67 versioned v1 contracts, canonical serialization, content hashes, campaign lifecycle state machine |
 | World models | Immutable world versions, domain-pack bindings, capability-input declarations, uncertainty declarations, deterministic realizations |
 | Campaign runtime | Structural, realization-aware (`3.0.0`), and adaptive (`4.0.0`) deterministic runtimes with exact replay |
 | Evidence | Run/campaign metric observations, empirical outcome distributions (Type-7 quantiles, fixed-alpha tails), objective evaluations |
@@ -88,7 +88,7 @@ flowchart LR
         direction TB
         API["FastAPI v1 surface<br/>46 paths · typed errors"]
         APP["application services<br/>runtimes 1.0.0 – 4.0.0"]
-        CON["versioned v1 contracts<br/>65 contracts · 65 JSON schemas"]
+        CON["versioned v1 contracts<br/>67 contracts · 67 JSON schemas"]
         STORE["in-memory store<br/>snapshots · evidence · replay"]
         API --> APP --> CON
         APP --> STORE
@@ -228,7 +228,7 @@ See [`docs/model-packs/README.md`](docs/model-packs/README.md) for the catalogue
 | [`AGENTS.md`](AGENTS.md) | Durable repository rules and gates |
 | [`docs/architecture/README.md`](docs/architecture/README.md) | Layer map and dependency rules |
 | [`docs/architecture/contracts-and-lifecycle.md`](docs/architecture/contracts-and-lifecycle.md) | Contract versions, lifecycle, and hash discipline |
-| [`docs/decisions/`](docs/decisions/) | ADR 001–009 (integration boundaries, domain packs, immutable world contracts, adaptive runtime, Model Pack mechanism/assurance, offline dataset intake, curated dataset lineage, dataset split and holdout lock, benchmark protocol and scoring) |
+| [`docs/decisions/`](docs/decisions/) | ADR 001–010 (integration boundaries, domain packs, immutable world contracts, adaptive runtime, Model Pack mechanism/assurance, offline dataset intake, curated dataset lineage, dataset split and holdout lock, benchmark protocol and scoring, declared-missing row presence) |
 | [`docs/model-packs/README.md`](docs/model-packs/README.md) | Model Pack maturity levels, the 13-entry catalogue, and the regeneration workflow |
 | [`CHANGELOG.md`](CHANGELOG.md) | Release and checkpoint timeline |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Workflow, gates, and acceptance rules |

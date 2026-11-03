@@ -1,0 +1,289 @@
+{
+  "$defs": {
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ScoreCell": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScoreSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evaluable_tasks": {
+          "minimum": 0,
+          "title": "Evaluable Tasks",
+          "type": "integer"
+        },
+        "horizon": {
+          "maximum": 366,
+          "minimum": 1,
+          "title": "Horizon",
+          "type": "integer"
+        },
+        "inadmissible_origin_tasks": {
+          "minimum": 0,
+          "title": "Inadmissible Origin Tasks",
+          "type": "integer"
+        },
+        "insufficient_history_tasks": {
+          "minimum": 0,
+          "title": "Insufficient History Tasks",
+          "type": "integer"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "reference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScoreSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relative_wis": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9]+\\.[0-9]{6}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Relative Wis"
+        },
+        "verdict": {
+          "enum": [
+            "pass",
+            "fail",
+            "inconclusive"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        },
+        "verdict_reason": {
+          "enum": [
+            "below_threshold",
+            "not_below_threshold",
+            "insufficient_evaluable_tasks",
+            "reference_score_zero"
+          ],
+          "title": "Verdict Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "horizon",
+        "evaluable_tasks",
+        "inadmissible_origin_tasks",
+        "insufficient_history_tasks",
+        "candidate",
+        "reference",
+        "relative_wis",
+        "verdict",
+        "verdict_reason"
+      ],
+      "title": "ScoreCell",
+      "type": "object"
+    },
+    "ScoreSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage_50": {
+          "pattern": "^(0\\.[0-9]{6}|1\\.000000)$",
+          "title": "Coverage 50",
+          "type": "string"
+        },
+        "coverage_95": {
+          "pattern": "^(0\\.[0-9]{6}|1\\.000000)$",
+          "title": "Coverage 95",
+          "type": "string"
+        },
+        "mean_absolute_error": {
+          "pattern": "^[0-9]+\\.[0-9]{6}$",
+          "title": "Mean Absolute Error",
+          "type": "string"
+        },
+        "mean_wis": {
+          "pattern": "^[0-9]+\\.[0-9]{6}$",
+          "title": "Mean Wis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mean_wis",
+        "mean_absolute_error",
+        "coverage_50",
+        "coverage_95"
+      ],
+      "title": "ScoreSummary",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "An immutable score report with declared limitations.",
+  "properties": {
+    "candidate_forecast_set_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Candidate Forecast Set Content Hash",
+      "type": "string"
+    },
+    "candidate_forecast_set_id": {
+      "minLength": 1,
+      "title": "Candidate Forecast Set Id",
+      "type": "string"
+    },
+    "cells": {
+      "items": {
+        "$ref": "#/$defs/ScoreCell"
+      },
+      "minItems": 1,
+      "title": "Cells",
+      "type": "array"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "limitations": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Limitations",
+      "type": "array"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "partition": {
+      "enum": [
+        "development",
+        "validation",
+        "holdout"
+      ],
+      "title": "Partition",
+      "type": "string"
+    },
+    "protocol_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Protocol Content Hash",
+      "type": "string"
+    },
+    "protocol_manifest_id": {
+      "minLength": 1,
+      "title": "Protocol Manifest Id",
+      "type": "string"
+    },
+    "reference_forecast_set_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Reference Forecast Set Content Hash",
+      "type": "string"
+    },
+    "reference_forecast_set_id": {
+      "minLength": 1,
+      "title": "Reference Forecast Set Id",
+      "type": "string"
+    },
+    "report_id": {
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "title": "Report Id",
+      "type": "string"
+    },
+    "report_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Report Version",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scored_at": {
+      "format": "date-time",
+      "title": "Scored At",
+      "type": "string"
+    },
+    "scoring_rule": {
+      "const": "kalhas-wis-k3-v1",
+      "title": "Scoring Rule",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "report_id",
+    "report_version",
+    "protocol_manifest_id",
+    "protocol_content_hash",
+    "partition",
+    "candidate_forecast_set_id",
+    "candidate_forecast_set_content_hash",
+    "reference_forecast_set_id",
+    "reference_forecast_set_content_hash",
+    "scoring_rule",
+    "cells",
+    "limitations",
+    "scored_at",
+    "content_hash"
+  ],
+  "title": "BenchmarkScoreReport",
+  "type": "object"
+}

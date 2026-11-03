@@ -16,6 +16,7 @@ root (or ``--root``). Each directory must hold a
 
 - A split manifest is checked against its curated and raw input chain.
 - A protocol is checked against its split, curated and raw input chain.
+- Forecasts and reports are checked against their complete input chain.
 
 It only reads: it never writes, never touches the network, and prints the
 bundle directory and the bounded failure reason, never bytes.
@@ -35,13 +36,25 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from kalhas.application.benchmark_errors import BenchmarkProtocolVerificationError
+from kalhas.application.benchmark_forecast_errors import (
+    BenchmarkForecastVerificationError,
+    BenchmarkScoreVerificationError,
+)
+from kalhas.application.benchmark_forecast_verifier import (
+    verify_benchmark_score_report,
+    verify_forecast_set,
+)
 from kalhas.application.benchmark_protocol_verifier import verify_benchmark_protocol
 from kalhas.application.curated_dataset_verifier import verify_curated_dataset_bundle
-from kalhas.application.dataset_split_errors import DatasetSplitVerificationError
+from kalhas.application.dataset_split_errors import (
+    DatasetSplitVerificationError,
+    SealedPartitionError,
+)
 from kalhas.application.dataset_split_verifier import verify_dataset_split
 from kalhas.application.dataset_transformation_errors import CuratedDatasetVerificationError
 from kalhas.application.raw_dataset_errors import RawDatasetVerificationError
 from kalhas.application.raw_dataset_verifier import verify_raw_dataset_bundle
+from kalhas.contracts.v1.benchmark_forecast import BenchmarkScoreReport, ForecastSet
 from kalhas.contracts.v1.benchmark_protocol import BenchmarkProtocol
 from kalhas.contracts.v1.curated_dataset import CuratedDatasetManifest
 from kalhas.contracts.v1.dataset import RawDatasetManifest
@@ -54,6 +67,14 @@ RAW_RELATIVE = Path("datasets") / "v1" / "raw"
 CURATED_RELATIVE = Path("datasets") / "v1" / "curated"
 SPLIT_RELATIVE = Path("datasets") / "v1" / "splits"
 PROTOCOL_RELATIVE = Path("benchmarks") / "v1" / "protocols"
+FORECAST_RELATIVE = Path("benchmarks") / "v1" / "forecasts"
+REPORT_RELATIVE = Path("benchmarks") / "v1" / "reports"
+_PROTOCOL_IDENTIFIER = re.compile(
+    r"benchmark-protocol-(?P<id>[a-z0-9]+(?:-[a-z0-9]+)*)-(?P<version>\d+\.\d+\.\d+)"
+)
+_FORECAST_IDENTIFIER = re.compile(
+    r"forecast-set-(?P<id>[a-z0-9]+(?:-[a-z0-9]+)*)-(?P<version>\d+\.\d+\.\d+)"
+)
 _SPLIT_IDENTIFIER = re.compile(
     r"dataset-split-(?P<split_id>[a-z0-9]+(?:-[a-z0-9]+)*)-(?P<version>\d+\.\d+\.\d+)"
 )
@@ -262,6 +283,138 @@ def _verify_protocol(root: Path, bundle: Path) -> str | None:
     return None
 
 
+def _protocol_chain(
+    root: Path, identifier: str
+) -> (
+    tuple[
+        BenchmarkProtocol,
+        DatasetSplitManifest,
+        CuratedDatasetManifest,
+        dict[str, bytes],
+        dict[str, tuple[RawDatasetManifest, Mapping[str, bytes]]],
+    ]
+    | str
+):
+    match = _PROTOCOL_IDENTIFIER.fullmatch(identifier)
+    if match is None:
+        return "protocol_input_missing"
+    directory = root / PROTOCOL_RELATIVE / match.group("id") / match.group("version")
+    if not (directory / MANIFEST_NAME).is_file():
+        return "protocol_input_missing"
+    if _verify_protocol(root, directory) is not None:
+        return "protocol_input_invalid"
+    try:
+        protocol = BenchmarkProtocol.model_validate_json((directory / MANIFEST_NAME).read_bytes())
+        split_match = _SPLIT_IDENTIFIER.fullmatch(protocol.split_manifest_id)
+        if split_match is None:
+            return "protocol_input_invalid"
+        split_dir = (
+            root / SPLIT_RELATIVE / split_match.group("split_id") / split_match.group("version")
+        )
+        split = DatasetSplitManifest.model_validate_json((split_dir / MANIFEST_NAME).read_bytes())
+        curated_match = _CURATED_IDENTIFIER.fullmatch(split.curated_manifest_id)
+        if curated_match is None:
+            return "protocol_input_invalid"
+        curated_dir = (
+            root
+            / CURATED_RELATIVE
+            / curated_match.group("dataset_id")
+            / curated_match.group("version")
+        )
+        curated = CuratedDatasetManifest.model_validate_json(
+            (curated_dir / MANIFEST_NAME).read_bytes()
+        )
+        raw: dict[str, tuple[RawDatasetManifest, Mapping[str, bytes]]] = {}
+        for reference in curated.inputs:
+            raw_match = _RAW_IDENTIFIER.fullmatch(reference.raw_manifest_id)
+            if raw_match is None:
+                return "protocol_input_invalid"
+            loaded = _load_raw(
+                root / RAW_RELATIVE / raw_match.group("dataset_id") / raw_match.group("vintage")
+            )
+            if isinstance(loaded, str):
+                return "protocol_input_invalid"
+            raw[reference.raw_manifest_id] = loaded
+        return protocol, split, curated, _read_files(curated_dir), raw
+    except (OSError, ValidationError):
+        return "protocol_input_invalid"
+
+
+def _load_forecast(bundle: Path) -> tuple[ForecastSet, bytes] | str:
+    path = bundle / MANIFEST_NAME
+    if not path.is_file():
+        return "missing_manifest"
+    if any(
+        entry.name not in {MANIFEST_NAME, "forecasts.csv"} or not entry.is_file()
+        for entry in bundle.iterdir()
+    ):
+        return "undeclared_file"
+    if not (bundle / "forecasts.csv").is_file():
+        return "missing_forecasts_file"
+    try:
+        item = ForecastSet.model_validate_json(path.read_bytes())
+    except ValidationError:
+        return "invalid_manifest"
+    if bundle.parent.name != item.forecast_set_id or bundle.name != item.forecast_set_version:
+        return "identity_mismatch"
+    return item, (bundle / "forecasts.csv").read_bytes()
+
+
+def _verify_forecast(root: Path, bundle: Path) -> str | None:
+    loaded = _load_forecast(bundle)
+    if isinstance(loaded, str):
+        return loaded
+    item, content = loaded
+    chain = _protocol_chain(root, item.protocol_manifest_id)
+    if isinstance(chain, str):
+        return chain
+    try:
+        verify_forecast_set(item, content, *chain)
+    except SealedPartitionError:
+        return "sealed_partition"
+    except BenchmarkForecastVerificationError as error:
+        return error.reason
+    return None
+
+
+def _verify_report(root: Path, bundle: Path) -> str | None:
+    path = bundle / MANIFEST_NAME
+    if not path.is_file():
+        return "missing_manifest"
+    if any(entry.name != MANIFEST_NAME or not entry.is_file() for entry in bundle.iterdir()):
+        return "undeclared_file"
+    try:
+        report = BenchmarkScoreReport.model_validate_json(path.read_bytes())
+    except ValidationError:
+        return "invalid_manifest"
+    if bundle.parent.name != report.report_id or bundle.name != report.report_version:
+        return "identity_mismatch"
+    if report.partition == "holdout":
+        return "sealed_partition"
+    chain = _protocol_chain(root, report.protocol_manifest_id)
+    if isinstance(chain, str):
+        return chain
+    forecasts = []
+    for identifier in (report.candidate_forecast_set_id, report.reference_forecast_set_id):
+        match = _FORECAST_IDENTIFIER.fullmatch(identifier)
+        if match is None:
+            return "forecast_input_missing"
+        directory = root / FORECAST_RELATIVE / match.group("id") / match.group("version")
+        if not (directory / MANIFEST_NAME).is_file():
+            return "forecast_input_missing"
+        loaded = _load_forecast(directory)
+        if isinstance(loaded, str):
+            return "forecast_input_invalid"
+        forecasts.append(loaded)
+    try:
+        verify_benchmark_score_report(report, *forecasts[0], *forecasts[1], *chain)
+    except SealedPartitionError:
+        return "sealed_partition"
+    except BenchmarkScoreVerificationError as error:
+        return error.reason
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument(
@@ -280,12 +433,18 @@ def main(argv: list[str] | None = None) -> int:
     failures += split_failures
     protocols, protocol_failures = _bundle_directories(root, PROTOCOL_RELATIVE)
     failures += protocol_failures
+    forecasts, forecast_failures = _bundle_directories(root, FORECAST_RELATIVE)
+    reports, report_failures = _bundle_directories(root, REPORT_RELATIVE)
     if (
         not raw_bundles
         and not curated_bundles
         and not split_bundles
         and not protocols
+        and not forecasts
+        and not reports
         and not failures
+        and not forecast_failures
+        and not report_failures
     ):
         print("no dataset bundles")
         return 0
@@ -319,7 +478,25 @@ def main(argv: list[str] | None = None) -> int:
             failures.append(f"FAIL {name}: {reason}")
     for line in failures:
         print(line)
-    return 1 if failures else 0
+    for bundle in forecasts:
+        name = bundle.relative_to(root).as_posix()
+        reason = _verify_forecast(root, bundle)
+        if reason is None:
+            print(f"ok {name}")
+        else:
+            forecast_failures.append(f"FAIL {name}: {reason}")
+    for line in forecast_failures:
+        print(line)
+    for bundle in reports:
+        name = bundle.relative_to(root).as_posix()
+        reason = _verify_report(root, bundle)
+        if reason is None:
+            print(f"ok {name}")
+        else:
+            report_failures.append(f"FAIL {name}: {reason}")
+    for line in report_failures:
+        print(line)
+    return 1 if failures or forecast_failures or report_failures else 0
 
 
 if __name__ == "__main__":
