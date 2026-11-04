@@ -617,13 +617,209 @@ def test_protocol_chain_missing_split_fails(protocol_chain_root: Path) -> None:
     assert "split_input_missing" in result.stdout
 
 
-def test_real_repository_has_verified_input_chain_and_no_protocol() -> None:
+def test_real_repository_has_verified_chain_and_locked_protocol() -> None:
     result = _run(REPO_ROOT)
     assert result.returncode == 0, result.stdout + result.stderr
     assert "ok datasets/v1/raw/ecdc-covid19-hospital-icu/2026-11-02" in result.stdout
     assert "ok datasets/v1/curated/ecdc-covid19-hospital-icu-by-indicator/1.0.0" in result.stdout
     assert "ok datasets/v1/splits/ecdc-covid19-hospital-icu-primary/1.0.0" in result.stdout
-    assert not (REPO_ROOT / "benchmarks").exists()
+    assert (
+        "ok benchmarks/v1/protocols/ecdc-covid19-hospital-icu-primary-benchmark/1.0.0"
+        in result.stdout
+    )
+    assert not (REPO_ROOT / "benchmarks/v1/forecasts").exists()
+    assert not (REPO_ROOT / "benchmarks/v1/reports").exists()
+
+
+# --- committed ECDC protocol (H30-D04) ----------------------------------------------------
+
+ECDC_PROTOCOL_PATH = "benchmarks/v1/protocols/ecdc-covid19-hospital-icu-primary-benchmark/1.0.0"
+ECDC_PROTOCOL_NOTE = (
+    "Targets, horizons (7, 14, 21 and 28 days; 1, 2, 3 and 4 ISO weeks), history rules "
+    "(84 days with at least 8 points; 12 weeks with at least 4 points), the minimum of 100 "
+    "evaluable tasks per target and horizon, the quantile levels, the scoring rule and the "
+    "reference baseline with its threshold of 1 were fixed by the reviewer without inspecting "
+    "outcome values. The non_negative declaration follows from the indicators being counts of "
+    "patients and rates per population, not from inspecting values. Before locking, the reviewer "
+    "ran the task engine on this split with these same parameters for software verification and "
+    "sizing only, observing task counts per target, horizon and status for the development and "
+    "validation partitions, but no values: 61132 evaluable and 1042 insufficient-history tasks in "
+    "development, 13280 evaluable and 35 insufficient-history tasks in validation, and at least "
+    "270 evaluable tasks in every target and horizon cell. No tasks were derived for the holdout "
+    "partition."
+)
+
+
+def test_ecdc_protocol_fixed_parameters_and_references() -> None:
+    from kalhas.contracts.v1.benchmark_protocol import BenchmarkProtocol
+    from kalhas.contracts.v1.curated_dataset import CuratedDatasetManifest
+    from kalhas.contracts.v1.dataset_split import DatasetSplitManifest
+
+    content = (REPO_ROOT / ECDC_PROTOCOL_PATH / "manifest.json").read_bytes()
+    protocol = BenchmarkProtocol.model_validate_json(content)
+    split = DatasetSplitManifest.model_validate_json(
+        (REPO_ROOT / ECDC_SPLIT_PATH / "manifest.json").read_bytes()
+    )
+    curated = CuratedDatasetManifest.model_validate_json(
+        (REPO_ROOT / ECDC_CURATED_PATH / "manifest.json").read_bytes()
+    )
+    assert len(content) == 3655
+    assert hashlib.sha256(content).hexdigest() == (
+        "27cba51375f89afb25481d3a4c141dede2f9718bdc8373c106bcf92b8973dff2"
+    )
+    assert protocol.model_dump(mode="json") == {
+        "identifier": "benchmark-protocol-ecdc-covid19-hospital-icu-primary-benchmark-1.0.0",
+        "tenant_id": "kalhas-reference",
+        "schema_version": "1.0.0",
+        "protocol_id": "ecdc-covid19-hospital-icu-primary-benchmark",
+        "protocol_version": "1.0.0",
+        "split_manifest_id": "dataset-split-ecdc-covid19-hospital-icu-primary-1.0.0",
+        "split_content_hash": "5b025a700402477934155a18c5807850907054e1c479f280b3e0e540095e70e6",
+        "curated_manifest_id": "curated-dataset-ecdc-covid19-hospital-icu-by-indicator-1.0.0",
+        "curated_content_hash": "418e2fc4d1e0d9130a3c751a507216baf37e6447d7ecfb4dc0ee631cd475ac2c",
+        "curated_bundle_hash": "c8fee2790fa1ed1ebdddca237531c6b70f092c404b507c30501b49568f243e0e",
+        "task_vocabulary_version": "1.0.0",
+        "targets": [
+            {
+                "path": "daily-hospital-occupancy.csv",
+                "series_column": "country",
+                "time_column": "date",
+                "value_column": "value",
+                "horizons": [7, 14, 21, 28],
+                "history_window": 84,
+                "min_history_points": 8,
+                "minimum_evaluable_tasks": 100,
+                "non_negative": True,
+            },
+            {
+                "path": "daily-icu-occupancy.csv",
+                "series_column": "country",
+                "time_column": "date",
+                "value_column": "value",
+                "horizons": [7, 14, 21, 28],
+                "history_window": 84,
+                "min_history_points": 8,
+                "minimum_evaluable_tasks": 100,
+                "non_negative": True,
+            },
+            {
+                "path": "weekly-hospital-admissions-per-100k.csv",
+                "series_column": "country",
+                "time_column": "year_week",
+                "value_column": "value",
+                "horizons": [1, 2, 3, 4],
+                "history_window": 12,
+                "min_history_points": 4,
+                "minimum_evaluable_tasks": 100,
+                "non_negative": True,
+            },
+            {
+                "path": "weekly-icu-admissions-per-100k.csv",
+                "series_column": "country",
+                "time_column": "year_week",
+                "value_column": "value",
+                "horizons": [1, 2, 3, 4],
+                "history_window": 12,
+                "min_history_points": 4,
+                "minimum_evaluable_tasks": 100,
+                "non_negative": True,
+            },
+        ],
+        "quantile_levels": ["0.025", "0.1", "0.25", "0.5", "0.75", "0.9", "0.975"],
+        "scoring_rule": "kalhas-wis-k3-v1",
+        "comparison": {
+            "reference_baseline_id": "kalhas-persistence-quantile-v1",
+            "reference_baseline_version": "1.0.0",
+            "relative_wis_pass_below": "1",
+        },
+        "preregistration_note": ECDC_PROTOCOL_NOTE,
+        "locked_at": "2026-11-04T09:05:00Z",
+        "metadata": {},
+        "content_hash": "2a1b258f07dc158de32115726acbe88beb7a43cc6722382dcf0e187a7c372df8",
+    }
+    assert (protocol.split_manifest_id, protocol.split_content_hash) == (
+        split.identifier,
+        split.content_hash,
+    )
+    assert (
+        protocol.curated_manifest_id,
+        protocol.curated_content_hash,
+        protocol.curated_bundle_hash,
+    ) == (curated.identifier, curated.content_hash, curated.bundle_hash)
+    readme = (REPO_ROOT / "benchmarks/README.md").read_text(encoding="utf-8")
+    assert ECDC_PROTOCOL_NOTE in readme
+    assert "without inspecting outcome values" in readme
+
+
+def test_ecdc_protocol_task_counts_and_sealed_holdout() -> None:
+    from collections import Counter
+
+    from kalhas.application.benchmark_task_engine import (
+        build_information_set,
+        derive_benchmark_tasks,
+    )
+    from kalhas.application.dataset_split_errors import SealedPartitionError
+    from kalhas.contracts.v1.benchmark_protocol import BenchmarkProtocol
+    from kalhas.contracts.v1.curated_dataset import CuratedDatasetManifest
+    from kalhas.contracts.v1.dataset_split import DatasetSplitManifest
+
+    protocol = BenchmarkProtocol.model_validate_json(
+        (REPO_ROOT / ECDC_PROTOCOL_PATH / "manifest.json").read_bytes()
+    )
+    split = DatasetSplitManifest.model_validate_json(
+        (REPO_ROOT / ECDC_SPLIT_PATH / "manifest.json").read_bytes()
+    )
+    directory = REPO_ROOT / ECDC_CURATED_PATH
+    curated = CuratedDatasetManifest.model_validate_json((directory / "manifest.json").read_bytes())
+    files = {item.path: (directory / item.path).read_bytes() for item in curated.files}
+    expected_cells = {
+        (path, horizon)
+        for path, horizons in (
+            ("daily-hospital-occupancy.csv", (7, 14, 21, 28)),
+            ("daily-icu-occupancy.csv", (7, 14, 21, 28)),
+            ("weekly-hospital-admissions-per-100k.csv", (1, 2, 3, 4)),
+            ("weekly-icu-admissions-per-100k.csv", (1, 2, 3, 4)),
+        )
+        for horizon in horizons
+    }
+    for partition, evaluable, insufficient in (
+        ("development", 61132, 1042),
+        ("validation", 13280, 35),
+    ):
+        tasks = derive_benchmark_tasks(protocol, split, curated, files, partition)
+        status = Counter(task.status for task in tasks)
+        assert status == {"evaluable": evaluable, "insufficient_history": insufficient}
+        assert status["inadmissible_origin"] == 0
+        cells = Counter((task.path, task.horizon) for task in tasks if task.status == "evaluable")
+        assert set(cells) == expected_cells
+        assert all(cells[cell] >= 270 for cell in expected_cells)
+    for function in (derive_benchmark_tasks, build_information_set):
+        with pytest.raises(SealedPartitionError):
+            function(protocol, split, curated, files, "holdout")
+
+
+@pytest.fixture
+def protocol_copy_root(scratch_root: Path) -> Path:
+    shutil.copytree(REPO_ROOT / "datasets", scratch_root / "datasets")
+    shutil.copytree(REPO_ROOT / "benchmarks", scratch_root / "benchmarks")
+    return scratch_root
+
+
+def test_ecdc_protocol_horizon_tamper_is_rejected(protocol_copy_root: Path) -> None:
+    path = protocol_copy_root / ECDC_PROTOCOL_PATH / "manifest.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["targets"][0]["horizons"][0] = 6
+    path.write_text(json.dumps(data), encoding="utf-8", newline="\n")
+    result = _run(protocol_copy_root)
+    assert result.returncode == 1
+    assert f"FAIL {ECDC_PROTOCOL_PATH}: content_hash_mismatch" in result.stdout
+
+
+def test_ecdc_protocol_extra_file_is_rejected(protocol_copy_root: Path) -> None:
+    (protocol_copy_root / ECDC_PROTOCOL_PATH / "extra").write_bytes(b"x")
+    result = _run(protocol_copy_root)
+    assert result.returncode == 1
+    assert f"FAIL {ECDC_PROTOCOL_PATH}: undeclared_file" in result.stdout
 
 
 @pytest.fixture

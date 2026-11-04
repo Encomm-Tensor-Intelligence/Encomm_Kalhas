@@ -1,0 +1,98 @@
+{
+  "comparison": {
+    "reference_baseline_id": "kalhas-persistence-quantile-v1",
+    "reference_baseline_version": "1.0.0",
+    "relative_wis_pass_below": "1"
+  },
+  "content_hash": "2a1b258f07dc158de32115726acbe88beb7a43cc6722382dcf0e187a7c372df8",
+  "curated_bundle_hash": "c8fee2790fa1ed1ebdddca237531c6b70f092c404b507c30501b49568f243e0e",
+  "curated_content_hash": "418e2fc4d1e0d9130a3c751a507216baf37e6447d7ecfb4dc0ee631cd475ac2c",
+  "curated_manifest_id": "curated-dataset-ecdc-covid19-hospital-icu-by-indicator-1.0.0",
+  "identifier": "benchmark-protocol-ecdc-covid19-hospital-icu-primary-benchmark-1.0.0",
+  "locked_at": "2026-11-04T09:05:00Z",
+  "metadata": {},
+  "preregistration_note": "Targets, horizons (7, 14, 21 and 28 days; 1, 2, 3 and 4 ISO weeks), history rules (84 days with at least 8 points; 12 weeks with at least 4 points), the minimum of 100 evaluable tasks per target and horizon, the quantile levels, the scoring rule and the reference baseline with its threshold of 1 were fixed by the reviewer without inspecting outcome values. The non_negative declaration follows from the indicators being counts of patients and rates per population, not from inspecting values. Before locking, the reviewer ran the task engine on this split with these same parameters for software verification and sizing only, observing task counts per target, horizon and status for the development and validation partitions, but no values: 61132 evaluable and 1042 insufficient-history tasks in development, 13280 evaluable and 35 insufficient-history tasks in validation, and at least 270 evaluable tasks in every target and horizon cell. No tasks were derived for the holdout partition.",
+  "protocol_id": "ecdc-covid19-hospital-icu-primary-benchmark",
+  "protocol_version": "1.0.0",
+  "quantile_levels": [
+    "0.025",
+    "0.1",
+    "0.25",
+    "0.5",
+    "0.75",
+    "0.9",
+    "0.975"
+  ],
+  "schema_version": "1.0.0",
+  "scoring_rule": "kalhas-wis-k3-v1",
+  "split_content_hash": "5b025a700402477934155a18c5807850907054e1c479f280b3e0e540095e70e6",
+  "split_manifest_id": "dataset-split-ecdc-covid19-hospital-icu-primary-1.0.0",
+  "targets": [
+    {
+      "history_window": 84,
+      "horizons": [
+        7,
+        14,
+        21,
+        28
+      ],
+      "min_history_points": 8,
+      "minimum_evaluable_tasks": 100,
+      "non_negative": true,
+      "path": "daily-hospital-occupancy.csv",
+      "series_column": "country",
+      "time_column": "date",
+      "value_column": "value"
+    },
+    {
+      "history_window": 84,
+      "horizons": [
+        7,
+        14,
+        21,
+        28
+      ],
+      "min_history_points": 8,
+      "minimum_evaluable_tasks": 100,
+      "non_negative": true,
+      "path": "daily-icu-occupancy.csv",
+      "series_column": "country",
+      "time_column": "date",
+      "value_column": "value"
+    },
+    {
+      "history_window": 12,
+      "horizons": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "min_history_points": 4,
+      "minimum_evaluable_tasks": 100,
+      "non_negative": true,
+      "path": "weekly-hospital-admissions-per-100k.csv",
+      "series_column": "country",
+      "time_column": "year_week",
+      "value_column": "value"
+    },
+    {
+      "history_window": 12,
+      "horizons": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "min_history_points": 4,
+      "minimum_evaluable_tasks": 100,
+      "non_negative": true,
+      "path": "weekly-icu-admissions-per-100k.csv",
+      "series_column": "country",
+      "time_column": "year_week",
+      "value_column": "value"
+    }
+  ],
+  "task_vocabulary_version": "1.0.0",
+  "tenant_id": "kalhas-reference"
+}
