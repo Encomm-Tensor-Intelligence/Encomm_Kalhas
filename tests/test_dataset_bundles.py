@@ -628,11 +628,50 @@ def test_real_repository_has_verified_input_chain_and_no_protocol() -> None:
 
 @pytest.fixture
 def forecast_chain_root(protocol_chain_root: Path) -> Path:
-    from kalhas.application.benchmark_scoring import build_benchmark_score_report
+    from kalhas.application.benchmark_baselines import (
+        QUANTILE_BASELINE_ID,
+        produce_persistence_quantile_forecasts,
+    )
+    from kalhas.application.benchmark_protocol_verifier import (
+        compute_benchmark_protocol_content_hash,
+    )
+    from kalhas.application.benchmark_scoring import (
+        build_benchmark_score_report,
+        compute_forecast_set_content_hash,
+    )
 
     from tests.test_benchmark_scoring import NOW, prepared
 
-    _, _, curated, files, split, protocol, candidate, cb, reference, rb = prepared()
+    _, _, curated, files, split, protocol, candidate, cb, _, _ = prepared()
+    comparison = protocol.comparison.model_copy(
+        update={"reference_baseline_id": QUANTILE_BASELINE_ID}
+    )
+    protocol = protocol.model_copy(update={"comparison": comparison})
+    protocol = protocol.model_copy(
+        update={"content_hash": compute_benchmark_protocol_content_hash(protocol)}
+    )
+    protocol_path = (
+        protocol_chain_root
+        / "benchmarks/v1/protocols"
+        / protocol.protocol_id
+        / protocol.protocol_version
+        / "manifest.json"
+    )
+    protocol_path.write_text(_render(protocol), encoding="utf-8", newline="\n")
+    candidate = candidate.model_copy(update={"protocol_content_hash": protocol.content_hash})
+    candidate = candidate.model_copy(
+        update={"content_hash": compute_forecast_set_content_hash(candidate)}
+    )
+    reference, rb = produce_persistence_quantile_forecasts(
+        forecast_set_id="reference",
+        forecast_set_version="1.0.0",
+        protocol=protocol,
+        split_manifest=split,
+        curated_manifest=curated,
+        curated_files=files,
+        partition="development",
+        created_at=NOW,
+    )
     for artifact, data in ((candidate, cb), (reference, rb)):
         directory = (
             protocol_chain_root
@@ -741,3 +780,98 @@ def test_forecast_failures_precede_report_results(forecast_chain_root: Path) -> 
     assert result.stdout.index("FAIL benchmarks/v1/forecasts/") < result.stdout.index(
         "FAIL benchmarks/v1/reports/"
     )
+
+
+@pytest.mark.parametrize(
+    "mutation,reason", [("forged", "reexecution_mismatch"), ("unknown", "unknown_baseline")]
+)
+def test_baseline_reexecution_fails_report(
+    forecast_chain_root: Path, mutation: str, reason: str
+) -> None:
+    from kalhas.application.benchmark_forecast_verifier import verify_benchmark_score_report
+    from kalhas.application.benchmark_scoring import (
+        build_benchmark_score_report,
+        compute_forecast_set_content_hash,
+    )
+    from kalhas.contracts.v1.benchmark_forecast import ForecastSet
+    from kalhas.contracts.v1.benchmark_protocol import BenchmarkProtocol
+
+    from tests.test_benchmark_scoring import NOW
+    from tests.test_benchmark_task_engine import chain
+
+    directory = forecast_chain_root / "benchmarks/v1/forecasts/reference/1.0.0"
+    path = directory / "manifest.json"
+    item = ForecastSet.model_validate_json(path.read_bytes())
+    if mutation == "forged":
+        content = (directory / "forecasts.csv").read_bytes().replace(b"10.050000", b"10.060000")
+        (directory / "forecasts.csv").write_bytes(content)
+        file = item.forecasts_file.model_copy(
+            update={"sha256": hashlib.sha256(content).hexdigest(), "byte_size": len(content)}
+        )
+        item = item.model_copy(update={"forecasts_file": file})
+    else:
+        item = item.model_copy(
+            update={"producer": item.producer.model_copy(update={"producer_id": "synthetic"})}
+        )
+    item = item.model_copy(update={"content_hash": compute_forecast_set_content_hash(item)})
+    path.write_text(_render(item), encoding="utf-8", newline="\n")
+    if mutation == "forged":
+        raw, raw_files, curated, curated_files, split, original_protocol = chain()
+        protocol_path = (
+            forecast_chain_root
+            / "benchmarks/v1/protocols"
+            / original_protocol.protocol_id
+            / original_protocol.protocol_version
+            / "manifest.json"
+        )
+        protocol = BenchmarkProtocol.model_validate_json(protocol_path.read_bytes())
+        candidate_dir = forecast_chain_root / "benchmarks/v1/forecasts/candidate/1.0.0"
+        candidate = ForecastSet.model_validate_json((candidate_dir / "manifest.json").read_bytes())
+        candidate_csv = (candidate_dir / "forecasts.csv").read_bytes()
+        report = build_benchmark_score_report(
+            report_id="report",
+            report_version="1.0.0",
+            protocol=protocol,
+            split_manifest=split,
+            curated_manifest=curated,
+            curated_files=curated_files,
+            candidate=candidate,
+            candidate_csv=candidate_csv,
+            reference=item,
+            reference_csv=content,
+            limitations=("Synthetic only",),
+            scored_at=NOW,
+            metadata={},
+        )
+        verify_benchmark_score_report(
+            report,
+            candidate,
+            candidate_csv,
+            item,
+            content,
+            protocol,
+            split,
+            curated,
+            curated_files,
+            {raw.identifier: (raw, raw_files)},
+        )
+        report_path = forecast_chain_root / "benchmarks/v1/reports/report/1.0.0/manifest.json"
+        report_path.write_text(_render(report), encoding="utf-8", newline="\n")
+    result = _run(forecast_chain_root)
+    assert result.returncode == 1
+    assert f"FAIL benchmarks/v1/forecasts/reference/1.0.0: {reason}" in result.stdout
+    assert "FAIL benchmarks/v1/reports/report/1.0.0: forecast_input_invalid" in result.stdout
+    assert "Traceback" not in result.stderr
+
+
+@pytest.mark.parametrize("name", ["candidate", "reference"])
+def test_report_maps_sealed_forecast_to_invalid_input(forecast_chain_root: Path, name: str) -> None:
+    path = forecast_chain_root / "benchmarks/v1/forecasts" / name / "1.0.0/manifest.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["partition"] = "holdout"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    result = _run(forecast_chain_root)
+    assert result.returncode == 1
+    assert f"FAIL benchmarks/v1/forecasts/{name}/1.0.0: sealed_partition" in result.stdout
+    assert "FAIL benchmarks/v1/reports/report/1.0.0: forecast_input_invalid" in result.stdout
+    assert "Traceback" not in result.stderr

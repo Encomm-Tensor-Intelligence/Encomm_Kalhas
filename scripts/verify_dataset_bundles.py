@@ -16,7 +16,8 @@ root (or ``--root``). Each directory must hold a
 
 - A split manifest is checked against its curated and raw input chain.
 - A protocol is checked against its split, curated and raw input chain.
-- Forecasts and reports are checked against their complete input chain.
+- Forecasts and reports are checked against their complete input chain;
+  baseline forecasts are also verified by re-execution.
 
 It only reads: it never writes, never touches the network, and prints the
 bundle directory and the bounded failure reason, never bytes.
@@ -35,8 +36,10 @@ import sys
 from collections.abc import Mapping
 from pathlib import Path
 
+from kalhas.application.benchmark_baselines import verify_baseline_forecast_set
 from kalhas.application.benchmark_errors import BenchmarkProtocolVerificationError
 from kalhas.application.benchmark_forecast_errors import (
+    BenchmarkBaselineVerificationError,
     BenchmarkForecastVerificationError,
     BenchmarkScoreVerificationError,
 )
@@ -369,10 +372,13 @@ def _verify_forecast(root: Path, bundle: Path) -> str | None:
     if isinstance(chain, str):
         return chain
     try:
-        verify_forecast_set(item, content, *chain)
+        if item.producer.kind == "baseline":
+            verify_baseline_forecast_set(item, content, *chain)
+        else:
+            verify_forecast_set(item, content, *chain)
     except SealedPartitionError:
         return "sealed_partition"
-    except BenchmarkForecastVerificationError as error:
+    except (BenchmarkForecastVerificationError, BenchmarkBaselineVerificationError) as error:
         return error.reason
     return None
 
@@ -402,6 +408,8 @@ def _verify_report(root: Path, bundle: Path) -> str | None:
         directory = root / FORECAST_RELATIVE / match.group("id") / match.group("version")
         if not (directory / MANIFEST_NAME).is_file():
             return "forecast_input_missing"
+        if _verify_forecast(root, directory) is not None:
+            return "forecast_input_invalid"
         loaded = _load_forecast(directory)
         if isinstance(loaded, str):
             return "forecast_input_invalid"

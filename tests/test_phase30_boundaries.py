@@ -446,3 +446,49 @@ def test_forecast_modules_are_neutral_and_pure(relative: str) -> None:
             assert not (isinstance(node, ast.Name) and node.id == "float")
             assert not (isinstance(node, ast.Constant) and isinstance(node.value, float))
             assert all(name not in {"decimal", "math"} for name in names)
+
+
+def test_baseline_module_boundaries() -> None:
+    relative = "application/benchmark_baselines.py"
+    test_curated_modules_carry_no_domain_vocabulary(relative)
+    tree = ast.parse((KALHAS_ROOT / relative).read_text(encoding="utf-8"))
+    allowed = {
+        "__future__",
+        "collections.abc",
+        "datetime",
+        "fractions",
+        "kalhas.application.benchmark_errors",
+        "kalhas.application.benchmark_forecast_errors",
+        "kalhas.application.benchmark_forecast_verifier",
+        "kalhas.application.benchmark_scoring",
+        "kalhas.application.benchmark_task_engine",
+        "kalhas.application.hashing",
+        "kalhas.contracts.v1.benchmark_forecast",
+        "kalhas.contracts.v1.benchmark_protocol",
+        "kalhas.contracts.v1.curated_dataset",
+        "kalhas.contracts.v1.dataset",
+        "kalhas.contracts.v1.dataset_split",
+        "kalhas.contracts.v1.shared",
+    }
+    forbidden = {
+        "_input_rows",
+        "_rows",
+        "resolve_target_values",
+        "select_partition_rows",
+        "compute_split_membership",
+    }
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names = [alias.name for alias in node.names]
+        elif isinstance(node, ast.ImportFrom):
+            assert node.level == 0
+            names = [node.module or ""]
+            assert not ({alias.name for alias in node.names} & forbidden)
+        else:
+            names = []
+        assert all(name in allowed for name in names)
+        if isinstance(node, ast.Name):
+            assert node.id not in forbidden | {"float", "open", "exec", "eval", "__import__"}
+        if isinstance(node, ast.Attribute):
+            assert node.attr not in forbidden | {"now", "today", "utcnow", "environ", "getenv"}
+        assert not (isinstance(node, ast.Constant) and isinstance(node.value, float))

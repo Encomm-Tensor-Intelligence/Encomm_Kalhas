@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from bisect import bisect_right
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Literal
 
@@ -66,6 +66,9 @@ class BenchmarkInformationSet:
     partition: Partition
     _types: tuple[tuple[str, TimeType], ...]
     _rows: tuple[_InformationRow, ...]
+    _by_series: dict[tuple[str, str], tuple[_InformationRow, ...]] = field(
+        default_factory=dict, compare=False, repr=False
+    )
 
     def rows(self, task: BenchmarkTask, path: str, series: str) -> tuple[tuple[str, str], ...]:
         if task.partition != self.partition:
@@ -79,9 +82,7 @@ class BenchmarkInformationSet:
             raise BenchmarkError("time_value_invalid") from exc
         origin_kind = kinds[task.path]
         result = []
-        for row in self._rows:
-            if row.path != path or row.series != series:
-                continue
+        for row in self._by_series.get((path, series), ()):
             row_time, task_time = row.time.toordinal(), origin.toordinal()
             if row.kind != origin_kind:
                 if row.kind == "iso_week":
@@ -309,4 +310,8 @@ def build_information_set(
         )
         for t in protocol.targets
     )
-    return BenchmarkInformationSet(selected, kinds, keep)
+    grouped: dict[tuple[str, str], list[_InformationRow]] = {}
+    for row in keep:
+        grouped.setdefault((row.path, row.series), []).append(row)
+    by_series = {key: tuple(group) for key, group in grouped.items()}
+    return BenchmarkInformationSet(selected, kinds, keep, by_series)

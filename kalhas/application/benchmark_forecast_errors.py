@@ -13,3 +13,9 @@ class BenchmarkScoreVerificationError(KalhasDomainError):
     def __init__(self, reason: str) -> None:
         self.reason = reason
         super().__init__("Benchmark score verification failed and was rejected")
+
+
+class BenchmarkBaselineVerificationError(KalhasDomainError):
+    def __init__(self, reason: str) -> None:
+        self.reason = reason
+        super().__init__("Benchmark baseline verification failed and was rejected")
