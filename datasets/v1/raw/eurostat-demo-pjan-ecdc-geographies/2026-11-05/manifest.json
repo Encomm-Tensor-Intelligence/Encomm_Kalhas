@@ -1,0 +1,146 @@
+{
+  "bundle_hash": "a0075e78cf88cbd15a328c9ef908b9199f93b0ee7bbb77d8163f35742031aac7",
+  "content_hash": "fd8dc4e1d642014944d8d4dda88b8a045b3a79bfac30b6c02d7be5fbc6ff7e56",
+  "data_subject_level": "aggregate",
+  "dataset_id": "eurostat-demo-pjan-ecdc-geographies",
+  "declared_at": "2026-11-05T21:02:55Z",
+  "files": [
+    {
+      "byte_size": 10776,
+      "columns": [
+        {
+          "missing_tokens": [],
+          "name": "DATAFLOW",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "LAST UPDATE",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "freq",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "unit",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "age",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "sex",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "geo",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "TIME_PERIOD",
+          "unit": "none",
+          "value_type": "integer"
+        },
+        {
+          "missing_tokens": [],
+          "name": "OBS_VALUE",
+          "unit": "persons",
+          "value_type": "integer"
+        },
+        {
+          "missing_tokens": [
+            ""
+          ],
+          "name": "OBS_FLAG",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [
+            ""
+          ],
+          "name": "CONF_STATUS",
+          "unit": "none",
+          "value_type": "string"
+        }
+      ],
+      "media_type": "text/csv",
+      "path": "data.csv",
+      "sha256": "855fe507bb55c2aa1cff26c8e404a811998289b216f5a216870d578d1952cfbc"
+    }
+  ],
+  "geography_basis": {
+    "geography_columns": [
+      "geo"
+    ],
+    "scheme": "eurostat-geo-code"
+  },
+  "identifier": "raw-dataset-eurostat-demo-pjan-ecdc-geographies-2026-11-05",
+  "license": {
+    "attribution_statement": "Source: Eurostat, dataset demo_pjan.",
+    "license_class": "attribution_commercial",
+    "license_id": "eurostat-copyright-notice",
+    "modifications_must_be_disclosed": true,
+    "scope_restrictions": [
+      "permission limited to data for EU, EFTA, EU candidate and acceding countries",
+      "permission does not extend to material identified as third-party copyright"
+    ],
+    "terms_locator": "https://ec.europa.eu/eurostat/web/main/help/copyright-notice",
+    "terms_read_at": "2026-11-05T21:01:42Z"
+  },
+  "metadata": {
+    "acquisition": {
+      "byte_size": 10776,
+      "etag": null,
+      "http_status": 200,
+      "last_modified": null,
+      "retrieved_at_basis": "HTTP Date response header (Thu, 05 Nov 2026 21:02:55 GMT)",
+      "url": "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/demo_pjan/A.NR.TOTAL.T.AT+BE+BG+CY+CZ+DE+EE+EL+ES+FR+HU+IE+IS+IT+LI+LT+LU+LV+MT+NL+PT+RO+SE+SI+SK?format=SDMX-CSV&startPeriod=2019&endPeriod=2024"
+    },
+    "modification_notice": "none — raw bytes as published",
+    "request_intent": {
+      "age": "all ages",
+      "dataset": "demo_pjan",
+      "frequency": "annual",
+      "geographies": "AT BE BG CY CZ DE EE EL ES FR HU IE IS IT LI LT LU LV MT NL PT RO SE SI SK",
+      "sex": "both sexes",
+      "unit": "number of persons",
+      "years": "2019-2024"
+    }
+  },
+  "retrieved_at": "2026-11-05T21:02:55Z",
+  "revision_notes": "This bundle records one retrieval; a later change means a new vintage.",
+  "revision_policy": "revised_in_place",
+  "schema_version": "1.0.0",
+  "source": {
+    "publisher": "Eurostat",
+    "publisher_release_id": null,
+    "source_locator": "https://ec.europa.eu/eurostat/databrowser/view/demo_pjan/default/table?lang=en",
+    "title": "Population on 1 January by age and sex (demo_pjan)"
+  },
+  "tenant_id": "kalhas-reference",
+  "time_basis": {
+    "calendar": "year",
+    "granularity": "year",
+    "time_columns": [
+      "TIME_PERIOD"
+    ],
+    "time_semantics": "reference_period"
+  },
+  "vintage": "2026-11-05"
+}

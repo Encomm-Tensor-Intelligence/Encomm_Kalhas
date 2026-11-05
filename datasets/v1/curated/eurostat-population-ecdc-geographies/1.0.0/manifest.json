@@ -1,0 +1,161 @@
+{
+  "bundle_hash": "663c317ceecab4a102a4dc789eaea85dfcab33900b264ea2acdb1524fb7fc4fd",
+  "content_hash": "2f23e3fd5ae090845b49dc2f8f1bf634a3359ceb0d359401d97e550ab45cd52f",
+  "curated_dataset_id": "eurostat-population-ecdc-geographies",
+  "curation_version": "1.0.0",
+  "declared_at": "2026-11-05T21:02:55Z",
+  "files": [
+    {
+      "byte_size": 2624,
+      "columns": [
+        {
+          "missing_tokens": [],
+          "name": "geo",
+          "unit": "none",
+          "value_type": "string"
+        },
+        {
+          "missing_tokens": [],
+          "name": "TIME_PERIOD",
+          "unit": "none",
+          "value_type": "integer"
+        },
+        {
+          "missing_tokens": [],
+          "name": "OBS_VALUE",
+          "unit": "persons",
+          "value_type": "integer"
+        },
+        {
+          "missing_tokens": [
+            ""
+          ],
+          "name": "OBS_FLAG",
+          "unit": "none",
+          "value_type": "string"
+        }
+      ],
+      "media_type": "text/csv",
+      "path": "population.csv",
+      "sha256": "352e5da4fa0c349d7fff38d822d0985b32f058c108beb20e94c29000ec0d668a"
+    }
+  ],
+  "geography_basis": {
+    "geography_columns": [
+      "geo"
+    ],
+    "scheme": "eurostat-geo-code"
+  },
+  "identifier": "curated-dataset-eurostat-population-ecdc-geographies-1.0.0",
+  "inputs": [
+    {
+      "raw_bundle_hash": "a0075e78cf88cbd15a328c9ef908b9199f93b0ee7bbb77d8163f35742031aac7",
+      "raw_content_hash": "fd8dc4e1d642014944d8d4dda88b8a045b3a79bfac30b6c02d7be5fbc6ff7e56",
+      "raw_manifest_id": "raw-dataset-eurostat-demo-pjan-ecdc-geographies-2026-11-05"
+    }
+  ],
+  "license": {
+    "attribution_statement": "Source: Eurostat, dataset demo_pjan.",
+    "license_class": "attribution_commercial",
+    "license_id": "eurostat-copyright-notice",
+    "modifications_must_be_disclosed": true,
+    "scope_restrictions": [
+      "permission limited to data for EU, EFTA, EU candidate and acceding countries",
+      "permission does not extend to material identified as third-party copyright"
+    ],
+    "terms_locator": "https://ec.europa.eu/eurostat/web/main/help/copyright-notice",
+    "terms_read_at": "2026-11-05T21:01:42Z"
+  },
+  "metadata": {
+    "geography_labels": {
+      "AT": "Austria",
+      "BE": "Belgium",
+      "BG": "Bulgaria",
+      "CY": "Cyprus",
+      "CZ": "Czechia",
+      "DE": "Germany",
+      "EE": "Estonia",
+      "EL": "Greece",
+      "ES": "Spain",
+      "FR": "France",
+      "HU": "Hungary",
+      "IE": "Ireland",
+      "IS": "Iceland",
+      "IT": "Italy",
+      "LI": "Liechtenstein",
+      "LT": "Lithuania",
+      "LU": "Luxembourg",
+      "LV": "Latvia",
+      "MT": "Malta",
+      "NL": "Netherlands",
+      "PT": "Portugal",
+      "RO": "Romania",
+      "SE": "Sweden",
+      "SI": "Slovenia",
+      "SK": "Slovakia"
+    },
+    "output_units": {
+      "population.csv": "persons"
+    }
+  },
+  "modification_notice": "Removed the DATAFLOW, LAST UPDATE, freq, unit, age, sex and CONF_STATUS columns; kept geo, TIME_PERIOD, OBS_VALUE and OBS_FLAG; validated types and sorted rows by geography and year. No value was changed, aggregated, imputed, interpolated or converted. Eurostat is not responsible for this derived file.",
+  "plan": {
+    "outputs": [
+      {
+        "output_path": "population.csv",
+        "source_manifest_id": "raw-dataset-eurostat-demo-pjan-ecdc-geographies-2026-11-05",
+        "source_path": "data.csv",
+        "steps": [
+          {
+            "encoding": "utf-8",
+            "op": "decode_text"
+          },
+          {
+            "op": "parse_csv"
+          },
+          {
+            "columns": [
+              "geo",
+              "TIME_PERIOD",
+              "OBS_VALUE",
+              "OBS_FLAG"
+            ],
+            "op": "select_columns"
+          },
+          {
+            "op": "cast_columns",
+            "types": {
+              "OBS_VALUE": "integer",
+              "TIME_PERIOD": "integer"
+            }
+          },
+          {
+            "columns": [
+              "geo",
+              "TIME_PERIOD"
+            ],
+            "op": "require_unique_key"
+          },
+          {
+            "columns": [
+              "geo",
+              "TIME_PERIOD"
+            ],
+            "op": "sort_rows"
+          }
+        ]
+      }
+    ],
+    "vocabulary_version": "1.0.0"
+  },
+  "schema_version": "1.0.0",
+  "tenant_id": "kalhas-reference",
+  "time_basis": {
+    "calendar": "year",
+    "granularity": "year",
+    "time_columns": [
+      "TIME_PERIOD"
+    ],
+    "time_semantics": "reference_period"
+  }
+}

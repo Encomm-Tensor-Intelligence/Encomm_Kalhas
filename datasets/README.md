@@ -70,3 +70,42 @@ Calendar cut points (validation from 2022-07-01 / 2022-W26, holdout from 2023-01
 
 The holdout partition is sealed until a separately authorized evaluation
 (H30-S06).
+
+## Raw bundle: eurostat-demo-pjan-ecdc-geographies — vintage 2026-11-05
+
+- Data: Eurostat, Population on 1 January by age and sex (`demo_pjan`),
+  retrieved 2026-11-05 from
+  `https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/demo_pjan/A.NR.TOTAL.T.AT+BE+BG+CY+CZ+DE+EE+EL+ES+FR+HU+IE+IS+IT+LI+LT+LU+LV+MT+NL+PT+RO+SE+SI+SK?format=SDMX-CSV&startPeriod=2019&endPeriod=2024`.
+- Dataset page: `https://ec.europa.eu/eurostat/databrowser/view/demo_pjan/default/table?lang=en`.
+- Terms (read 2026-11-05): `https://ec.europa.eu/eurostat/web/main/help/copyright-notice`.
+  Commercial and non-commercial reuse is permitted with attribution. Permission
+  is limited to data for EU, EFTA, EU candidate and acceding countries and does
+  not extend to material identified as third-party copyright. Modifications
+  must be disclosed.
+- Required acknowledgement (verbatim): Source: Eurostat, dataset demo_pjan.
+- Modification notice (verbatim): none — raw bytes as published
+- Coverage: all 25 requested geographies and all years 2019–2024 are present;
+  no requested country and year combination is missing.
+- This is one retrieval of a dataset revised in place; a later change requires
+  a new vintage.
+
+## Curated bundle: eurostat-population-ecdc-geographies 1.0.0
+
+This bundle derives from Eurostat `demo_pjan`, retrieved 2026-11-05 from
+`https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/demo_pjan/A.NR.TOTAL.T.AT+BE+BG+CY+CZ+DE+EE+EL+ES+FR+HU+IE+IS+IT+LI+LT+LU+LV+MT+NL+PT+RO+SE+SI+SK?format=SDMX-CSV&startPeriod=2019&endPeriod=2024`.
+The terms at `https://ec.europa.eu/eurostat/web/main/help/copyright-notice`
+permit attributed commercial and non-commercial reuse for EU, EFTA, EU
+candidate and acceding countries; permission does not extend to material
+identified as third-party copyright. Modifications must be disclosed.
+
+Required acknowledgement (verbatim):
+
+Source: Eurostat, dataset demo_pjan.
+
+Modification notice (verbatim):
+
+Removed the DATAFLOW, LAST UPDATE, freq, unit, age, sex and CONF_STATUS columns; kept geo, TIME_PERIOD, OBS_VALUE and OBS_FLAG; validated types and sorted rows by geography and year. No value was changed, aggregated, imputed, interpolated or converted. Eurostat is not responsible for this derived file.
+
+The curated file retains all 150 rows. No requested country and year
+combination is missing. `OBS_VALUE` is a count of persons, and `OBS_FLAG`
+preserves the source status flags.

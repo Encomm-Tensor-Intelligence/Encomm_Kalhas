@@ -1230,3 +1230,122 @@ def test_report_maps_sealed_forecast_to_invalid_input(forecast_chain_root: Path,
     assert f"FAIL benchmarks/v1/forecasts/{name}/1.0.0: sealed_partition" in result.stdout
     assert "FAIL benchmarks/v1/reports/report/1.0.0: forecast_input_invalid" in result.stdout
     assert "Traceback" not in result.stderr
+
+
+# --- committed population bundles (H30-D06) ---
+
+POPULATION_RAW_PATH = "datasets/v1/raw/eurostat-demo-pjan-ecdc-geographies/2026-11-05"
+POPULATION_CURATED_PATH = "datasets/v1/curated/eurostat-population-ecdc-geographies/1.0.0"
+POPULATION_LABELS = {
+    "AT": "Austria",
+    "BE": "Belgium",
+    "BG": "Bulgaria",
+    "CY": "Cyprus",
+    "CZ": "Czechia",
+    "DE": "Germany",
+    "EE": "Estonia",
+    "EL": "Greece",
+    "ES": "Spain",
+    "FR": "France",
+    "HU": "Hungary",
+    "IE": "Ireland",
+    "IS": "Iceland",
+    "IT": "Italy",
+    "LI": "Liechtenstein",
+    "LT": "Lithuania",
+    "LU": "Luxembourg",
+    "LV": "Latvia",
+    "MT": "Malta",
+    "NL": "Netherlands",
+    "PT": "Portugal",
+    "RO": "Romania",
+    "SE": "Sweden",
+    "SI": "Slovenia",
+    "SK": "Slovakia",
+}
+
+
+def test_population_bundle_hashes_and_terms() -> None:
+    from kalhas.contracts.v1.curated_dataset import CuratedDatasetManifest
+
+    expected = {
+        f"{POPULATION_RAW_PATH}/data.csv": (
+            "855fe507bb55c2aa1cff26c8e404a811998289b216f5a216870d578d1952cfbc"
+        ),
+        f"{POPULATION_RAW_PATH}/manifest.json": (
+            "588e6d902fcdd9e2df538669463e58fd3c35978f7f70c9545e9b411b52f16a15"
+        ),
+        f"{POPULATION_CURATED_PATH}/population.csv": (
+            "352e5da4fa0c349d7fff38d822d0985b32f058c108beb20e94c29000ec0d668a"
+        ),
+        f"{POPULATION_CURATED_PATH}/manifest.json": (
+            "928f10105286d46fea80c26130c7a4f3f1bb24d9db35c6a267be5a6f7b39dc6d"
+        ),
+    }
+    for path, digest in expected.items():
+        assert hashlib.sha256((REPO_ROOT / path).read_bytes()).hexdigest() == digest
+    raw = RawDatasetManifest.model_validate_json(
+        (REPO_ROOT / POPULATION_RAW_PATH / "manifest.json").read_bytes()
+    )
+    curated = CuratedDatasetManifest.model_validate_json(
+        (REPO_ROOT / POPULATION_CURATED_PATH / "manifest.json").read_bytes()
+    )
+    assert raw.data_subject_level == "aggregate"
+    assert curated.license == raw.license
+    assert raw.license.license_class == "attribution_commercial"
+    assert raw.license.license_id == "eurostat-copyright-notice"
+    assert raw.license.attribution_statement == "Source: Eurostat, dataset demo_pjan."
+    assert raw.license.scope_restrictions == (
+        "permission limited to data for EU, EFTA, EU candidate and acceding countries",
+        "permission does not extend to material identified as third-party copyright",
+    )
+    assert raw.license.modifications_must_be_disclosed
+    assert curated.metadata["geography_labels"] == POPULATION_LABELS
+    readme = (REPO_ROOT / "datasets/README.md").read_text(encoding="utf-8")
+    assert raw.license.attribution_statement in readme
+    assert curated.modification_notice in readme
+
+
+def test_population_rows_and_ecdc_geography_labels() -> None:
+    import csv
+
+    for path in (
+        REPO_ROOT / POPULATION_RAW_PATH / "data.csv",
+        REPO_ROOT / POPULATION_CURATED_PATH / "population.csv",
+    ):
+        with path.open(encoding="utf-8", newline="") as source:
+            rows = list(csv.DictReader(source))
+        assert len(rows) == 150
+        assert {row["geo"] for row in rows} == set(POPULATION_LABELS)
+        assert {row["TIME_PERIOD"] for row in rows} == {
+            "2019",
+            "2020",
+            "2021",
+            "2022",
+            "2023",
+            "2024",
+        }
+        keys = [(row["geo"], row["TIME_PERIOD"]) for row in rows]
+        assert len(keys) == len(set(keys))
+        assert set(keys) == {
+            (geo, str(year)) for geo in POPULATION_LABELS for year in range(2019, 2025)
+        }
+    countries: set[str] = set()
+    for name in ECDC_OUTPUTS:
+        with (REPO_ROOT / ECDC_CURATED_PATH / name).open(encoding="utf-8", newline="") as source:
+            countries.update(row["country"] for row in csv.DictReader(source))
+    assert countries == set(POPULATION_LABELS.values())
+
+
+def test_population_bundles_verify_and_tampering_fails(copied_root: Path) -> None:
+    result = _run_repository()
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert f"ok {POPULATION_RAW_PATH}" in result.stdout
+    assert f"ok {POPULATION_CURATED_PATH}" in result.stdout
+    path = copied_root / POPULATION_CURATED_PATH / "population.csv"
+    content = bytearray(path.read_bytes())
+    content[-2] ^= 1
+    path.write_bytes(bytes(content))
+    result = _run(copied_root)
+    assert result.returncode == 1
+    assert f"FAIL {POPULATION_CURATED_PATH}: sha256_mismatch" in result.stdout
