@@ -4,68 +4,118 @@
 
 # KALHAS
 
-A domain-neutral Python kernel for **versioned world models, declared
-uncertainty, deterministic simulation campaigns, evidence, and exact replay** —
-the decision-world engine in a strict three-role architecture alongside NEXUS
-(dialogue and presentation) and LEGION (strategy and agent exploration).
+A domain-neutral Python kernel for comparing strategies in reproducible simulations under declared uncertainty.
 
 [![CI](https://github.com/Encomm-Tensor-Intelligence/Encomm_Kalhas/actions/workflows/ci.yml/badge.svg)](https://github.com/Encomm-Tensor-Intelligence/Encomm_Kalhas/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](https://docs.astral.sh/uv/)
-[![Tests](https://img.shields.io/badge/tests-7%2C553%20green-2ea44f)](#testing-and-verification)
-[![Phase](https://img.shields.io/badge/Phase%2029-complete-8250DF)](#phase-29--complete-and-published)
+[![Phase](https://img.shields.io/badge/Phase%2030-in%20progress-8250DF)](#where-it-stands-today)
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?logo=ruff)](#testing-and-verification)
 [![Formatting](https://img.shields.io/badge/format-ruff%20format-261230?logo=ruff)](#testing-and-verification)
 [![Types](https://img.shields.io/badge/types-mypy%20strict-1F6FEB)](#testing-and-verification)
 [![Schemas](https://img.shields.io/badge/schemas-67%20synchronized-F7C744)](#testing-and-verification)
-[![Replay](https://img.shields.io/badge/replay-deterministic-2ea44f)](#core-guarantees)
+[![Replay](https://img.shields.io/badge/replay-deterministic-2ea44f)](#why-trust-the-results)
 
 </div>
 
 ## What is KALHAS?
 
-KALHAS records **versioned world models** with declared uncertainty, compiles
-them into immutable simulation targets, and runs **deterministic campaigns**
-over strategy × shared-seed matrices. Every run emits content-hashed evidence;
-every completed run can be **replayed exactly**; every comparison between
-strategies shares identical recorded conditions. Runtime evidence is
-**empirical and evidence-based under declared models and recorded assumptions
-— not calibrated and not certainty.** It performs no autonomous live action.
+KALHAS does not predict one future. It constructs bounded, reproducible possible worlds, tests strategies under identical declared uncertainty, and identifies which decisions remain robust across recorded assumption variants.
 
-The kernel is deliberately domain-neutral: domain concerns arrive only through
-explicitly supplied, versioned domain packs consumed through the `DomainPack`
-protocol, and the kernel never imports NEXUS or LEGION internals.
+A world is a recorded model of a situation, including its assumptions. For a
+fictional flood, a user might compare evacuation, shelter and supply strategies
+across the same possible flood scenarios. A seed is a recorded input that fixes
+how a simulation draws its uncertainty; each strategy is tested with the same
+worlds and seeds. The comparison can truthfully be `inconclusive`.
 
-## Core guarantees
+Runtime evidence is empirical and evidence-based under declared models and
+recorded assumptions — not calibrated and not certainty. It performs no autonomous live action.
+The kernel is domain-neutral: domain concerns enter through explicitly supplied
+versioned domain packs, not domain-specific kernel logic.
 
-- **Versioned public contracts.** All 67 public v1 contracts are frozen once
-  shipped, with synchronized JSON Schema artifacts; breaking changes require a
-  new version module and API segment, never in-place mutation.
-- **Deterministic replay.** Completed runs replay exactly, verified against
-  recorded input hashes and event hashes — preflight verification before
-  execution, integrity verification before any derivation.
-- **Fair strategy comparison.** Campaigns execute ordered strategy × seed
-  matrices under identical recorded worlds, seeds, and noise coordinates.
-- **Immutable evidence.** Executions, observations, decisions, and switch
-  events are immutable, content-hashed, and independently re-derivable;
-  read-only query services expose verified projections.
-- **Fail-closed integrity.** Tampered inputs, forged evidence, and identity
-  mismatches are rejected, never repaired or coerced.
-- **No live actions.** Local development only — no network calls, no provider
-  calls, no real-world effects from the running application.
+## How it works
+
+The diagram shows the intended path from a declared model to evidence for a
+human. The simulation and benchmark facilities exist, but Model Pack step
+results are not yet connected to campaign outcomes or decision briefs.
+
+```mermaid
+flowchart LR
+    A["Declared assumptions"] --> B["Versioned world"] --> C["Declared uncertainty"] --> D["Candidate strategies"] --> E["Identical-condition campaigns"] --> F["Replayable evidence"] --> G["Benchmark against real data"] --> H["Brief for a human decision"]
+```
+
+## Where it stands today
+
+A holdout is data reserved for a later evaluation, kept separate from fitting
+and selection. The current holdout is sealed.
+
+| Area | Status | What that means |
+| --- | --- | --- |
+| Deterministic kernel and exact replay | Working | Recorded inputs and conditions can reproduce completed runs. |
+| Adaptive runtime `4.0.0` | Working | Recorded observations and bounded policies support replayable adaptation. |
+| Model Pack foundation and KALHAS-PAN v0.1 | Working synthetic reference | `experimental`, with no benchmark evidence; the synthetic fixture `kalhas-conformance-stockflow` is `conformance_only`. |
+| Real-data chain | Working on one disease dataset | ECDC data has raw, curated, split and locked protocol artifacts; Eurostat population data is also stored separately. |
+| Reference baselines and exact scoring | Working | Baseline forecasts and scores exist for `development` and `validation`. |
+| Holdout | Sealed | Reserved for a separately authorized evaluation; it has not been evaluated. |
+| PAN forecasts on real data | Not started | No PAN mechanism forecast has been evaluated against the benchmark. |
+| Second pathogen and leave-one-pathogen-out evaluation | Decided, not started | ADR-011 sets the rules; a second pathogen dataset and the evaluation remain future work. |
+| Persistence, multi-user operation and deployment | Not implemented | The kernel uses an in-memory local store. |
+| External scientific review | Not done | No external domain or statistical review supports the current pack claims. |
+
+## First real-data results
+
+The ECDC COVID-19 hospital and ICU bundle was evaluated under protocol
+`ecdc-covid19-hospital-icu-primary-benchmark` `1.0.0`. This is a sanity
+benchmark between a point persistence baseline and a quantile persistence
+reference; it is not evidence about PAN or any Model Pack. Weighted interval
+score (WIS) measures forecast error and interval quality; relative WIS compares
+candidate and reference scores on the same tasks, with lower values better.
+
+| Partition | Tasks per set | Cells | Verdicts | Relative WIS range | Reference 95% coverage range | Fallback tasks |
+| --- | --- | --- | --- | --- | --- | --- |
+| development | 61132 | 16 | 16 fail | 1.549059 to 1.675262 | 0.740612 to 0.868811 | 751 |
+| validation | 13280 | 16 | 16 fail | 1.637843 to 1.825789 | 0.825926 to 0.925558 | 2 |
+
+The `fail` verdicts are largely by construction: the point baseline has
+zero-width intervals, so its WIS equals its absolute error. The reference is
+under-dispersed on these data: its intervals cover less than their nominal
+level in every cell. The holdout was not evaluated.
+
+See [benchmarks](benchmarks/README.md) for the protocol, results and limits,
+and [datasets](datasets/README.md) for sources, terms and required attribution.
+The data in this repository carries its publishers' terms and acknowledgements.
+
+## Why trust the results
+
+- **Versioned contracts.** Public v1 contracts are frozen when shipped and have
+  synchronized JSON schemas; breaking changes require a new version.
+- **Exact replay.** A completed run can be replayed against recorded input and
+  event hashes. Strategy comparisons use identical recorded conditions.
+- **Immutable evidence.** Executions, observations, decisions and switch
+  events are content-hashed and can be independently re-derived.
+- **Integrity checks.** Tampered inputs, forged evidence and identity mismatches
+  are rejected rather than silently repaired.
+- **Preregistration.** The split and protocol are locked by hashes; the holdout
+  remains sealed. Baselines are verified by re-execution, and failed verdicts
+  are retained in score reports.
+- **Local operation.** The running application makes no network or provider calls
+  and performs no real-world effects.
+
+These checks establish reproducibility and integrity under declared assumptions;
+they do not establish empirical adequacy or scientific validity.
 
 ## Capabilities at a glance
 
 | Area | What it provides |
 | --- | --- |
-| Contracts & lifecycle | 67 versioned v1 contracts, canonical serialization, content hashes, campaign lifecycle state machine |
-| World models | Immutable world versions, domain-pack bindings, capability-input declarations, uncertainty declarations, deterministic realizations |
-| Campaign runtime | Structural, realization-aware (`3.0.0`), and adaptive (`4.0.0`) deterministic runtimes with exact replay |
-| Evidence | Run/campaign metric observations, empirical outcome distributions (Type-7 quantiles, fixed-alpha tails), objective evaluations |
-| Decision support | Immutable decision policies, paired same-seed comparisons, regret/robustness/Pareto evidence, deterministic briefs — read-only, no winners claimed |
-| Adaptive runtime 4.0.0 | Causal mid-run observations, closed bounded policy ASTs, dwell/cooldown/budget switching, exact adaptive replay |
-| Model Packs | Release/assurance/catalogue contracts, a pure mechanism dispatcher/runtime, the synthetic `KALHAS-PAN` v0.1 reference pack (`experimental`), the synthetic conformance fixture (`conformance_only`), and a 13-entry catalogue |
-| API | FastAPI v1 surface (46 paths / 57 operations), typed error envelope, OpenAPI docs |
-| Observability | Operational activity feed; optional local synthetic Colony UI |
+| Contracts and lifecycle | 67 versioned v1 contracts, canonical serialization, content hashes and a campaign lifecycle state machine |
+| World models | Immutable world versions, domain-pack bindings, uncertainty declarations and deterministic realizations |
+| Campaign runtime | Structural, realization-aware (`3.0.0`) and adaptive (`4.0.0`) deterministic runtimes with exact replay |
+| Evidence | Observations, empirical outcome distributions, objective evaluations and verified projections |
+| Decision support | Paired same-seed comparisons, regret, robustness, Pareto evidence and deterministic briefs |
+| Model Packs | A generic mechanism boundary, synthetic KALHAS-PAN reference and a 13-entry catalogue; catalogue entries do not add capabilities |
+| Offline datasets and benchmarks | Hash-bound raw and curated data, locked split and protocol, baseline forecasts and exact scores |
+| API | FastAPI v1 surface: 46 paths and 57 operations, typed errors and OpenAPI docs |
+| Observability | Operational activity feed and an optional local synthetic Colony UI |
 
 ## Architecture
 
@@ -75,9 +125,13 @@ protocol, and the kernel never imports NEXUS or LEGION internals.
 | **LEGION** | Strategy and agent exploration |
 | **KALHAS** | Versioned world models, uncertainty, deterministic simulation campaigns, evidence, replay |
 
-These three roles are the only components (see [`AGENTS.md`](AGENTS.md)).
-KALHAS couples to the other two solely through the placeholder adapter
-protocols in `kalhas/adapters/`.
+These three roles are the only components in this architecture (see
+[AGENTS.md](AGENTS.md)). KALHAS couples to the other two solely through the
+placeholder adapter protocols in `kalhas/adapters/`.
+
+ARCHITECT names the wider programme combining NEXUS, LEGION, KALHAS and a
+planned scientific-evaluation system, EUCLIDES. EUCLIDES is not a KALHAS
+component and is not integrated today.
 
 ```mermaid
 flowchart LR
@@ -100,6 +154,7 @@ flowchart LR
     LEGION -->|LegionAdapter protocol| API
     PACK -->|DomainPack protocol| APP
 ```
+
 
 ## Quick start
 
@@ -128,10 +183,9 @@ curl -s http://127.0.0.1:8000/health
 curl -s -H "X-Tenant-ID: tenant-1" http://127.0.0.1:8000/v1/system-info
 ```
 
-Every API response uses one typed error shape (`code`, `message`, `details`,
-`request_id`), and every endpoint is tenant-scoped and read-only or
-explicitly lifecycle-gated. The architecture guides describe the complete
-lifecycle, while the test suite provides executable end-to-end examples.
+The health endpoint checks the local service; system information uses the
+specified tenant. API errors use a typed shape with `code`, `message`, `details`
+and `request_id`. The architecture guides and tests show complete lifecycles.
 
 ## KALHAS Lab (local)
 
@@ -146,7 +200,7 @@ Open http://127.0.0.1:8000/lab/. It runs the real kernel with synthetic inputs a
 ## Testing and verification
 
 ```bash
-uv run pytest                              # full suite: 7,553 tests collected
+uv run pytest                              # full suite
 uv run ruff check .                        # lint
 uv run ruff format --check .               # formatting check
 uv run mypy kalhas tests                   # strict type check
@@ -155,12 +209,82 @@ PYTHONPATH= uv run python scripts/export_model_pack_artifacts.py --check   # mod
 PYTHONPATH= uv run python scripts/verify_dataset_bundles.py --check   # dataset bundle check
 ```
 
-Latest full-suite gate: **7,553 tests collected; exit code 0** (2026-11-01).
-`make check` runs the same gates where GNU make is available.
+CI runs the full suite on every push to `main` and on pull requests targeting
+`main`. `make check` runs lint, formatting, types and tests where GNU make is
+available; use the commands above for the artifact checks.
 
-## Release status
+## Roadmap
 
-Published milestones on `main`:
+These are plans and evidence gates, not claims that the work is complete.
+
+| Phase | Planned work |
+| --- | --- |
+| 30 | Historical benchmarking: extend the benchmark chain to PAN authoring, a second pathogen, calibration and sealed-holdout evaluation, under preregistered rules. |
+| 31 | Local integration of NEXUS, LEGION and KALHAS through versioned contracts, with conformance fixtures. |
+| 32 | A durable local platform: persistent storage, background jobs and crash recovery, with replay unchanged. |
+| 33 | Scientific validation: sensitivity and identifiability analysis, uncertainty classes, and independent domain and statistical review. |
+| 34 | Generalization and hardening: a second scenario, one substantive non-health pack, planned as MARITIME-TRADE, then fuzzing, cross-platform replay and a threat model. |
+| 35 | A research release candidate that partners and reviewers can evaluate and reproduce. |
+
+The catalogue does not implement post-quantum cryptography (PQC) or a
+variational quantum eigensolver (VQE); catalogue entries are plans, not packs.
+See the [catalogue](docs/model-packs/README.md) and
+[decisions](docs/decisions/) for their scope and gates.
+
+## Documentation
+
+| Document | Contents |
+| --- | --- |
+| [AGENTS.md](AGENTS.md) | Repository rules and gates |
+| [Architecture](docs/architecture/README.md) | Layer map and dependency rules |
+| [Contracts and lifecycle](docs/architecture/contracts-and-lifecycle.md) | Contract versions, lifecycle and hash discipline |
+| [Decisions](docs/decisions/) | Architecture decision records |
+| [Model Packs](docs/model-packs/README.md) | Maturity, catalogue and regeneration |
+| [Datasets](datasets/README.md) | Sources, terms, attribution and dataset bundles |
+| [Benchmarks](benchmarks/README.md) | Locked protocol, reference results and limitations |
+| [CHANGELOG.md](CHANGELOG.md) | Release and checkpoint timeline |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution workflow and gates |
+| [SECURITY.md](SECURITY.md) | Scope and security reporting |
+
+## Known limitations and non-goals
+
+- **Local, in-memory kernel.** There is no database, process-independent
+  persistence, clustering or multi-user operation.
+- **No live actions.** The application performs no autonomous live action.
+- **Determinism is not validity.** Replay does not establish scientific
+  validity, calibration, certainty or real-world causality. Outputs are not
+  real-world recommendations.
+- **Synthetic UI.** Colony UI renders mock activity and is separate from the
+  verified evidence pipeline.
+- **Explicit local packs.** A validated `DomainPack` is supplied explicitly;
+  there is no dynamic discovery, plugin loading or provider call.
+- **PAN is a synthetic reference.** KALHAS-PAN is `experimental`, with no
+  benchmark evidence, empirical adequacy claim or external scientific review.
+- **Pack results stop at the runtime boundary.** Mechanism step results are
+  not yet consumed by campaign outcomes, objective evaluations or briefs.
+- **Catalogue entries are not capabilities.** `catalogued` means a roadmap
+  candidate, not an implemented pack.
+- **Bounded results.** Benchmark results bind only their exact data vintage,
+  geography, horizon and metric, as well as the configuration and claim.
+- **No license yet.** No license has been selected; all rights are reserved by
+  the repository owner until a license is added.
+
+## Contributing and security
+
+Contributions follow the repository's gate discipline — see
+[CONTRIBUTING.md](CONTRIBUTING.md). Behavioral changes ship with tests.
+Security scope and responsible-disclosure guidance are in [SECURITY.md](SECURITY.md).
+Pull requests and issues use the templates under [.github/](.github/).
+
+<details>
+<summary>Release history</summary>
+
+## Phase 30 — in progress
+
+Committed work includes offline ECDC and Eurostat data bundles, curated lineage,
+a locked ECDC split and benchmark protocol, exact scoring, reference baselines
+and development and validation results. ADR-011 records the PAN authoring and
+multi-pathogen evaluation decisions. KALHAS Lab provides a separate local app.
 
 ## Phase 26 — published
 
@@ -221,60 +345,4 @@ The completion work on top of it (slices H29-S07 through H29-S09) adds:
 
 See [`docs/model-packs/README.md`](docs/model-packs/README.md) for the catalogue.
 
-## Documentation
-
-| Document | Contents |
-| --- | --- |
-| [`AGENTS.md`](AGENTS.md) | Durable repository rules and gates |
-| [`docs/architecture/README.md`](docs/architecture/README.md) | Layer map and dependency rules |
-| [`docs/architecture/contracts-and-lifecycle.md`](docs/architecture/contracts-and-lifecycle.md) | Contract versions, lifecycle, and hash discipline |
-| [`docs/decisions/`](docs/decisions/) | ADR 001–011 (integration boundaries, domain packs, immutable world contracts, adaptive runtime, Model Pack mechanism/assurance, offline dataset intake, curated dataset lineage, dataset split and holdout lock, benchmark protocol and scoring, declared-missing row presence, PAN authoring and multi-pathogen evaluation) |
-| [`docs/model-packs/README.md`](docs/model-packs/README.md) | Model Pack maturity levels, the 13-entry catalogue, and the regeneration workflow |
-| [`CHANGELOG.md`](CHANGELOG.md) | Release and checkpoint timeline |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Workflow, gates, and acceptance rules |
-| [`SECURITY.md`](SECURITY.md) | Scope, reporting, and supported boundaries |
-
-## Known limitations and non-goals
-
-- **Local, in-memory kernel.** No database, no persistence beyond the process,
-  no clustering, and no multi-tenancy beyond tenant-scoped identifiers.
-- **No live actions.** The running application performs no autonomous live
-  action: no network calls, no provider calls, no real-world effects.
-- **Determinism is not validity.** Deterministic replay and repository
-  acceptance are not scientific validity, not calibration, not certainty, not
-  certification, and not a guarantee of any outcome; replay does not establish
-  real-world causality; no output is a real-world recommendation. The
-  exact-five campaigns are deterministic proofs over synthetic,
-  domain-neutral fixture worlds.
-- **Colony UI is synthetic.** The bundled observability UI renders mock
-  activity and is intentionally separate from the verified evidence pipeline.
-- **Executable packs are explicit and local.** The generic mechanism boundary
-  accepts an explicitly supplied, validated `DomainPack`; there is no dynamic
-  discovery, plugin loading, provider call, or pack-specific kernel import.
-- **KALHAS-PAN is a synthetic executable reference.** It is deterministic
-  architecture/mechanism evidence, not an epidemiological forecast. Its
-  maturity is `experimental` — deterministic execution and synthetic
-  conformance evidence only, no benchmark evidence, no empirical adequacy
-  claim; it has no real patient data, empirical calibration, external
-  scientific review, automatic API registration, or authority over a public
-  decision.
-- **Pack results stop at the runtime boundary.** Mechanism step results are
-  not yet consumed by campaign outcomes, objective evaluations, or decision
-  briefs, so the pack-to-runtime-to-brief path is proven only up to the runtime
-  boundary. The pack-to-brief evidence path is open work for a later, separately
-  authorized slice and is not claimed as done.
-- **Catalogue entries are not capabilities.** A `catalogued` entry is a roadmap
-  candidate with no implemented capability, no pack, and no planned delivery
-  order.
-- **No license yet.** No license has been selected; that is a separate
-  explicit decision. All rights are reserved by the repository owner until a
-  license is added.
-
-## Contributing and security
-
-Contributions follow the repository's gate discipline — see
-[`CONTRIBUTING.md`](CONTRIBUTING.md). Every behavioral change ships with
-tests, and `pytest`, `ruff`, and `mypy` must pass before any change is
-considered. Security expectations, supported scope, and responsible-disclosure
-guidance are in [`SECURITY.md`](SECURITY.md). Pull requests and issues use the
-templates under [`.github/`](.github/).
+</details>

@@ -110,23 +110,14 @@ def test_phase29_facts_are_present_in_every_closure_document() -> None:
             assert fact in normalized, f"{fact!r} missing from {name}"
 
 
-def test_readme_phase29_status_is_single_and_numbers_agree() -> None:
+def test_readme_phase29_status_is_single_and_has_no_stale_count() -> None:
     readme = _read("README.md")
     headings = [line for line in readme.splitlines() if line.startswith("## Phase 29")]
     assert headings == [_README_HEADING]
     assert _FOUNDATION_COMMIT in _readme_phase29_section()
-
-    badge = re.search(r"badge/tests-([0-9%A-F]+)%20green", readme)
-    assert badge is not None
-    badge_count = badge.group(1).replace("%2C", "")
-    gate = re.search(r"Latest full-suite gate: \*\*([0-9,]+) tests collected; exit code 0", readme)
-    assert gate is not None
-    changelog_gate = re.search(
-        r"### Gate\n\n- ([0-9,]+) tests collected; exit code 0", _changelog_entry()
-    )
-    assert changelog_gate is not None
-    assert badge_count == gate.group(1).replace(",", "")
-    assert badge_count == changelog_gate.group(1).replace(",", "")
+    assert "badge/tests-" not in readme
+    assert "Latest full-suite gate" not in readme
+    assert "### Gate\n\n- 7,553 tests collected; exit code 0" in _changelog_entry()
 
 
 def test_catalogue_document_mirrors_the_catalogue_data() -> None:
