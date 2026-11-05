@@ -492,3 +492,24 @@ def test_baseline_module_boundaries() -> None:
         if isinstance(node, ast.Attribute):
             assert node.attr not in forbidden | {"now", "today", "utcnow", "environ", "getenv"}
         assert not (isinstance(node, ast.Constant) and isinstance(node.value, float))
+
+
+def test_adr011_scope_and_decisions() -> None:
+    path = REPO_ROOT / "docs/decisions/ADR-011-pan-authoring-and-multi-pathogen-evaluation.md"
+    normalized = re.sub(r"\s+", " ", path.read_text(encoding="utf-8")).lower()
+    assert "- status: accepted" in normalized
+    assert "- date: 2026-11-05" in normalized
+    for number in range(1, 11):
+        assert f"### d30-04-{number} — " in normalized
+    for phrase in (
+        "this adr supersedes nothing",
+        "must not be read as claiming any of them",
+        "modelpackauthoringbinding",
+        "`stock_sum`",
+        "`flow_sum`",
+        "`per_100k`",
+        "`within_pathogen`",
+        "`transfer`",
+        "`unbenchmarked`",
+    ):
+        assert phrase in normalized
