@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/banner.svg" alt="KALHAS — deterministic worlds, uncertainty, evidence, exact replay" width="800"/>
+<img src="docs/banner.png" alt="KALHAS — deterministic worlds, uncertainty, evidence, exact replay" width="800"/>
 
 # KALHAS
 
