@@ -6,6 +6,7 @@ with ``--root``; they never touch the committed files.
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import json
 import os
@@ -42,6 +43,11 @@ def _run(root: Path) -> subprocess.CompletedProcess[str]:
         check=False,
         env={**os.environ, "PYTHONPATH": ""},
     )
+
+
+@functools.cache
+def _run_repository() -> subprocess.CompletedProcess[str]:
+    return _run(REPO_ROOT)
 
 
 def _manifest_paths() -> list[Path]:
@@ -368,7 +374,7 @@ def test_committed_ecdc_curated_bundle_and_completeness() -> None:
     assert raw.license.attribution_statement in readme
     assert manifest.modification_notice in readme
 
-    result = _run(REPO_ROOT)
+    result = _run_repository()
     assert result.returncode == 0, result.stdout + result.stderr
     assert f"ok {ECDC_CURATED_PATH}" in result.stdout
 
@@ -529,7 +535,7 @@ def test_ecdc_split_fixed_rule_and_sealed_holdout() -> None:
         assert counts.development + counts.validation + counts.holdout == counts_by_file[rule.path]
         with pytest.raises(SealedPartitionError):
             select_partition_rows(split, curated, files, rule.path, "holdout")
-    result = _run(REPO_ROOT)
+    result = _run_repository()
     assert result.returncode == 0, result.stdout + result.stderr
     assert f"ok {ECDC_SPLIT_PATH}" in result.stdout
     assert split.preregistration_note in (REPO_ROOT / "datasets/README.md").read_text(
@@ -618,7 +624,7 @@ def test_protocol_chain_missing_split_fails(protocol_chain_root: Path) -> None:
 
 
 def test_real_repository_has_verified_chain_and_locked_protocol() -> None:
-    result = _run(REPO_ROOT)
+    result = _run_repository()
     assert result.returncode == 0, result.stdout + result.stderr
     assert "ok datasets/v1/raw/ecdc-covid19-hospital-icu/2026-11-02" in result.stdout
     assert "ok datasets/v1/curated/ecdc-covid19-hospital-icu-by-indicator/1.0.0" in result.stdout
@@ -627,8 +633,16 @@ def test_real_repository_has_verified_chain_and_locked_protocol() -> None:
         "ok benchmarks/v1/protocols/ecdc-covid19-hospital-icu-primary-benchmark/1.0.0"
         in result.stdout
     )
-    assert not (REPO_ROOT / "benchmarks/v1/forecasts").exists()
-    assert not (REPO_ROOT / "benchmarks/v1/reports").exists()
+    for partition in ("development", "validation"):
+        for baseline in ("point", "quantile"):
+            assert (
+                f"ok benchmarks/v1/forecasts/ecdc-primary-persistence-{baseline}-{partition}/1.0.0"
+                in result.stdout
+            )
+        assert (
+            f"ok benchmarks/v1/reports/ecdc-primary-point-vs-quantile-{partition}/1.0.0"
+            in result.stdout
+        )
 
 
 # --- committed ECDC protocol (H30-D04) ----------------------------------------------------
@@ -801,7 +815,9 @@ def test_ecdc_protocol_task_counts_and_sealed_holdout() -> None:
 @pytest.fixture
 def protocol_copy_root(scratch_root: Path) -> Path:
     shutil.copytree(REPO_ROOT / "datasets", scratch_root / "datasets")
-    shutil.copytree(REPO_ROOT / "benchmarks", scratch_root / "benchmarks")
+    (scratch_root / "benchmarks/v1").mkdir(parents=True)
+    shutil.copytree(REPO_ROOT / "benchmarks/v1/protocols", scratch_root / "benchmarks/v1/protocols")
+    shutil.copy2(REPO_ROOT / "benchmarks/README.md", scratch_root / "benchmarks/README.md")
     return scratch_root
 
 
@@ -820,6 +836,149 @@ def test_ecdc_protocol_extra_file_is_rejected(protocol_copy_root: Path) -> None:
     result = _run(protocol_copy_root)
     assert result.returncode == 1
     assert f"FAIL {ECDC_PROTOCOL_PATH}: undeclared_file" in result.stdout
+
+
+# --- committed baseline results (H30-D05) -------------------------------------------------
+
+
+def test_ecdc_baseline_result_file_hashes() -> None:
+    expected = {
+        "forecasts/ecdc-primary-persistence-point-development/1.0.0/forecasts.csv": (
+            "d69130a8fd0660f12afaf4e8f6c416bb3c395f50c27fbfe52d0d644e8479bb77"
+        ),
+        "forecasts/ecdc-primary-persistence-point-development/1.0.0/manifest.json": (
+            "162d3371fab1fc2437b8303e6e2f9f07b89851d1bd2a3adda2772ef80635a07e"
+        ),
+        "forecasts/ecdc-primary-persistence-point-validation/1.0.0/forecasts.csv": (
+            "f79453679c19520ac7e6d3ee996dffa6182a314a508ce28933d8201deb343853"
+        ),
+        "forecasts/ecdc-primary-persistence-point-validation/1.0.0/manifest.json": (
+            "191c1db95ff294656f5ab4b70d71412dde090414c14956a1f0004a7591724bd6"
+        ),
+        "forecasts/ecdc-primary-persistence-quantile-development/1.0.0/forecasts.csv": (
+            "1cca74aae651692c390949cc9edf4232c350dab66adef86569d91978418a8b1e"
+        ),
+        "forecasts/ecdc-primary-persistence-quantile-development/1.0.0/manifest.json": (
+            "737538c66f3365018f955b3095e9201e72b84ba17c3d4e8f2c1c97396188d708"
+        ),
+        "forecasts/ecdc-primary-persistence-quantile-validation/1.0.0/forecasts.csv": (
+            "0607b4dbb0c2a316abc384aaa83228128b1fd8d1b0b6a8cca16e8fc1f1cd8eff"
+        ),
+        "forecasts/ecdc-primary-persistence-quantile-validation/1.0.0/manifest.json": (
+            "576fa77fdfb6060fbfea1cb419532b0a631adb2a1e52fe5c333dd461014331b2"
+        ),
+        "reports/ecdc-primary-point-vs-quantile-development/1.0.0/manifest.json": (
+            "643c26e5b7a375ac7618476eb1263c40b9aeae25e893ff2b8a94768fb9f39a65"
+        ),
+        "reports/ecdc-primary-point-vs-quantile-validation/1.0.0/manifest.json": (
+            "dfed29c26c284b11a99481cc349bcac17d017a102535abe41da60843a275fda1"
+        ),
+    }
+    for path, digest in expected.items():
+        assert (
+            hashlib.sha256((REPO_ROOT / "benchmarks/v1" / path).read_bytes()).hexdigest() == digest
+        )
+
+
+def test_ecdc_baseline_forecasts_and_reports() -> None:
+    from fractions import Fraction
+
+    from kalhas.application.benchmark_baselines import BASELINE_CONFIGURATION_HASH
+    from kalhas.contracts.v1.benchmark_forecast import BenchmarkScoreReport, ForecastSet
+    from kalhas.contracts.v1.benchmark_protocol import BenchmarkProtocol
+
+    base = REPO_ROOT / "benchmarks/v1"
+    protocol = BenchmarkProtocol.model_validate_json(
+        (REPO_ROOT / ECDC_PROTOCOL_PATH / "manifest.json").read_bytes()
+    )
+    all_forecasts = tuple((base / "forecasts").glob("*/*/manifest.json"))
+    all_reports = tuple((base / "reports").glob("*/*/manifest.json"))
+    assert len(all_forecasts) == 4
+    assert len(all_reports) == 2
+    assert all(
+        ForecastSet.model_validate_json(path.read_bytes()).partition != "holdout"
+        for path in all_forecasts
+    )
+    assert all(
+        BenchmarkScoreReport.model_validate_json(path.read_bytes()).partition != "holdout"
+        for path in all_reports
+    )
+    limitations = (
+        "The evaluation is retrospective against one final data vintage. "
+        "Reporting delays and revisions are absent.",
+        "Admission criteria and reporting differ by country and over time.",
+        "Sources change within some series.",
+        "Daily series have gaps.",
+        "A benchmarked label binds only the exact pack and configuration, data vintage, "
+        "geography, horizon, metric and claim. It disappears rather than transfers when "
+        "that binding is absent.",
+        "This report compares two reference baselines as a sanity benchmark. Neither is a "
+        "Model Pack mechanism, and no verdict here is a claim about any Model Pack.",
+    )
+    for partition, count, fallback, wis_min, wis_max, coverage_min, coverage_max in (
+        ("development", 61132, 751, "1.549059", "1.675262", "0.740612", "0.868811"),
+        ("validation", 13280, 2, "1.637843", "1.825789", "0.825926", "0.925558"),
+    ):
+        sets = {}
+        for baseline in ("point", "quantile"):
+            identifier = f"ecdc-primary-persistence-{baseline}-{partition}"
+            path = base / "forecasts" / identifier / "1.0.0/manifest.json"
+            forecast = ForecastSet.model_validate_json(path.read_bytes())
+            sets[baseline] = forecast
+            assert forecast.partition == partition
+            assert forecast.forecast_set_id == identifier
+            assert forecast.forecast_set_version == "1.0.0"
+            assert forecast.forecasts_file.row_count == count
+            assert forecast.metadata == (
+                {"fallback_count": fallback} if baseline == "quantile" else {}
+            )
+            assert forecast.producer.kind == "baseline"
+            assert forecast.producer.producer_id == f"kalhas-persistence-{baseline}-v1"
+            assert forecast.producer.producer_version == "1.0.0"
+            assert forecast.producer.configuration_hash == BASELINE_CONFIGURATION_HASH
+            assert (forecast.protocol_manifest_id, forecast.protocol_content_hash) == (
+                protocol.identifier,
+                protocol.content_hash,
+            )
+        report_id = f"ecdc-primary-point-vs-quantile-{partition}"
+        report = BenchmarkScoreReport.model_validate_json(
+            (base / "reports" / report_id / "1.0.0/manifest.json").read_bytes()
+        )
+        assert report.partition == partition
+        assert (report.protocol_manifest_id, report.protocol_content_hash) == (
+            protocol.identifier,
+            protocol.content_hash,
+        )
+        assert (report.candidate_forecast_set_id, report.candidate_forecast_set_content_hash) == (
+            sets["point"].identifier,
+            sets["point"].content_hash,
+        )
+        assert (report.reference_forecast_set_id, report.reference_forecast_set_content_hash) == (
+            sets["quantile"].identifier,
+            sets["quantile"].content_hash,
+        )
+        assert report.limitations == limitations
+        assert len(report.cells) == 16
+        assert all(
+            (cell.verdict, cell.verdict_reason) == ("fail", "not_below_threshold")
+            for cell in report.cells
+        )
+        assert all(
+            cell.relative_wis is not None and cell.reference is not None for cell in report.cells
+        )
+        wis = [
+            Fraction(cell.relative_wis) for cell in report.cells if cell.relative_wis is not None
+        ]
+        coverage = [
+            Fraction(cell.reference.coverage_95)
+            for cell in report.cells
+            if cell.reference is not None
+        ]
+        assert (min(wis), max(wis)) == (Fraction(wis_min), Fraction(wis_max))
+        assert (min(coverage), max(coverage)) == (Fraction(coverage_min), Fraction(coverage_max))
+    assert "## First results: reference baselines (development and validation)" in (
+        REPO_ROOT / "benchmarks/README.md"
+    ).read_text(encoding="utf-8")
 
 
 @pytest.fixture

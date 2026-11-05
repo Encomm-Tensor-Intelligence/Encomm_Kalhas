@@ -31,3 +31,17 @@ Every report on this bundle carries these limitations (ADR-009 D30-02-10):
 
 A `pass` means only that a candidate beats the pinned reference baseline on this preregistered metric, for this binding. It
 is not external validity, a causal claim or a maturity label.
+
+## First results: reference baselines (development and validation)
+
+Candidate is `kalhas-persistence-point-v1`, reference is `kalhas-persistence-quantile-v1`, under the protocol above. This is a
+sanity benchmark between two baselines. It is not a claim about any Model Pack.
+
+| Partition | Tasks per set | Cells | Verdicts | Relative WIS range | Reference 95% coverage range | Fallback tasks |
+| --- | --- | --- | --- | --- | --- | --- |
+| development | 61132 | 16 | 16 fail | 1.549059 to 1.675262 | 0.740612 to 0.868811 | 751 |
+| validation | 13280 | 16 | 16 fail | 1.637843 to 1.825789 | 0.825926 to 0.925558 | 2 |
+
+The `fail` verdicts are largely by construction: a point forecast has zero-width intervals, so its WIS equals its absolute error.
+The reference's 95% intervals cover less than their nominal level in every cell, and in development their coverage falls with the
+horizon, so the reference is itself under-dispersed on this data. The holdout partition was not evaluated.

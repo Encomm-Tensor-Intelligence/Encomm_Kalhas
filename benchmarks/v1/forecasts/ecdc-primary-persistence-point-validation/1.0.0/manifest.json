@@ -1,0 +1,25 @@
+{
+  "content_hash": "d1faa3a830bddf5d12d193b4401385343f42d341975b9a3585887fc55766824f",
+  "created_at": "2026-11-05T15:30:00Z",
+  "forecast_set_id": "ecdc-primary-persistence-point-validation",
+  "forecast_set_version": "1.0.0",
+  "forecasts_file": {
+    "byte_size": 1617967,
+    "path": "forecasts.csv",
+    "row_count": 13280,
+    "sha256": "f79453679c19520ac7e6d3ee996dffa6182a314a508ce28933d8201deb343853"
+  },
+  "identifier": "forecast-set-ecdc-primary-persistence-point-validation-1.0.0",
+  "metadata": {},
+  "partition": "validation",
+  "producer": {
+    "configuration_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "kind": "baseline",
+    "producer_id": "kalhas-persistence-point-v1",
+    "producer_version": "1.0.0"
+  },
+  "protocol_content_hash": "2a1b258f07dc158de32115726acbe88beb7a43cc6722382dcf0e187a7c372df8",
+  "protocol_manifest_id": "benchmark-protocol-ecdc-covid19-hospital-icu-primary-benchmark-1.0.0",
+  "schema_version": "1.0.0",
+  "tenant_id": "kalhas-reference"
+}

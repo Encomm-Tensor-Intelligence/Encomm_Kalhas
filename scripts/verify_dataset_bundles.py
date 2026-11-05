@@ -34,6 +34,7 @@ import argparse
 import re
 import sys
 from collections.abc import Mapping
+from functools import cache
 from pathlib import Path
 
 from kalhas.application.benchmark_baselines import verify_baseline_forecast_set
@@ -286,6 +287,7 @@ def _verify_protocol(root: Path, bundle: Path) -> str | None:
     return None
 
 
+@cache
 def _protocol_chain(
     root: Path, identifier: str
 ) -> (
@@ -363,6 +365,7 @@ def _load_forecast(bundle: Path) -> tuple[ForecastSet, bytes] | str:
     return item, (bundle / "forecasts.csv").read_bytes()
 
 
+@cache
 def _verify_forecast(root: Path, bundle: Path) -> str | None:
     loaded = _load_forecast(bundle)
     if isinstance(loaded, str):

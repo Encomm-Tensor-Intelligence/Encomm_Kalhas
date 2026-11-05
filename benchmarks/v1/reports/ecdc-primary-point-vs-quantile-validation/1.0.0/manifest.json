@@ -1,0 +1,380 @@
+{
+  "candidate_forecast_set_content_hash": "d1faa3a830bddf5d12d193b4401385343f42d341975b9a3585887fc55766824f",
+  "candidate_forecast_set_id": "forecast-set-ecdc-primary-persistence-point-validation-1.0.0",
+  "cells": [
+    {
+      "candidate": {
+        "coverage_50": "0.041751",
+        "coverage_95": "0.041751",
+        "mean_absolute_error": "146.529293",
+        "mean_wis": "146.529293"
+      },
+      "evaluable_tasks": 1485,
+      "horizon": 7,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 0,
+      "path": "daily-hospital-occupancy.csv",
+      "reference": {
+        "coverage_50": "0.526599",
+        "coverage_95": "0.907071",
+        "mean_absolute_error": "146.529293",
+        "mean_wis": "89.387515"
+      },
+      "relative_wis": "1.639259",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.033761",
+        "coverage_95": "0.033761",
+        "mean_absolute_error": "272.076300",
+        "mean_wis": "272.076300"
+      },
+      "evaluable_tasks": 1481,
+      "horizon": 14,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 0,
+      "path": "daily-hospital-occupancy.csv",
+      "reference": {
+        "coverage_50": "0.551654",
+        "coverage_95": "0.901418",
+        "mean_absolute_error": "272.076300",
+        "mean_wis": "166.118718"
+      },
+      "relative_wis": "1.637843",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.030893",
+        "coverage_95": "0.030893",
+        "mean_absolute_error": "377.580927",
+        "mean_wis": "377.580927"
+      },
+      "evaluable_tasks": 1489,
+      "horizon": 21,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 0,
+      "path": "daily-hospital-occupancy.csv",
+      "reference": {
+        "coverage_50": "0.568838",
+        "coverage_95": "0.894560",
+        "mean_absolute_error": "377.580927",
+        "mean_wis": "227.282257"
+      },
+      "relative_wis": "1.661286",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.033647",
+        "coverage_95": "0.033647",
+        "mean_absolute_error": "461.026918",
+        "mean_wis": "461.026918"
+      },
+      "evaluable_tasks": 1486,
+      "horizon": 28,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 0,
+      "path": "daily-hospital-occupancy.csv",
+      "reference": {
+        "coverage_50": "0.570659",
+        "coverage_95": "0.871467",
+        "mean_absolute_error": "461.026918",
+        "mean_wis": "271.179061"
+      },
+      "relative_wis": "1.700083",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.124587",
+        "coverage_95": "0.124587",
+        "mean_absolute_error": "11.096535",
+        "mean_wis": "11.096535"
+      },
+      "evaluable_tasks": 1212,
+      "horizon": 7,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 0,
+      "path": "daily-icu-occupancy.csv",
+      "reference": {
+        "coverage_50": "0.568482",
+        "coverage_95": "0.924092",
+        "mean_absolute_error": "11.096535",
+        "mean_wis": "6.077667"
+      },
+      "relative_wis": "1.825789",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.103391",
+        "coverage_95": "0.103391",
+        "mean_absolute_error": "18.707196",
+        "mean_wis": "18.707196"
+      },
+      "evaluable_tasks": 1209,
+      "horizon": 14,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 0,
+      "path": "daily-icu-occupancy.csv",
+      "reference": {
+        "coverage_50": "0.591398",
+        "coverage_95": "0.925558",
+        "mean_absolute_error": "18.707196",
+        "mean_wis": "10.331049"
+      },
+      "relative_wis": "1.810774",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.083951",
+        "coverage_95": "0.083951",
+        "mean_absolute_error": "25.046091",
+        "mean_wis": "25.046091"
+      },
+      "evaluable_tasks": 1215,
+      "horizon": 21,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 0,
+      "path": "daily-icu-occupancy.csv",
+      "reference": {
+        "coverage_50": "0.606584",
+        "coverage_95": "0.898765",
+        "mean_absolute_error": "25.046091",
+        "mean_wis": "13.999577"
+      },
+      "relative_wis": "1.789061",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.079901",
+        "coverage_95": "0.079901",
+        "mean_absolute_error": "29.907743",
+        "mean_wis": "29.907743"
+      },
+      "evaluable_tasks": 1214,
+      "horizon": 28,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 0,
+      "path": "daily-icu-occupancy.csv",
+      "reference": {
+        "coverage_50": "0.630148",
+        "coverage_95": "0.905272",
+        "mean_absolute_error": "29.907743",
+        "mean_wis": "16.654321"
+      },
+      "relative_wis": "1.795795",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.008547",
+        "coverage_95": "0.008547",
+        "mean_absolute_error": "1.495586",
+        "mean_wis": "1.495586"
+      },
+      "evaluable_tasks": 351,
+      "horizon": 1,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 3,
+      "path": "weekly-hospital-admissions-per-100k.csv",
+      "reference": {
+        "coverage_50": "0.495726",
+        "coverage_95": "0.880342",
+        "mean_absolute_error": "1.495586",
+        "mean_wis": "0.865827"
+      },
+      "relative_wis": "1.727349",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.002857",
+        "coverage_95": "0.002857",
+        "mean_absolute_error": "2.419417",
+        "mean_wis": "2.419417"
+      },
+      "evaluable_tasks": 350,
+      "horizon": 2,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 3,
+      "path": "weekly-hospital-admissions-per-100k.csv",
+      "reference": {
+        "coverage_50": "0.488571",
+        "coverage_95": "0.854286",
+        "mean_absolute_error": "2.419417",
+        "mean_wis": "1.376613"
+      },
+      "relative_wis": "1.757514",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.008596",
+        "coverage_95": "0.008596",
+        "mean_absolute_error": "3.086291",
+        "mean_wis": "3.086291"
+      },
+      "evaluable_tasks": 349,
+      "horizon": 3,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 3,
+      "path": "weekly-hospital-admissions-per-100k.csv",
+      "reference": {
+        "coverage_50": "0.527221",
+        "coverage_95": "0.830946",
+        "mean_absolute_error": "3.086291",
+        "mean_wis": "1.754559"
+      },
+      "relative_wis": "1.759013",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.005747",
+        "coverage_95": "0.005747",
+        "mean_absolute_error": "3.659084",
+        "mean_wis": "3.659084"
+      },
+      "evaluable_tasks": 348,
+      "horizon": 4,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 3,
+      "path": "weekly-hospital-admissions-per-100k.csv",
+      "reference": {
+        "coverage_50": "0.531609",
+        "coverage_95": "0.833333",
+        "mean_absolute_error": "3.659084",
+        "mean_wis": "2.032970"
+      },
+      "relative_wis": "1.799871",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.000000",
+        "coverage_95": "0.000000",
+        "mean_absolute_error": "0.112591",
+        "mean_wis": "0.112591"
+      },
+      "evaluable_tasks": 276,
+      "horizon": 1,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 5,
+      "path": "weekly-icu-admissions-per-100k.csv",
+      "reference": {
+        "coverage_50": "0.427536",
+        "coverage_95": "0.869565",
+        "mean_absolute_error": "0.112591",
+        "mean_wis": "0.063738"
+      },
+      "relative_wis": "1.766458",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.000000",
+        "coverage_95": "0.000000",
+        "mean_absolute_error": "0.157073",
+        "mean_wis": "0.157073"
+      },
+      "evaluable_tasks": 273,
+      "horizon": 2,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 7,
+      "path": "weekly-icu-admissions-per-100k.csv",
+      "reference": {
+        "coverage_50": "0.472527",
+        "coverage_95": "0.853480",
+        "mean_absolute_error": "0.157073",
+        "mean_wis": "0.090195"
+      },
+      "relative_wis": "1.741483",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.000000",
+        "coverage_95": "0.000000",
+        "mean_absolute_error": "0.195775",
+        "mean_wis": "0.195775"
+      },
+      "evaluable_tasks": 272,
+      "horizon": 3,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 6,
+      "path": "weekly-icu-admissions-per-100k.csv",
+      "reference": {
+        "coverage_50": "0.448529",
+        "coverage_95": "0.834559",
+        "mean_absolute_error": "0.195775",
+        "mean_wis": "0.112435"
+      },
+      "relative_wis": "1.741227",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    },
+    {
+      "candidate": {
+        "coverage_50": "0.000000",
+        "coverage_95": "0.000000",
+        "mean_absolute_error": "0.220808",
+        "mean_wis": "0.220808"
+      },
+      "evaluable_tasks": 270,
+      "horizon": 4,
+      "inadmissible_origin_tasks": 0,
+      "insufficient_history_tasks": 5,
+      "path": "weekly-icu-admissions-per-100k.csv",
+      "reference": {
+        "coverage_50": "0.529630",
+        "coverage_95": "0.825926",
+        "mean_absolute_error": "0.220808",
+        "mean_wis": "0.124348"
+      },
+      "relative_wis": "1.775732",
+      "verdict": "fail",
+      "verdict_reason": "not_below_threshold"
+    }
+  ],
+  "content_hash": "08f1d16ca293381c8dc19ead9adbb1258b5a4e19e8124d5ba84e4c88d79ad989",
+  "identifier": "benchmark-score-report-ecdc-primary-point-vs-quantile-validation-1.0.0",
+  "limitations": [
+    "The evaluation is retrospective against one final data vintage. Reporting delays and revisions are absent.",
+    "Admission criteria and reporting differ by country and over time.",
+    "Sources change within some series.",
+    "Daily series have gaps.",
+    "A benchmarked label binds only the exact pack and configuration, data vintage, geography, horizon, metric and claim. It disappears rather than transfers when that binding is absent.",
+    "This report compares two reference baselines as a sanity benchmark. Neither is a Model Pack mechanism, and no verdict here is a claim about any Model Pack."
+  ],
+  "metadata": {},
+  "partition": "validation",
+  "protocol_content_hash": "2a1b258f07dc158de32115726acbe88beb7a43cc6722382dcf0e187a7c372df8",
+  "protocol_manifest_id": "benchmark-protocol-ecdc-covid19-hospital-icu-primary-benchmark-1.0.0",
+  "reference_forecast_set_content_hash": "46031c696997386c8953b0239934e70d29b3ba7cc569c2c943a1e9c45e3c633a",
+  "reference_forecast_set_id": "forecast-set-ecdc-primary-persistence-quantile-validation-1.0.0",
+  "report_id": "ecdc-primary-point-vs-quantile-validation",
+  "report_version": "1.0.0",
+  "schema_version": "1.0.0",
+  "scored_at": "2026-11-05T15:30:00Z",
+  "scoring_rule": "kalhas-wis-k3-v1",
+  "tenant_id": "kalhas-reference"
+}
