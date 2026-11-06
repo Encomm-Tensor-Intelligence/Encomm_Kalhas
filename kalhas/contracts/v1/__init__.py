@@ -52,6 +52,7 @@ from kalhas.contracts.v1.model_pack import (
     ModelPackCatalogueEntry,
     ModelPackReleaseProfile,
 )
+from kalhas.contracts.v1.model_pack_authoring import ModelPackAuthoringBinding
 from kalhas.contracts.v1.objective_evaluation import (
     CampaignObjectiveEvaluationMatrix,
     ScenarioEvaluationProfile,
@@ -193,6 +194,7 @@ PUBLIC_CONTRACTS: tuple[type[VersionedContract], ...] = (
     BenchmarkProtocol,
     ForecastSet,
     BenchmarkScoreReport,
+    ModelPackAuthoringBinding,
 )
 __all__ = [
     "API_VERSION",
@@ -236,6 +238,7 @@ __all__ = [
     "ExternalObservationInputBundle",
     "HealthResponse",
     "ModelPackAssuranceProfile",
+    "ModelPackAuthoringBinding",
     "ModelPackCatalogueEntry",
     "ModelPackReleaseProfile",
     "OperationalActivityEvent",

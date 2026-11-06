@@ -12,7 +12,7 @@ A domain-neutral Python kernel for comparing strategies in reproducible simulati
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?logo=ruff)](#testing-and-verification)
 [![Formatting](https://img.shields.io/badge/format-ruff%20format-261230?logo=ruff)](#testing-and-verification)
 [![Types](https://img.shields.io/badge/types-mypy%20strict-1F6FEB)](#testing-and-verification)
-[![Schemas](https://img.shields.io/badge/schemas-67%20synchronized-F7C744)](#testing-and-verification)
+[![Schemas](https://img.shields.io/badge/schemas-68%20synchronized-F7C744)](#testing-and-verification)
 [![Replay](https://img.shields.io/badge/replay-deterministic-2ea44f)](#why-trust-the-results)
 
 </div>
@@ -107,7 +107,7 @@ they do not establish empirical adequacy or scientific validity.
 
 | Area | What it provides |
 | --- | --- |
-| Contracts and lifecycle | 67 versioned v1 contracts, canonical serialization, content hashes and a campaign lifecycle state machine |
+| Contracts and lifecycle | 68 versioned v1 contracts, canonical serialization, content hashes and a campaign lifecycle state machine |
 | World models | Immutable world versions, domain-pack bindings, uncertainty declarations and deterministic realizations |
 | Campaign runtime | Structural, realization-aware (`3.0.0`) and adaptive (`4.0.0`) deterministic runtimes with exact replay |
 | Evidence | Observations, empirical outcome distributions, objective evaluations and verified projections |
@@ -142,7 +142,7 @@ flowchart LR
         direction TB
         API["FastAPI v1 surface<br/>46 paths · typed errors"]
         APP["application services<br/>runtimes 1.0.0 – 4.0.0"]
-        CON["versioned v1 contracts<br/>67 contracts · 67 JSON schemas"]
+        CON["versioned v1 contracts<br/>68 contracts · 68 JSON schemas"]
         STORE["in-memory store<br/>snapshots · evidence · replay"]
         API --> APP --> CON
         APP --> STORE

@@ -513,3 +513,65 @@ def test_adr011_scope_and_decisions() -> None:
         "`unbenchmarked`",
     ):
         assert phrase in normalized
+
+
+_AUTHORING_MODULES = (
+    "contracts/v1/model_pack_authoring.py",
+    "application/observation_operators.py",
+    "application/model_pack_authoring_errors.py",
+    "application/model_pack_authoring_verifier.py",
+)
+_AUTHORING_IMPORTS = {
+    "__future__",
+    "typing",
+    "collections.abc",
+    "dataclasses",
+    "datetime",
+    "fractions",
+    "pydantic",
+    "kalhas.application.benchmark_protocol_verifier",
+    "kalhas.application.benchmark_task_engine",
+    "kalhas.application.hashing",
+    "kalhas.application.domain_errors",
+    "kalhas.application.model_pack_authoring_errors",
+    "kalhas.application.observation_operators",
+    "kalhas.contracts.v1.benchmark_forecast",
+    "kalhas.contracts.v1.benchmark_protocol",
+    "kalhas.contracts.v1.curated_dataset",
+    "kalhas.contracts.v1.dataset",
+    "kalhas.contracts.v1.dataset_split",
+    "kalhas.contracts.v1.domain_mechanism",
+    "kalhas.contracts.v1.model_pack_authoring",
+    "kalhas.contracts.v1.shared",
+    "kalhas.contracts.v1.state_model",
+    "kalhas.contracts.v1.world_realization",
+}
+
+
+@pytest.mark.parametrize("relative", _AUTHORING_MODULES)
+def test_authoring_modules_are_neutral_and_pure(relative: str) -> None:
+    test_new_kernel_modules_carry_no_domain_vocabulary(relative)
+    source = (KALHAS_ROOT / relative).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names = [alias.name for alias in node.names]
+        elif isinstance(node, ast.ImportFrom):
+            assert node.level == 0
+            names = [node.module or ""]
+        else:
+            names = []
+        assert all(name in _AUTHORING_IMPORTS for name in names), (relative, names)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            assert node.func.id not in {"open", "exec", "eval", "__import__"}
+        if isinstance(node, ast.Attribute):
+            assert node.attr not in {"now", "today", "utcnow", "environ", "getenv"}
+        if relative in {
+            "application/observation_operators.py",
+            "application/model_pack_authoring_verifier.py",
+        }:
+            assert not (isinstance(node, ast.Name) and node.id == "float")
+            assert not (isinstance(node, ast.Constant) and isinstance(node.value, float))
+            assert all(name not in {"decimal", "math"} for name in names)
+    if relative == "application/model_pack_authoring_verifier.py":
+        assert "holdout" not in source.lower()

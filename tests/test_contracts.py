@@ -3309,6 +3309,34 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         "content_hash": "0" * 64,
         "metadata": {},
     },
+    next(
+        contract
+        for contract in PUBLIC_CONTRACTS
+        if contract.__name__ == "ModelPackAuthoringBinding"
+    ): {
+        "identifier": "model-pack-authoring-binding-synthetic-1.0.0",
+        "tenant_id": "tenant-1",
+        "binding_id": "synthetic",
+        "binding_version": "1.0.0",
+        "pack_id": "synthetic",
+        "pack_version": "1.0.0",
+        "protocol_manifest_id": "benchmark-protocol-synthetic-1.0.0",
+        "protocol_content_hash": "0" * 64,
+        "operator_vocabulary_version": "1.0.0",
+        "observations": [
+            {
+                "target_path": "clean.csv",
+                "variant_id": "default",
+                "operator": {"op": "flow_sum", "flow": "flow_a"},
+            }
+        ],
+        "denominators": [],
+        "payload": {"initial_state_rule": {}, "action_schedule": {}, "candidate_grid": {}},
+        "assumptions": ["Synthetic example."],
+        "declared_at": NOW,
+        "content_hash": "0" * 64,
+        "metadata": {},
+    },
 }
 
 
