@@ -1411,3 +1411,66 @@ def test_mechanism_forecast_requires_reexecution(forecast_chain_root: Path) -> N
     assert result.returncode == 1
     assert "mechanism_reexecution_unavailable" in result.stdout
     assert "Traceback" not in result.stderr
+
+
+# --- committed PAN binding (H30-S05C2) ---
+
+PAN_BINDING_RELATIVE = Path("benchmarks/v1/bindings/ecdc-covid19-pan-primary/1.0.0")
+
+
+@pytest.fixture
+def pan_binding_root(scratch_root: Path) -> Path:
+    for relative in (
+        Path("datasets"),
+        Path("benchmarks/v1/protocols"),
+        Path("benchmarks/v1/bindings"),
+    ):
+        shutil.copytree(REPO_ROOT / relative, scratch_root / relative)
+    return scratch_root
+
+
+def test_committed_pan_binding_is_verified() -> None:
+    result = _run_repository()
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert f"ok {PAN_BINDING_RELATIVE.as_posix()}" in result.stdout
+
+
+@pytest.mark.parametrize(
+    ("case", "reason"),
+    [
+        ("extra", "undeclared_file"),
+        ("identity", "identity_mismatch"),
+        ("hash", "content_hash_mismatch"),
+        ("candidates", "pack_payload_invalid"),
+        ("protocol", "protocol_input_missing"),
+    ],
+)
+def test_committed_pan_binding_tampering(pan_binding_root: Path, case: str, reason: str) -> None:
+    directory = pan_binding_root / PAN_BINDING_RELATIVE
+    manifest = directory / "manifest.json"
+    if case == "extra":
+        (directory / "extra.txt").write_text("x", encoding="utf-8")
+    elif case == "identity":
+        directory.rename(directory.with_name("1.0.1"))
+    elif case == "protocol":
+        shutil.rmtree(pan_binding_root / "benchmarks/v1/protocols")
+    else:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        if case == "hash":
+            data["assumptions"][0] += " changed"
+        else:
+            from kalhas.application.model_pack_authoring_verifier import (
+                compute_model_pack_authoring_binding_content_hash,
+            )
+            from kalhas.contracts.v1.model_pack_authoring import ModelPackAuthoringBinding
+
+            data["payload"]["candidate_grid"]["candidates"].append(
+                data["payload"]["candidate_grid"]["candidates"][-1]
+            )
+            item = ModelPackAuthoringBinding.model_validate(data)
+            data["content_hash"] = compute_model_pack_authoring_binding_content_hash(item)
+        manifest.write_text(json.dumps(data), encoding="utf-8", newline="\n")
+    result = _run(pan_binding_root)
+    assert result.returncode == 1
+    assert reason in result.stdout
+    assert "Traceback" not in result.stdout + result.stderr

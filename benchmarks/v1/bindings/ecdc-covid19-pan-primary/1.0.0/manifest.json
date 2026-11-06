@@ -1,0 +1,1185 @@
+{
+  "assumptions": [
+    "The ECDC dictionary does not say whether hospital occupancy includes ICU patients, so both variants are declared and run (ADR-011 D30-04-3).",
+    "Capacities are set above every population, so capacity never binds. No result supports a claim about capacity limits.",
+    "The intervention intensity is a constant 0 with compliance 0. It is a modelling parameter, not an observed policy, and no result supports a claim about any real intervention.",
+    "The immune share is 0 and its effect is absorbed by transmission. No result supports a claim about immunity.",
+    "Rates are fixed across countries and across the whole period. Changes from vaccination, variants, testing and care are not modelled.",
+    "Denominators are Eurostat population on 1 January. Values flagged by Eurostat as provisional, estimated or a break in series are used as published.",
+    "A task whose initial state cannot be derived takes the persistence fallback of ADR-011 D30-04-4, counted and never dropped.",
+    "Every value of the grid was chosen from the cited literature and the ADRs, without inspecting any outcome value of this dataset."
+  ],
+  "binding_id": "ecdc-covid19-pan-primary",
+  "binding_version": "1.0.0",
+  "content_hash": "fa95fe5542bdf06547f9fa164de9675633dcc1c173506b9ecabe6433da784a32",
+  "declared_at": "2026-11-06T21:30:00Z",
+  "denominators": [
+    {
+      "series": "Austria",
+      "value": 8858775,
+      "year": 2019
+    },
+    {
+      "series": "Austria",
+      "value": 8901064,
+      "year": 2020
+    },
+    {
+      "series": "Austria",
+      "value": 8932664,
+      "year": 2021
+    },
+    {
+      "series": "Austria",
+      "value": 8978929,
+      "year": 2022
+    },
+    {
+      "series": "Austria",
+      "value": 9104772,
+      "year": 2023
+    },
+    {
+      "series": "Austria",
+      "value": 9158750,
+      "year": 2024
+    },
+    {
+      "series": "Belgium",
+      "value": 11455519,
+      "year": 2019
+    },
+    {
+      "series": "Belgium",
+      "value": 11522440,
+      "year": 2020
+    },
+    {
+      "series": "Belgium",
+      "value": 11554767,
+      "year": 2021
+    },
+    {
+      "series": "Belgium",
+      "value": 11617623,
+      "year": 2022
+    },
+    {
+      "series": "Belgium",
+      "value": 11742796,
+      "year": 2023
+    },
+    {
+      "series": "Belgium",
+      "value": 11817096,
+      "year": 2024
+    },
+    {
+      "series": "Bulgaria",
+      "value": 6664177,
+      "year": 2019
+    },
+    {
+      "series": "Bulgaria",
+      "value": 6569275,
+      "year": 2020
+    },
+    {
+      "series": "Bulgaria",
+      "value": 6532117,
+      "year": 2021
+    },
+    {
+      "series": "Bulgaria",
+      "value": 6482484,
+      "year": 2022
+    },
+    {
+      "series": "Bulgaria",
+      "value": 6447710,
+      "year": 2023
+    },
+    {
+      "series": "Bulgaria",
+      "value": 6445481,
+      "year": 2024
+    },
+    {
+      "series": "Cyprus",
+      "value": 890194,
+      "year": 2019
+    },
+    {
+      "series": "Cyprus",
+      "value": 902429,
+      "year": 2020
+    },
+    {
+      "series": "Cyprus",
+      "value": 914476,
+      "year": 2021
+    },
+    {
+      "series": "Cyprus",
+      "value": 929764,
+      "year": 2022
+    },
+    {
+      "series": "Cyprus",
+      "value": 949084,
+      "year": 2023
+    },
+    {
+      "series": "Cyprus",
+      "value": 966365,
+      "year": 2024
+    },
+    {
+      "series": "Czechia",
+      "value": 10649800,
+      "year": 2019
+    },
+    {
+      "series": "Czechia",
+      "value": 10693939,
+      "year": 2020
+    },
+    {
+      "series": "Czechia",
+      "value": 10494836,
+      "year": 2021
+    },
+    {
+      "series": "Czechia",
+      "value": 10516707,
+      "year": 2022
+    },
+    {
+      "series": "Czechia",
+      "value": 10827529,
+      "year": 2023
+    },
+    {
+      "series": "Czechia",
+      "value": 10900555,
+      "year": 2024
+    },
+    {
+      "series": "Estonia",
+      "value": 1324820,
+      "year": 2019
+    },
+    {
+      "series": "Estonia",
+      "value": 1328889,
+      "year": 2020
+    },
+    {
+      "series": "Estonia",
+      "value": 1330068,
+      "year": 2021
+    },
+    {
+      "series": "Estonia",
+      "value": 1331796,
+      "year": 2022
+    },
+    {
+      "series": "Estonia",
+      "value": 1365884,
+      "year": 2023
+    },
+    {
+      "series": "Estonia",
+      "value": 1374687,
+      "year": 2024
+    },
+    {
+      "series": "France",
+      "value": 67290471,
+      "year": 2019
+    },
+    {
+      "series": "France",
+      "value": 67473651,
+      "year": 2020
+    },
+    {
+      "series": "France",
+      "value": 67728568,
+      "year": 2021
+    },
+    {
+      "series": "France",
+      "value": 68091703,
+      "year": 2022
+    },
+    {
+      "series": "France",
+      "value": 68277210,
+      "year": 2023
+    },
+    {
+      "series": "France",
+      "value": 68669303,
+      "year": 2024
+    },
+    {
+      "series": "Germany",
+      "value": 83019213,
+      "year": 2019
+    },
+    {
+      "series": "Germany",
+      "value": 83166711,
+      "year": 2020
+    },
+    {
+      "series": "Germany",
+      "value": 83155031,
+      "year": 2021
+    },
+    {
+      "series": "Germany",
+      "value": 83237124,
+      "year": 2022
+    },
+    {
+      "series": "Germany",
+      "value": 83118501,
+      "year": 2023
+    },
+    {
+      "series": "Germany",
+      "value": 83456045,
+      "year": 2024
+    },
+    {
+      "series": "Greece",
+      "value": 10635213,
+      "year": 2019
+    },
+    {
+      "series": "Greece",
+      "value": 10612591,
+      "year": 2020
+    },
+    {
+      "series": "Greece",
+      "value": 10555344,
+      "year": 2021
+    },
+    {
+      "series": "Greece",
+      "value": 10461627,
+      "year": 2022
+    },
+    {
+      "series": "Greece",
+      "value": 10401868,
+      "year": 2023
+    },
+    {
+      "series": "Greece",
+      "value": 10375764,
+      "year": 2024
+    },
+    {
+      "series": "Hungary",
+      "value": 9700272,
+      "year": 2019
+    },
+    {
+      "series": "Hungary",
+      "value": 9689376,
+      "year": 2020
+    },
+    {
+      "series": "Hungary",
+      "value": 9651461,
+      "year": 2021
+    },
+    {
+      "series": "Hungary",
+      "value": 9610403,
+      "year": 2022
+    },
+    {
+      "series": "Hungary",
+      "value": 9599744,
+      "year": 2023
+    },
+    {
+      "series": "Hungary",
+      "value": 9584627,
+      "year": 2024
+    },
+    {
+      "series": "Iceland",
+      "value": 356991,
+      "year": 2019
+    },
+    {
+      "series": "Iceland",
+      "value": 364134,
+      "year": 2020
+    },
+    {
+      "series": "Iceland",
+      "value": 368792,
+      "year": 2021
+    },
+    {
+      "series": "Iceland",
+      "value": 376248,
+      "year": 2022
+    },
+    {
+      "series": "Iceland",
+      "value": 387758,
+      "year": 2023
+    },
+    {
+      "series": "Iceland",
+      "value": 383567,
+      "year": 2024
+    },
+    {
+      "series": "Ireland",
+      "value": 4940311,
+      "year": 2019
+    },
+    {
+      "series": "Ireland",
+      "value": 5012600,
+      "year": 2020
+    },
+    {
+      "series": "Ireland",
+      "value": 5066893,
+      "year": 2021
+    },
+    {
+      "series": "Ireland",
+      "value": 5154277,
+      "year": 2022
+    },
+    {
+      "series": "Ireland",
+      "value": 5271395,
+      "year": 2023
+    },
+    {
+      "series": "Ireland",
+      "value": 5351681,
+      "year": 2024
+    },
+    {
+      "series": "Italy",
+      "value": 59816673,
+      "year": 2019
+    },
+    {
+      "series": "Italy",
+      "value": 59641488,
+      "year": 2020
+    },
+    {
+      "series": "Italy",
+      "value": 59236213,
+      "year": 2021
+    },
+    {
+      "series": "Italy",
+      "value": 59030133,
+      "year": 2022
+    },
+    {
+      "series": "Italy",
+      "value": 58997201,
+      "year": 2023
+    },
+    {
+      "series": "Italy",
+      "value": 58971230,
+      "year": 2024
+    },
+    {
+      "series": "Latvia",
+      "value": 1919968,
+      "year": 2019
+    },
+    {
+      "series": "Latvia",
+      "value": 1907675,
+      "year": 2020
+    },
+    {
+      "series": "Latvia",
+      "value": 1893223,
+      "year": 2021
+    },
+    {
+      "series": "Latvia",
+      "value": 1875757,
+      "year": 2022
+    },
+    {
+      "series": "Latvia",
+      "value": 1895239,
+      "year": 2023
+    },
+    {
+      "series": "Latvia",
+      "value": 1878575,
+      "year": 2024
+    },
+    {
+      "series": "Liechtenstein",
+      "value": 38378,
+      "year": 2019
+    },
+    {
+      "series": "Liechtenstein",
+      "value": 38747,
+      "year": 2020
+    },
+    {
+      "series": "Liechtenstein",
+      "value": 39055,
+      "year": 2021
+    },
+    {
+      "series": "Liechtenstein",
+      "value": 39308,
+      "year": 2022
+    },
+    {
+      "series": "Liechtenstein",
+      "value": 39677,
+      "year": 2023
+    },
+    {
+      "series": "Liechtenstein",
+      "value": 40015,
+      "year": 2024
+    },
+    {
+      "series": "Lithuania",
+      "value": 2812200,
+      "year": 2019
+    },
+    {
+      "series": "Lithuania",
+      "value": 2809977,
+      "year": 2020
+    },
+    {
+      "series": "Lithuania",
+      "value": 2810761,
+      "year": 2021
+    },
+    {
+      "series": "Lithuania",
+      "value": 2805998,
+      "year": 2022
+    },
+    {
+      "series": "Lithuania",
+      "value": 2857279,
+      "year": 2023
+    },
+    {
+      "series": "Lithuania",
+      "value": 2885891,
+      "year": 2024
+    },
+    {
+      "series": "Luxembourg",
+      "value": 613894,
+      "year": 2019
+    },
+    {
+      "series": "Luxembourg",
+      "value": 626108,
+      "year": 2020
+    },
+    {
+      "series": "Luxembourg",
+      "value": 634730,
+      "year": 2021
+    },
+    {
+      "series": "Luxembourg",
+      "value": 645397,
+      "year": 2022
+    },
+    {
+      "series": "Luxembourg",
+      "value": 660809,
+      "year": 2023
+    },
+    {
+      "series": "Luxembourg",
+      "value": 672050,
+      "year": 2024
+    },
+    {
+      "series": "Malta",
+      "value": 492968,
+      "year": 2019
+    },
+    {
+      "series": "Malta",
+      "value": 514855,
+      "year": 2020
+    },
+    {
+      "series": "Malta",
+      "value": 516125,
+      "year": 2021
+    },
+    {
+      "series": "Malta",
+      "value": 520174,
+      "year": 2022
+    },
+    {
+      "series": "Malta",
+      "value": 542051,
+      "year": 2023
+    },
+    {
+      "series": "Malta",
+      "value": 563443,
+      "year": 2024
+    },
+    {
+      "series": "Netherlands",
+      "value": 17282163,
+      "year": 2019
+    },
+    {
+      "series": "Netherlands",
+      "value": 17407585,
+      "year": 2020
+    },
+    {
+      "series": "Netherlands",
+      "value": 17475415,
+      "year": 2021
+    },
+    {
+      "series": "Netherlands",
+      "value": 17590672,
+      "year": 2022
+    },
+    {
+      "series": "Netherlands",
+      "value": 17811291,
+      "year": 2023
+    },
+    {
+      "series": "Netherlands",
+      "value": 17942942,
+      "year": 2024
+    },
+    {
+      "series": "Portugal",
+      "value": 10333496,
+      "year": 2019
+    },
+    {
+      "series": "Portugal",
+      "value": 10375395,
+      "year": 2020
+    },
+    {
+      "series": "Portugal",
+      "value": 10394297,
+      "year": 2021
+    },
+    {
+      "series": "Portugal",
+      "value": 10421117,
+      "year": 2022
+    },
+    {
+      "series": "Portugal",
+      "value": 10516621,
+      "year": 2023
+    },
+    {
+      "series": "Portugal",
+      "value": 10639726,
+      "year": 2024
+    },
+    {
+      "series": "Romania",
+      "value": 19414458,
+      "year": 2019
+    },
+    {
+      "series": "Romania",
+      "value": 19328838,
+      "year": 2020
+    },
+    {
+      "series": "Romania",
+      "value": 19201662,
+      "year": 2021
+    },
+    {
+      "series": "Romania",
+      "value": 19043098,
+      "year": 2022
+    },
+    {
+      "series": "Romania",
+      "value": 19055228,
+      "year": 2023
+    },
+    {
+      "series": "Romania",
+      "value": 19067576,
+      "year": 2024
+    },
+    {
+      "series": "Slovakia",
+      "value": 5450421,
+      "year": 2019
+    },
+    {
+      "series": "Slovakia",
+      "value": 5457873,
+      "year": 2020
+    },
+    {
+      "series": "Slovakia",
+      "value": 5459781,
+      "year": 2021
+    },
+    {
+      "series": "Slovakia",
+      "value": 5434712,
+      "year": 2022
+    },
+    {
+      "series": "Slovakia",
+      "value": 5428792,
+      "year": 2023
+    },
+    {
+      "series": "Slovakia",
+      "value": 5424687,
+      "year": 2024
+    },
+    {
+      "series": "Slovenia",
+      "value": 2080908,
+      "year": 2019
+    },
+    {
+      "series": "Slovenia",
+      "value": 2095861,
+      "year": 2020
+    },
+    {
+      "series": "Slovenia",
+      "value": 2108977,
+      "year": 2021
+    },
+    {
+      "series": "Slovenia",
+      "value": 2107180,
+      "year": 2022
+    },
+    {
+      "series": "Slovenia",
+      "value": 2116972,
+      "year": 2023
+    },
+    {
+      "series": "Slovenia",
+      "value": 2123949,
+      "year": 2024
+    },
+    {
+      "series": "Spain",
+      "value": 46918951,
+      "year": 2019
+    },
+    {
+      "series": "Spain",
+      "value": 47318050,
+      "year": 2020
+    },
+    {
+      "series": "Spain",
+      "value": 47400798,
+      "year": 2021
+    },
+    {
+      "series": "Spain",
+      "value": 47486843,
+      "year": 2022
+    },
+    {
+      "series": "Spain",
+      "value": 48085361,
+      "year": 2023
+    },
+    {
+      "series": "Spain",
+      "value": 48619695,
+      "year": 2024
+    },
+    {
+      "series": "Sweden",
+      "value": 10230185,
+      "year": 2019
+    },
+    {
+      "series": "Sweden",
+      "value": 10327589,
+      "year": 2020
+    },
+    {
+      "series": "Sweden",
+      "value": 10379295,
+      "year": 2021
+    },
+    {
+      "series": "Sweden",
+      "value": 10452326,
+      "year": 2022
+    },
+    {
+      "series": "Sweden",
+      "value": 10521556,
+      "year": 2023
+    },
+    {
+      "series": "Sweden",
+      "value": 10551707,
+      "year": 2024
+    }
+  ],
+  "identifier": "model-pack-authoring-binding-ecdc-covid19-pan-primary-1.0.0",
+  "metadata": {
+    "grid_size_per_variant": 12,
+    "value_blind": true,
+    "variants": [
+      "h-and-c",
+      "h-only"
+    ]
+  },
+  "observations": [
+    {
+      "operator": {
+        "op": "stock_sum",
+        "stocks": [
+          "hospitalized",
+          "intensive_care"
+        ]
+      },
+      "target_path": "daily-hospital-occupancy.csv",
+      "variant_id": "h-and-c"
+    },
+    {
+      "operator": {
+        "op": "stock_sum",
+        "stocks": [
+          "hospitalized"
+        ]
+      },
+      "target_path": "daily-hospital-occupancy.csv",
+      "variant_id": "h-only"
+    },
+    {
+      "operator": {
+        "op": "stock_sum",
+        "stocks": [
+          "intensive_care"
+        ]
+      },
+      "target_path": "daily-icu-occupancy.csv",
+      "variant_id": "default"
+    },
+    {
+      "operator": {
+        "inner": {
+          "flow": "hospital_admissions",
+          "op": "flow_sum"
+        },
+        "op": "per_100k"
+      },
+      "target_path": "weekly-hospital-admissions-per-100k.csv",
+      "variant_id": "default"
+    },
+    {
+      "operator": {
+        "inner": {
+          "flow": "icu_admissions",
+          "op": "flow_sum"
+        },
+        "op": "per_100k"
+      },
+      "target_path": "weekly-icu-admissions-per-100k.csv",
+      "variant_id": "default"
+    }
+  ],
+  "operator_vocabulary_version": "1.0.0",
+  "pack_id": "kalhas-pan",
+  "pack_version": "0.1.0",
+  "payload": {
+    "action_schedule": {
+      "action": {
+        "intervention_intensity_bps": 0
+      },
+      "kind": "constant"
+    },
+    "candidate_grid": {
+      "candidates": [
+        {
+          "configuration": {
+            "compliance_bps": 0,
+            "exposed_progression_bps": 2500,
+            "hospital_admission_bps": 38,
+            "hospital_capacity": 100000000,
+            "hospital_recovery_bps": 1134,
+            "icu_admission_bps": 252,
+            "icu_capacity": 100000000,
+            "icu_mortality_bps": 356,
+            "icu_recovery_bps": 634,
+            "infectious_recovery_bps": 1429,
+            "transmission_bps": 1174
+          },
+          "initial_state_parameters": {
+            "infectious_per_hospitalized_bps": 182368
+          }
+        },
+        {
+          "configuration": {
+            "compliance_bps": 0,
+            "exposed_progression_bps": 2500,
+            "hospital_admission_bps": 38,
+            "hospital_capacity": 100000000,
+            "hospital_recovery_bps": 1134,
+            "icu_admission_bps": 252,
+            "icu_capacity": 100000000,
+            "icu_mortality_bps": 356,
+            "icu_recovery_bps": 634,
+            "infectious_recovery_bps": 1429,
+            "transmission_bps": 1174
+          },
+          "initial_state_parameters": {
+            "infectious_per_hospitalized_bps": 364737
+          }
+        },
+        {
+          "configuration": {
+            "compliance_bps": 0,
+            "exposed_progression_bps": 2500,
+            "hospital_admission_bps": 38,
+            "hospital_capacity": 100000000,
+            "hospital_recovery_bps": 1134,
+            "icu_admission_bps": 252,
+            "icu_capacity": 100000000,
+            "icu_mortality_bps": 356,
+            "icu_recovery_bps": 634,
+            "infectious_recovery_bps": 1429,
+            "transmission_bps": 1174
+          },
+          "initial_state_parameters": {
+            "infectious_per_hospitalized_bps": 729474
+          }
+        },
+        {
+          "configuration": {
+            "compliance_bps": 0,
+            "exposed_progression_bps": 2500,
+            "hospital_admission_bps": 38,
+            "hospital_capacity": 100000000,
+            "hospital_recovery_bps": 1134,
+            "icu_admission_bps": 252,
+            "icu_capacity": 100000000,
+            "icu_mortality_bps": 356,
+            "icu_recovery_bps": 634,
+            "infectious_recovery_bps": 1429,
+            "transmission_bps": 1467
+          },
+          "initial_state_parameters": {
+            "infectious_per_hospitalized_bps": 182368
+          }
+        },
+        {
+          "configuration": {
+            "compliance_bps": 0,
+            "exposed_progression_bps": 2500,
+            "hospital_admission_bps": 38,
+            "hospital_capacity": 100000000,
+            "hospital_recovery_bps": 1134,
+            "icu_admission_bps": 252,
+            "icu_capacity": 100000000,
+            "icu_mortality_bps": 356,
+            "icu_recovery_bps": 634,
+            "infectious_recovery_bps": 1429,
+            "transmission_bps": 1467
+          },
+          "initial_state_parameters": {
+            "infectious_per_hospitalized_bps": 364737
+          }
+        },
+        {
+          "configuration": {
+            "compliance_bps": 0,
+            "exposed_progression_bps": 2500,
+            "hospital_admission_bps": 38,
+            "hospital_capacity": 100000000,
+            "hospital_recovery_bps": 1134,
+            "icu_admission_bps": 252,
+            "icu_capacity": 100000000,
+            "icu_mortality_bps": 356,
+            "icu_recovery_bps": 634,
+            "infectious_recovery_bps": 1429,
+            "transmission_bps": 1467
+          },
+          "initial_state_parameters": {
+            "infectious_per_hospitalized_bps": 729474
+          }
+        },
+        {
+          "configuration": {
+            "compliance_bps": 0,
+            "exposed_progression_bps": 2500,
+            "hospital_admission_bps": 38,
+            "hospital_capacity": 100000000,
+            "hospital_recovery_bps": 1134,
+            "icu_admission_bps": 252,
+            "icu_capacity": 100000000,
+            "icu_mortality_bps": 356,
+            "icu_recovery_bps": 634,
+            "infectious_recovery_bps": 1429,
+            "transmission_bps": 1760
+          },
+          "initial_state_parameters": {
+            "infectious_per_hospitalized_bps": 182368
+          }
+        },
+        {
+          "configuration": {
+            "compliance_bps": 0,
+            "exposed_progression_bps": 2500,
+            "hospital_admission_bps": 38,
+            "hospital_capacity": 100000000,
+            "hospital_recovery_bps": 1134,
+            "icu_admission_bps": 252,
+            "icu_capacity": 100000000,
+            "icu_mortality_bps": 356,
+            "icu_recovery_bps": 634,
+            "infectious_recovery_bps": 1429,
+            "transmission_bps": 1760
+          },
+          "initial_state_parameters": {
+            "infectious_per_hospitalized_bps": 364737
+          }
+        },
+        {
+          "configuration": {
+            "compliance_bps": 0,
+            "exposed_progression_bps": 2500,
+            "hospital_admission_bps": 38,
+            "hospital_capacity": 100000000,
+            "hospital_recovery_bps": 1134,
+            "icu_admission_bps": 252,
+            "icu_capacity": 100000000,
+            "icu_mortality_bps": 356,
+            "icu_recovery_bps": 634,
+            "infectious_recovery_bps": 1429,
+            "transmission_bps": 1760
+          },
+          "initial_state_parameters": {
+            "infectious_per_hospitalized_bps": 729474
+          }
+        },
+        {
+          "configuration": {
+            "compliance_bps": 0,
+            "exposed_progression_bps": 2500,
+            "hospital_admission_bps": 38,
+            "hospital_capacity": 100000000,
+            "hospital_recovery_bps": 1134,
+            "icu_admission_bps": 252,
+            "icu_capacity": 100000000,
+            "icu_mortality_bps": 356,
+            "icu_recovery_bps": 634,
+            "infectious_recovery_bps": 1429,
+            "transmission_bps": 2054
+          },
+          "initial_state_parameters": {
+            "infectious_per_hospitalized_bps": 182368
+          }
+        },
+        {
+          "configuration": {
+            "compliance_bps": 0,
+            "exposed_progression_bps": 2500,
+            "hospital_admission_bps": 38,
+            "hospital_capacity": 100000000,
+            "hospital_recovery_bps": 1134,
+            "icu_admission_bps": 252,
+            "icu_capacity": 100000000,
+            "icu_mortality_bps": 356,
+            "icu_recovery_bps": 634,
+            "infectious_recovery_bps": 1429,
+            "transmission_bps": 2054
+          },
+          "initial_state_parameters": {
+            "infectious_per_hospitalized_bps": 364737
+          }
+        },
+        {
+          "configuration": {
+            "compliance_bps": 0,
+            "exposed_progression_bps": 2500,
+            "hospital_admission_bps": 38,
+            "hospital_capacity": 100000000,
+            "hospital_recovery_bps": 1134,
+            "icu_admission_bps": 252,
+            "icu_capacity": 100000000,
+            "icu_mortality_bps": 356,
+            "icu_recovery_bps": 634,
+            "infectious_recovery_bps": 1429,
+            "transmission_bps": 2054
+          },
+          "initial_state_parameters": {
+            "infectious_per_hospitalized_bps": 729474
+          }
+        }
+      ],
+      "fitter": {
+        "algorithm_id": "kalhas-grid-fitter-v1",
+        "algorithm_version": "1.0.0",
+        "max_ensemble_members": 8,
+        "objective": "mean_relative_wis_over_cells",
+        "partition": "development",
+        "retention_tolerance": "21/20"
+      },
+      "sources": [
+        {
+          "basis": "assumption",
+          "parameter": "compliance_bps",
+          "reference": "ADR-012",
+          "statement": "Zero, so the constant intervention intensity has no effect (ADR-012 D30-05-4)."
+        },
+        {
+          "basis": "derived",
+          "parameter": "exposed_per_infectious_bps",
+          "reference": "Derived from the values above",
+          "statement": "10000 x (infectious_recovery_bps + hospital_admission_bps) / exposed_progression_bps: the ratio at which E is in balance when R is 1."
+        },
+        {
+          "basis": "source",
+          "parameter": "exposed_progression_bps",
+          "reference": "Salje H et al. Science 2020;369:208-211. doi:10.1126/science.abc3517",
+          "statement": "10000 / 4: a mean non-infectious latent stage of about 4.0 days within a mean incubation period of 5 days."
+        },
+        {
+          "basis": "source",
+          "parameter": "hospital_admission_bps",
+          "reference": "Salje H et al. Science 2020;369:208-211. doi:10.1126/science.abc3517",
+          "statement": "infectious_recovery_bps x 26 / 974: an infection hospitalisation probability of 2.6 percent. It changed over time with vaccination and variants; this is not modelled."
+        },
+        {
+          "basis": "assumption",
+          "parameter": "hospital_capacity",
+          "reference": "ADR-012",
+          "statement": "Above every population in the denominator bundle, so capacity never binds (ADR-012 D30-05-4)."
+        },
+        {
+          "basis": "source",
+          "parameter": "hospital_recovery_bps",
+          "reference": "Rees EM et al. BMC Med 2020;18:270. doi:10.1186/s12916-020-01726-3",
+          "statement": "The hospital exit rate minus icu_admission_bps."
+        },
+        {
+          "basis": "source",
+          "parameter": "icu_admission_bps",
+          "reference": "Salje H et al. 2020, and Rees EM et al. BMC Med 2020;18:270. doi:10.1186/s12916-020-01726-3",
+          "statement": "18.2 percent of the hospital exit rate, which is 10000 x 0.693147 / 5, an exponential stay with the reported median of 5 days outside China."
+        },
+        {
+          "basis": "assumption",
+          "parameter": "icu_capacity",
+          "reference": "ADR-012",
+          "statement": "Above every population in the denominator bundle, so capacity never binds (ADR-012 D30-05-4)."
+        },
+        {
+          "basis": "source",
+          "parameter": "icu_mortality_bps",
+          "reference": "Armstrong RA et al. Anaesthesia 2021;76:537-548. doi:10.1111/anae.15425, and Rees EM et al. 2020",
+          "statement": "36 percent of the ICU exit rate, which is 10000 x 0.693147 / 7, an exponential stay with the reported median of 7 days outside China."
+        },
+        {
+          "basis": "source",
+          "parameter": "icu_recovery_bps",
+          "reference": "Rees EM et al. BMC Med 2020;18:270. doi:10.1186/s12916-020-01726-3",
+          "statement": "The ICU exit rate minus icu_mortality_bps."
+        },
+        {
+          "basis": "derived",
+          "parameter": "icu_share_bps",
+          "reference": "Derived from the values above",
+          "statement": "The steady-state ICU share implied by icu_admission_bps and the ICU exit rate: C over H for h-only, and C over H plus C for h-and-c."
+        },
+        {
+          "basis": "assumption",
+          "parameter": "immune_share_bps",
+          "reference": "ADR-012 D30-05-10",
+          "statement": "Zero. Under a constant schedule immunity cannot be told apart from transmission, so its effect is absorbed by transmission_bps. No result supports any claim about immunity."
+        },
+        {
+          "basis": "derived",
+          "parameter": "infectious_per_hospitalized_bps",
+          "reference": "Derived from the values above",
+          "statement": "Half, one and two times the steady-state ratio 10000 x hospital exit rate / hospital_admission_bps, at which admissions balance hospital exits."
+        },
+        {
+          "basis": "source",
+          "parameter": "infectious_recovery_bps",
+          "reference": "Byrne AW et al. BMJ Open 2020;10:e039856. doi:10.1136/bmjopen-2020-039856",
+          "statement": "10000 / 7: a mean infectious period of 7 days, within the reported median of 6.5 to 9.5 days for asymptomatic cases."
+        },
+        {
+          "basis": "derived",
+          "parameter": "transmission_bps",
+          "reference": "Flaxman S et al. Nature 2020;584:257-261. doi:10.1038/s41586-020-2405-7",
+          "statement": "R x (infectious_recovery_bps + hospital_admission_bps) for R in 0.8, 1.0, 1.2 and 1.4, half-even. The R range is an assumption spanning declining to growing transmission, as reported for European countries in Flaxman et al. 2020."
+        }
+      ],
+      "variants": {
+        "h-and-c": {
+          "exposed_per_infectious_bps": 5868,
+          "icu_share_bps": 2029,
+          "immune_share_bps": 0
+        },
+        "h-only": {
+          "exposed_per_infectious_bps": 5868,
+          "icu_share_bps": 2545,
+          "immune_share_bps": 0
+        }
+      }
+    },
+    "initial_state_rule": {
+      "hospital_path": "daily-hospital-occupancy.csv",
+      "icu_path": "daily-icu-occupancy.csv",
+      "rule_id": "kalhas-pan-initial-state-v1",
+      "rule_version": "1.0.0"
+    }
+  },
+  "protocol_content_hash": "2a1b258f07dc158de32115726acbe88beb7a43cc6722382dcf0e187a7c372df8",
+  "protocol_manifest_id": "benchmark-protocol-ecdc-covid19-hospital-icu-primary-benchmark-1.0.0",
+  "schema_version": "1.0.0",
+  "tenant_id": "kalhas-reference"
+}

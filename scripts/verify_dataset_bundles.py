@@ -55,6 +55,8 @@ from kalhas.application.dataset_split_errors import (
 )
 from kalhas.application.dataset_split_verifier import verify_dataset_split
 from kalhas.application.dataset_transformation_errors import CuratedDatasetVerificationError
+from kalhas.application.model_pack_authoring_errors import ModelPackAuthoringVerificationError
+from kalhas.application.model_pack_authoring_verifier import verify_model_pack_authoring_binding
 from kalhas.application.raw_dataset_errors import RawDatasetVerificationError
 from kalhas.application.raw_dataset_verifier import verify_raw_dataset_bundle
 from kalhas.contracts.v1.benchmark_forecast import BenchmarkScoreReport, ForecastSet
@@ -62,6 +64,9 @@ from kalhas.contracts.v1.benchmark_protocol import BenchmarkProtocol
 from kalhas.contracts.v1.curated_dataset import CuratedDatasetManifest
 from kalhas.contracts.v1.dataset import RawDatasetManifest
 from kalhas.contracts.v1.dataset_split import DatasetSplitManifest
+from kalhas.contracts.v1.model_pack_authoring import ModelPackAuthoringBinding
+from kalhas.domain_packs.pan.binding_plan import parse_pan_binding_plan
+from kalhas.domain_packs.pan.mechanism import PanDomainPackError
 from pydantic import ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -70,6 +75,7 @@ RAW_RELATIVE = Path("datasets") / "v1" / "raw"
 CURATED_RELATIVE = Path("datasets") / "v1" / "curated"
 SPLIT_RELATIVE = Path("datasets") / "v1" / "splits"
 PROTOCOL_RELATIVE = Path("benchmarks") / "v1" / "protocols"
+BINDING_RELATIVE = Path("benchmarks") / "v1" / "bindings"
 FORECAST_RELATIVE = Path("benchmarks") / "v1" / "forecasts"
 REPORT_RELATIVE = Path("benchmarks") / "v1" / "reports"
 _PROTOCOL_IDENTIFIER = re.compile(
@@ -344,6 +350,34 @@ def _protocol_chain(
         return "protocol_input_invalid"
 
 
+def _verify_binding(root: Path, bundle: Path) -> str | None:
+    path = bundle / MANIFEST_NAME
+    if not path.is_file():
+        return "missing_manifest"
+    if any(entry.name != MANIFEST_NAME for entry in bundle.iterdir()):
+        return "undeclared_file"
+    try:
+        binding = ModelPackAuthoringBinding.model_validate_json(path.read_bytes())
+    except ValidationError:
+        return "invalid_manifest"
+    if bundle.parent.name != binding.binding_id or bundle.name != binding.binding_version:
+        return "identity_mismatch"
+    chain = _protocol_chain(root, binding.protocol_manifest_id)
+    if isinstance(chain, str):
+        return chain
+    try:
+        verify_model_pack_authoring_binding(binding, *chain)
+    except ModelPackAuthoringVerificationError as error:
+        return error.reason
+    if binding.pack_id != "kalhas-pan":
+        return "unknown_pack"
+    try:
+        parse_pan_binding_plan(binding)
+    except PanDomainPackError:
+        return "pack_payload_invalid"
+    return None
+
+
 def _load_forecast(bundle: Path) -> tuple[ForecastSet, bytes] | str:
     path = bundle / MANIFEST_NAME
     if not path.is_file():
@@ -443,6 +477,8 @@ def main(argv: list[str] | None = None) -> int:
     failures += split_failures
     protocols, protocol_failures = _bundle_directories(root, PROTOCOL_RELATIVE)
     failures += protocol_failures
+    bindings, binding_failures = _bundle_directories(root, BINDING_RELATIVE)
+    failures += binding_failures
     forecasts, forecast_failures = _bundle_directories(root, FORECAST_RELATIVE)
     reports, report_failures = _bundle_directories(root, REPORT_RELATIVE)
     if (
@@ -450,6 +486,7 @@ def main(argv: list[str] | None = None) -> int:
         and not curated_bundles
         and not split_bundles
         and not protocols
+        and not bindings
         and not forecasts
         and not reports
         and not failures
@@ -482,6 +519,13 @@ def main(argv: list[str] | None = None) -> int:
     for bundle in protocols:
         name = bundle.relative_to(root).as_posix()
         reason = _verify_protocol(root, bundle)
+        if reason is None:
+            print(f"ok {name}")
+        else:
+            failures.append(f"FAIL {name}: {reason}")
+    for bundle in bindings:
+        name = bundle.relative_to(root).as_posix()
+        reason = _verify_binding(root, bundle)
         if reason is None:
             print(f"ok {name}")
         else:
