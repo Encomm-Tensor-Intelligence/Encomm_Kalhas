@@ -637,3 +637,21 @@ def test_mechanism_forecast_modules_are_neutral_and_pure(relative: str) -> None:
                 assert node.attr != "step"
         assert not (isinstance(node, ast.Constant) and isinstance(node.value, float))
         assert all(name not in {"decimal", "math"} for name in names)
+
+
+def test_adr012_scope_and_decisions() -> None:
+    path = REPO_ROOT / "docs/decisions/ADR-012-first-pan-binding-calibration-and-reexecution.md"
+    normalized = re.sub(r"\s+", " ", path.read_text(encoding="utf-8")).lower()
+    assert "- status: accepted" in normalized
+    assert "- date: 2026-11-06" in normalized
+    for number in range(1, 11):
+        assert f"### d30-05-{number} — " in normalized
+    for phrase in (
+        "this adr supersedes nothing",
+        "must not be read as claiming any of them",
+        "modelpackcalibrationrecord",
+        "`kalhas-pan-initial-state-v1`",
+        "`kalhas-grid-fitter-v1`",
+        "no fast path",
+    ):
+        assert phrase in normalized
