@@ -46,7 +46,6 @@ from kalhas.application.benchmark_forecast_errors import (
 )
 from kalhas.application.benchmark_forecast_verifier import (
     verify_benchmark_score_report,
-    verify_forecast_set,
 )
 from kalhas.application.benchmark_protocol_verifier import verify_benchmark_protocol
 from kalhas.application.curated_dataset_verifier import verify_curated_dataset_bundle
@@ -378,7 +377,7 @@ def _verify_forecast(root: Path, bundle: Path) -> str | None:
         if item.producer.kind == "baseline":
             verify_baseline_forecast_set(item, content, *chain)
         else:
-            verify_forecast_set(item, content, *chain)
+            return "mechanism_reexecution_unavailable"
     except SealedPartitionError:
         return "sealed_partition"
     except (BenchmarkForecastVerificationError, BenchmarkBaselineVerificationError) as error:

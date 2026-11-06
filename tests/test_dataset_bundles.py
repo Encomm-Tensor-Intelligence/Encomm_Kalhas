@@ -1349,3 +1349,65 @@ def test_population_bundles_verify_and_tampering_fails(copied_root: Path) -> Non
     result = _run(copied_root)
     assert result.returncode == 1
     assert f"FAIL {POPULATION_CURATED_PATH}: sha256_mismatch" in result.stdout
+
+
+@pytest.fixture(autouse=True)
+def _replayable_forecast_chain_candidate(request: pytest.FixtureRequest) -> None:
+    """Keep the existing synthetic chain tests on a re-executable candidate."""
+    if "forecast_chain_root" not in request.fixturenames:
+        return
+    from kalhas.application.benchmark_baselines import produce_persistence_point_forecasts
+    from kalhas.application.benchmark_scoring import build_benchmark_score_report
+    from kalhas.contracts.v1.benchmark_forecast import ForecastSet
+    from kalhas.contracts.v1.benchmark_protocol import BenchmarkProtocol
+
+    from tests.test_benchmark_scoring import NOW
+    from tests.test_benchmark_task_engine import chain
+
+    root: Path = request.getfixturevalue("forecast_chain_root")
+    _, _, curated, files, split, _ = chain()
+    protocol_path = root / "benchmarks/v1/protocols/synthetic/1.0.0/manifest.json"
+    protocol = BenchmarkProtocol.model_validate_json(protocol_path.read_bytes())
+    candidate, content = produce_persistence_point_forecasts(
+        forecast_set_id="candidate",
+        forecast_set_version="1.0.0",
+        protocol=protocol,
+        split_manifest=split,
+        curated_manifest=curated,
+        curated_files=files,
+        partition="development",
+        created_at=NOW,
+    )
+    candidate_dir = root / "benchmarks/v1/forecasts/candidate/1.0.0"
+    (candidate_dir / "manifest.json").write_text(_render(candidate), encoding="utf-8", newline="\n")
+    (candidate_dir / "forecasts.csv").write_bytes(content)
+    reference_dir = root / "benchmarks/v1/forecasts/reference/1.0.0"
+    reference = ForecastSet.model_validate_json((reference_dir / "manifest.json").read_bytes())
+    report = build_benchmark_score_report(
+        report_id="report",
+        report_version="1.0.0",
+        protocol=protocol,
+        split_manifest=split,
+        curated_manifest=curated,
+        curated_files=files,
+        candidate=candidate,
+        candidate_csv=content,
+        reference=reference,
+        reference_csv=(reference_dir / "forecasts.csv").read_bytes(),
+        limitations=("Synthetic only",),
+        scored_at=NOW,
+        metadata={},
+    )
+    report_path = root / "benchmarks/v1/reports/report/1.0.0/manifest.json"
+    report_path.write_text(_render(report), encoding="utf-8", newline="\n")
+
+
+def test_mechanism_forecast_requires_reexecution(forecast_chain_root: Path) -> None:
+    path = forecast_chain_root / "benchmarks/v1/forecasts/candidate/1.0.0/manifest.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["producer"]["kind"] = "model_pack_mechanism"
+    path.write_text(json.dumps(data), encoding="utf-8", newline="\n")
+    result = _run(forecast_chain_root)
+    assert result.returncode == 1
+    assert "mechanism_reexecution_unavailable" in result.stdout
+    assert "Traceback" not in result.stderr
