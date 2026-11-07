@@ -1,0 +1,359 @@
+{
+  "$defs": {
+    "CalibrationCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_index": {
+          "minimum": 1,
+          "title": "Candidate Index",
+          "type": "integer"
+        },
+        "cells": {
+          "items": {
+            "$ref": "#/$defs/CalibrationCell"
+          },
+          "minItems": 1,
+          "title": "Cells",
+          "type": "array"
+        },
+        "configuration_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Configuration Hash",
+          "type": "string"
+        },
+        "dispatched_step_count": {
+          "minimum": 0,
+          "title": "Dispatched Step Count",
+          "type": "integer"
+        },
+        "fallback_count": {
+          "minimum": 0,
+          "title": "Fallback Count",
+          "type": "integer"
+        },
+        "forecasts_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Forecasts Sha256",
+          "type": "string"
+        },
+        "member_id": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "title": "Member Id",
+          "type": "string"
+        },
+        "objective": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9]+\\.[0-9]{6}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Objective"
+        },
+        "objective_exact": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Objective Exact"
+        },
+        "rank": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rank"
+        },
+        "status": {
+          "enum": [
+            "retained",
+            "qualifying_left_out",
+            "not_retained",
+            "no_objective"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "candidate_index",
+        "member_id",
+        "configuration_hash",
+        "forecasts_sha256",
+        "objective",
+        "objective_exact",
+        "cells",
+        "fallback_count",
+        "dispatched_step_count",
+        "rank",
+        "status"
+      ],
+      "title": "CalibrationCandidate",
+      "type": "object"
+    },
+    "CalibrationCell": {
+      "additionalProperties": false,
+      "properties": {
+        "horizon": {
+          "maximum": 366,
+          "minimum": 1,
+          "title": "Horizon",
+          "type": "integer"
+        },
+        "included": {
+          "title": "Included",
+          "type": "boolean"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "relative_wis": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9]+\\.[0-9]{6}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Relative Wis"
+        }
+      },
+      "required": [
+        "path",
+        "horizon",
+        "relative_wis",
+        "included"
+      ],
+      "title": "CalibrationCell",
+      "type": "object"
+    },
+    "CalibrationTargetVariant": {
+      "additionalProperties": false,
+      "properties": {
+        "target_path": {
+          "title": "Target Path",
+          "type": "string"
+        },
+        "variant_id": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "title": "Variant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target_path",
+        "variant_id"
+      ],
+      "title": "CalibrationTargetVariant",
+      "type": "object"
+    },
+    "JsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "description": "An immutable calibration identity and its candidate results.",
+  "properties": {
+    "algorithm_id": {
+      "const": "kalhas-grid-fitter-v1",
+      "title": "Algorithm Id",
+      "type": "string"
+    },
+    "algorithm_version": {
+      "const": "1.0.0",
+      "title": "Algorithm Version",
+      "type": "string"
+    },
+    "binding_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Binding Content Hash",
+      "type": "string"
+    },
+    "binding_manifest_id": {
+      "minLength": 1,
+      "title": "Binding Manifest Id",
+      "type": "string"
+    },
+    "calibrated_at": {
+      "format": "date-time",
+      "title": "Calibrated At",
+      "type": "string"
+    },
+    "candidates": {
+      "items": {
+        "$ref": "#/$defs/CalibrationCandidate"
+      },
+      "minItems": 1,
+      "title": "Candidates",
+      "type": "array"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "limitations": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Limitations",
+      "type": "array"
+    },
+    "max_ensemble_members": {
+      "maximum": 64,
+      "minimum": 1,
+      "title": "Max Ensemble Members",
+      "type": "integer"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "objective": {
+      "const": "mean_relative_wis_over_cells",
+      "title": "Objective",
+      "type": "string"
+    },
+    "partition": {
+      "const": "development",
+      "title": "Partition",
+      "type": "string"
+    },
+    "protocol_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Protocol Content Hash",
+      "type": "string"
+    },
+    "protocol_manifest_id": {
+      "minLength": 1,
+      "title": "Protocol Manifest Id",
+      "type": "string"
+    },
+    "qualifying_left_out_count": {
+      "minimum": 0,
+      "title": "Qualifying Left Out Count",
+      "type": "integer"
+    },
+    "record_id": {
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "title": "Record Id",
+      "type": "string"
+    },
+    "record_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Record Version",
+      "type": "string"
+    },
+    "reference_forecast_set_content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Reference Forecast Set Content Hash",
+      "type": "string"
+    },
+    "reference_forecast_set_id": {
+      "minLength": 1,
+      "title": "Reference Forecast Set Id",
+      "type": "string"
+    },
+    "retention_tolerance": {
+      "const": "21/20",
+      "title": "Retention Tolerance",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "variants": {
+      "items": {
+        "$ref": "#/$defs/CalibrationTargetVariant"
+      },
+      "minItems": 1,
+      "title": "Variants",
+      "type": "array"
+    }
+  },
+  "required": [
+    "identifier",
+    "tenant_id",
+    "record_id",
+    "record_version",
+    "binding_manifest_id",
+    "binding_content_hash",
+    "protocol_manifest_id",
+    "protocol_content_hash",
+    "partition",
+    "variants",
+    "algorithm_id",
+    "algorithm_version",
+    "objective",
+    "retention_tolerance",
+    "max_ensemble_members",
+    "reference_forecast_set_id",
+    "reference_forecast_set_content_hash",
+    "candidates",
+    "qualifying_left_out_count",
+    "limitations",
+    "calibrated_at",
+    "content_hash"
+  ],
+  "title": "ModelPackCalibrationRecord",
+  "type": "object"
+}

@@ -6,7 +6,8 @@ Phase 29 H29-S02A appends grew it again from 55 to 58, and the accepted
 H29-S02B appends grew it once more from 58 to 61, and the accepted
 Phase 30 H30-S01 append grew it from 61 to 62, and the accepted
 Phase 30 H30-S02A append grew it from 62 to 63, H30-S02B grew it to 64,
-H30-S03A grew it to 65, H30-S03B grew it to 67, and H30-S05A grows it to 68.
+H30-S03A grew it to 65, H30-S03B grew it to 67, H30-S05A grew it to 68,
+and H30-S05C3A grows it to 69.
 This suite guards the additive-compatibility contract for all historical slices:
 
 - API and schema versions stay unchanged (``"1"`` / ``"1.0.0"``);
@@ -18,7 +19,7 @@ This suite guards the additive-compatibility contract for all historical slices:
   (``RuntimeObservationDeclaration`` /
   ``ExternalObservationInputBundle`` / ``AdaptivePolicy`` /
   ``AdaptiveRunTrajectoryExecution`` / ``AdaptiveRunTrajectoryReplayManifest``);
-- the current registry is exactly 68 with a frozen Phase 29 tail
+- the current registry is exactly 69 with a frozen Phase 29 tail
   (indexes 55-57 ``DomainMechanismSpec`` /
   ``DomainMechanismStepRequest`` / ``DomainMechanismStepResult`` and
   indexes 58-60 ``ModelPackReleaseProfile`` /
@@ -35,10 +36,10 @@ This suite guards the additive-compatibility contract for all historical slices:
 - a precise AST scan over ``tests/`` fails if any other test module
   asserts an exact integer count for ``len(PUBLIC_CONTRACTS)`` or
   ``len(schema_files)``, in either equality orientation; in this owner
-  module the scan rejects obsolete global counts through 67.
+  module the scan rejects obsolete global counts through 68.
 
 Only this module (the single owner) may assert the exact current
-cardinality (68). Every other suite must stay additive-safe: ``>= N`` for
+cardinality (69). Every other suite must stay additive-safe: ``>= N`` for
 the registry and ``== len(PUBLIC_CONTRACTS)`` for schema artifacts, so a
 later additive contract never breaks an unrelated suite. The AST scan is
 the durable guard for that rule.
@@ -114,9 +115,9 @@ _PHASE29_MODEL_PACK_TAIL = (
 
 #: Obsolete *current-global-count* literals the AST detector rejects in this
 #: owner module, in either equality orientation. The owner may still assert
-#: the current exact count (68); every other module may assert no exact
+#: the current exact count (69); every other module may assert no exact
 #: integer count at all.
-_OBSOLETE_GLOBAL_COUNTS = (50, 55, 58, 61, 62, 63, 64, 65, 66, 67)
+_OBSOLETE_GLOBAL_COUNTS = (50, 55, 58, 61, 62, 63, 64, 65, 66, 67, 68)
 
 #: The single module allowed to assert the exact current cardinality.
 _OWNER_MODULE_NAME = Path(__file__).name
@@ -194,6 +195,9 @@ _NESTED_PHASE30 = (
     "PerHundredKOperator",
     "TargetObservation",
     "DenominatorEntry",
+    "CalibrationTargetVariant",
+    "CalibrationCell",
+    "CalibrationCandidate",
 )
 
 
@@ -204,8 +208,8 @@ class TestVersionBoundary:
 
 
 class TestPublicContractRegistry:
-    def test_current_public_contract_count_is_exactly_68(self) -> None:
-        assert len(PUBLIC_CONTRACTS) == 68
+    def test_current_public_contract_count_is_exactly_69(self) -> None:
+        assert len(PUBLIC_CONTRACTS) == 69
 
     def test_immutable_accepted_50_phase27_prefix_is_unchanged(self) -> None:
         names = tuple(contract.__name__ for contract in PUBLIC_CONTRACTS)
@@ -228,6 +232,7 @@ class TestPublicContractRegistry:
         assert names[65] == "ForecastSet"
         assert names[66] == "BenchmarkScoreReport"
         assert names[67] == "ModelPackAuthoringBinding"
+        assert names[68] == "ModelPackCalibrationRecord"
 
 
 class TestSchemaCompatibility:
@@ -240,7 +245,7 @@ class TestSchemaCompatibility:
     def test_schema_artifact_count_follows_the_public_registry(self) -> None:
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
         assert len(schema_files) == len(PUBLIC_CONTRACTS)
-        assert len(schema_files) == 68
+        assert len(schema_files) == 69
 
     def test_schema_titles_equal_public_contract_names(self) -> None:
         schema_files = sorted(SCHEMA_DIR.glob("*.schema.json"))
@@ -333,8 +338,8 @@ class TestStaleAssertionDetector:
     In every ``tests/*.py`` module except this owner, any exact equality
     between ``len(PUBLIC_CONTRACTS)`` or ``len(schema_files)`` and any
     integer literal is flagged, in either orientation. In this owner
-    module the current exact count (68) is allowed and only the obsolete
-    literals 50, 55, 58, 61, 62, 63, 64, 65, 66 and 67 are flagged. Legitimate unrelated facts
+    module the current exact count (69) is allowed and only the obsolete
+    literals 50, 55, 58, 61 through 68 are flagged. Legitimate unrelated facts
     (``len(frozen_names) == 50``) are deliberately not matched, so a plain
     substring scan cannot be used: this detector parses real equality
     expressions. Additive facts (``>= N``, ``== len(PUBLIC_CONTRACTS)``)
@@ -426,7 +431,7 @@ class TestStaleAssertionDetector:
         assert _stale_equality_nodes(src) == []
 
     def test_owner_module_may_assert_the_current_exact_count(self) -> None:
-        src = "assert len(PUBLIC_CONTRACTS) == 68\nassert len(schema_files) == 68\n"
+        src = "assert len(PUBLIC_CONTRACTS) == 69\nassert len(schema_files) == 69\n"
         assert _stale_equality_nodes(src, owner=True) == []
 
     def test_owner_module_still_flags_obsolete_counts(self) -> None:
@@ -467,7 +472,7 @@ def _stale_equality_nodes(
     forms where ``X`` is the ``PUBLIC_CONTRACTS`` module symbol or a
     variable literally named ``schema_files``. For a non-owner module
     ``N`` is any integer literal; for the owner module (``owner=True``)
-    only the obsolete literals 50, 55 and 58 are flagged. Returns
+    only the literals in ``_OBSOLETE_GLOBAL_COUNTS`` are flagged. Returns
     ``(lineno, unparsed expression)``.
 
     The detector is symmetric (the literal is accepted on either side of

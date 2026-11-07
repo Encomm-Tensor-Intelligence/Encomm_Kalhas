@@ -3337,6 +3337,51 @@ VALID_PAYLOADS: dict[type[VersionedContract], dict[str, object]] = {
         "content_hash": "0" * 64,
         "metadata": {},
     },
+    next(
+        contract
+        for contract in PUBLIC_CONTRACTS
+        if contract.__name__ == "ModelPackCalibrationRecord"
+    ): {
+        "identifier": "model-pack-calibration-record-synthetic-1.0.0",
+        "tenant_id": "tenant-1",
+        "record_id": "synthetic",
+        "record_version": "1.0.0",
+        "binding_manifest_id": "binding-1",
+        "binding_content_hash": "0" * 64,
+        "protocol_manifest_id": "protocol-1",
+        "protocol_content_hash": "0" * 64,
+        "partition": "development",
+        "variants": [{"target_path": "clean.csv", "variant_id": "default"}],
+        "algorithm_id": "kalhas-grid-fitter-v1",
+        "algorithm_version": "1.0.0",
+        "objective": "mean_relative_wis_over_cells",
+        "retention_tolerance": "21/20",
+        "max_ensemble_members": 8,
+        "reference_forecast_set_id": "forecast-1",
+        "reference_forecast_set_content_hash": "0" * 64,
+        "candidates": [
+            {
+                "candidate_index": 1,
+                "member_id": "candidate-01",
+                "configuration_hash": "0" * 64,
+                "forecasts_sha256": "0" * 64,
+                "objective": None,
+                "objective_exact": None,
+                "cells": [
+                    {"path": "clean.csv", "horizon": 1, "relative_wis": None, "included": False}
+                ],
+                "fallback_count": 0,
+                "dispatched_step_count": 0,
+                "rank": None,
+                "status": "no_objective",
+            }
+        ],
+        "qualifying_left_out_count": 0,
+        "limitations": ["Synthetic example."],
+        "calibrated_at": NOW,
+        "content_hash": "0" * 64,
+        "metadata": {},
+    },
 }
 
 

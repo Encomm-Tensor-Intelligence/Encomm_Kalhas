@@ -655,3 +655,60 @@ def test_adr012_scope_and_decisions() -> None:
         "no fast path",
     ):
         assert phrase in normalized
+
+
+_CALIBRATION_MODULES = (
+    "contracts/v1/model_pack_calibration.py",
+    "application/grid_calibration.py",
+    "application/grid_calibration_errors.py",
+)
+_CALIBRATION_IMPORTS = {
+    "__future__",
+    "collections.abc",
+    "dataclasses",
+    "datetime",
+    "fractions",
+    "hashlib",
+    "re",
+    "typing",
+    "pydantic",
+    "kalhas.application.benchmark_scoring",
+    "kalhas.application.domain_errors",
+    "kalhas.application.grid_calibration_errors",
+    "kalhas.application.hashing",
+    "kalhas.application.mechanism_forecasts",
+    "kalhas.application.model_pack_authoring_verifier",
+    "kalhas.contracts.v1.benchmark_forecast",
+    "kalhas.contracts.v1.benchmark_protocol",
+    "kalhas.contracts.v1.curated_dataset",
+    "kalhas.contracts.v1.dataset",
+    "kalhas.contracts.v1.dataset_split",
+    "kalhas.contracts.v1.domain_mechanism",
+    "kalhas.contracts.v1.model_pack_authoring",
+    "kalhas.contracts.v1.model_pack_calibration",
+    "kalhas.contracts.v1.shared",
+    "kalhas.contracts.v1.state_model",
+    "kalhas.contracts.v1.world_realization",
+}
+
+
+@pytest.mark.parametrize("relative", _CALIBRATION_MODULES)
+def test_calibration_modules_are_neutral_and_pure(relative: str) -> None:
+    test_new_kernel_modules_carry_no_domain_vocabulary(relative)
+    source = (KALHAS_ROOT / relative).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names = [alias.name for alias in node.names]
+        elif isinstance(node, ast.ImportFrom):
+            assert node.level == 0
+            names = [node.module or ""]
+        else:
+            names = []
+        assert all(name in _CALIBRATION_IMPORTS for name in names), (relative, names)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            assert node.func.id not in {"open", "exec", "eval", "__import__"}
+        if isinstance(node, ast.Attribute):
+            assert node.attr not in {"now", "today", "utcnow", "environ", "getenv"}
+        if relative == "application/grid_calibration.py":
+            assert not (isinstance(node, ast.Name) and node.id in {"float", "decimal", "math"})
